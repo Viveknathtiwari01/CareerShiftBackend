@@ -1,0 +1,253 @@
+{
+    "input_profile": {
+        "job_title": "Lead HRIS Analyst",
+        "industry": "Professional & Business Services",
+        "business_function": "Business Process Outsourcing",
+        "domain": "Human Resources Process Outsourcing",
+        "specialization": "HRIS Implementation & Management",
+        "technical_skills": [
+            "HRIS Implementation",
+            "HR Data Management"
+        ],
+        "experience_years": 5
+    },
+    "role_understanding": {
+        "profession": "HRIS Analyst",
+        "role_family": "Human Resources Technology",
+        "purpose": "Enables effective workforce management by ensuring HR systems accurately support data-driven decision-making and efficient people operations across the organization.",
+        "functional_areas": [
+            "HR Systems Management",
+            "HR Data Governance",
+            "System Implementation & Configuration",
+            "Process Optimization",
+            "Reporting & Analytics",
+            "Compliance & Data Security"
+        ]
+    },
+    "competency_discovery": {
+        "technical": [
+            "HR Systems Management",
+            "System Implementation & Configuration",
+            "Data Governance"
+        ],
+        "behavioural": [
+            "Cross-Functional Collaboration",
+            "Stakeholder Management",
+            "Written and Verbal Communication"
+        ],
+        "leadership": [],
+        "analytical": [
+            "Compliance and Regulatory Analysis",
+            "Process Optimization",
+            "Reporting and Data Analytics"
+        ]
+    },
+    "competency_structuring": [
+        {
+            "name": "Compliance and Regulatory Analysis",
+            "category": "Analytical",
+            "description": "Evaluates HR system configurations and data handling practices against employment, privacy, and labor regulations to ensure organizational adherence to legal and policy requirements."
+        },
+        {
+            "name": "Cross-Functional Collaboration",
+            "category": "Behavioural",
+            "description": "Coordinates with HR, IT, payroll, and business units to align system requirements and workflows, ensuring HR technology solutions meet diverse organizational needs."
+        },
+        {
+            "name": "Data Governance",
+            "category": "Technical",
+            "description": "Establishes and maintains standards for data accuracy, security, and integrity within HR systems, ensuring reliable and consistent workforce information across the organization."
+        },
+        {
+            "name": "HR Systems Management",
+            "category": "Technical",
+            "description": "Oversees the operation, maintenance, and administration of HR information systems to ensure accurate employee data and reliable support for workforce processes."
+        },
+        {
+            "name": "Process Optimization",
+            "category": "Analytical",
+            "description": "Identifies inefficiencies in HR data and system workflows, redesigning processes to improve accuracy, speed, and consistency of people operations activities."
+        },
+        {
+            "name": "Reporting and Data Analytics",
+            "category": "Analytical",
+            "description": "Analyzes workforce data to produce accurate reports and insights that support informed decision-making across HR functions and organizational planning."
+        },
+        {
+            "name": "Stakeholder Management",
+            "category": "Behavioural",
+            "description": "Manages relationships with HR leaders, employees, and system vendors to gather requirements, address concerns, and ensure alignment on HR technology initiatives."
+        },
+        {
+            "name": "System Implementation & Configuration",
+            "category": "Technical",
+            "description": "Plans and executes the setup, customization, and deployment of HR systems to align technical functionality with organizational HR processes and data requirements."
+        },
+        {
+            "name": "Written and Verbal Communication",
+            "category": "Behavioural",
+            "description": "Conveys system requirements, data insights, and process changes clearly to HR staff and business stakeholders through documentation and interpersonal exchanges."
+        }
+    ],
+    "competency_validation": {
+        "validated_competencies": [
+            {
+                "name": "Compliance and Regulatory Analysis",
+                "category": "Analytical",
+                "description": "Evaluates HR system configurations and data handling practices against employment, privacy, and labor regulations to ensure organizational adherence to legal and policy requirements.",
+                "importance": "Critical",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "Cross-Functional Collaboration",
+                "category": "Behavioural",
+                "description": "Coordinates with HR, IT, payroll, and business units to align system requirements and workflows, ensuring HR technology solutions meet diverse organizational needs.",
+                "importance": "High",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "Data Governance",
+                "category": "Technical",
+                "description": "Establishes and maintains standards for data accuracy, security, and integrity within HR systems, ensuring reliable and consistent workforce information across the organization.",
+                "importance": "Critical",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "HR Systems Management",
+                "category": "Technical",
+                "description": "Oversees the operation, maintenance, and administration of HR information systems to ensure accurate employee data and reliable support for workforce processes.",
+                "importance": "Critical",
+                "expected_level": "Expert"
+            },
+            {
+                "name": "Process Optimization",
+                "category": "Analytical",
+                "description": "Identifies inefficiencies in HR data and system workflows, redesigning processes to improve accuracy, speed, and consistency of people operations activities.",
+                "importance": "High",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "Reporting and Data Analytics",
+                "category": "Analytical",
+                "description": "Analyzes workforce data to produce accurate reports and insights that support informed decision-making across HR functions and organizational planning.",
+                "importance": "High",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "Stakeholder Management",
+                "category": "Behavioural",
+                "description": "Manages relationships with HR leaders, employees, and system vendors to gather requirements, address concerns, and ensure alignment on HR technology initiatives.",
+                "importance": "Medium",
+                "expected_level": "Intermediate"
+            },
+            {
+                "name": "System Implementation & Configuration",
+                "category": "Technical",
+                "description": "Plans and executes the setup, customization, and deployment of HR systems to align technical functionality with organizational HR processes and data requirements.",
+                "importance": "High",
+                "expected_level": "Advanced"
+            },
+            {
+                "name": "Written and Verbal Communication",
+                "category": "Behavioural",
+                "description": "Conveys system requirements, data insights, and process changes clearly to HR staff and business stakeholders through documentation and interpersonal exchanges.",
+                "importance": "Medium",
+                "expected_level": "Intermediate"
+            }
+        ],
+        "coverage": {
+            "status": "Complete",
+            "missing_competencies": []
+        },
+        "quality": {
+            "confidence": "High",
+            "consistency": "Passed"
+        }
+    },
+    "competency_explanation": {
+        "profession_summary": "This profession maintains the systems and data infrastructure that support workforce management, ensuring HR information remains accurate, secure, and accessible. It bridges human resources, technology, and operational functions to enable reliable people-related decision-making across organizational departments and processes.",
+        "competencies": [
+            {
+                "name": "Compliance and Regulatory Analysis",
+                "category": "Analytical",
+                "importance": "Critical",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency involves examining HR system configurations and data practices to verify alignment with employment, privacy, and labor regulations governing workforce information.",
+                "why_it_matters": "It safeguards the organization against legal exposure and regulatory penalties by ensuring HR data handling consistently meets required legal and policy standards.",
+                "professional_context": "Analysts apply this skill when auditing system settings, reviewing data access controls, and validating that HR processes comply with evolving legal frameworks and internal policy requirements."
+            },
+            {
+                "name": "Cross-Functional Collaboration",
+                "category": "Behavioural",
+                "importance": "High",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency reflects the ability to coordinate with HR, IT, payroll, and business units to align system requirements and workflows across departments.",
+                "why_it_matters": "It ensures HR technology solutions address varied departmental needs, reducing miscommunication and creating systems that function effectively across the entire organization.",
+                "professional_context": "Analysts rely on this skill when gathering requirements from multiple departments, negotiating shared system priorities, and translating diverse operational needs into unified HR technology solutions."
+            },
+            {
+                "name": "Data Governance",
+                "category": "Technical",
+                "importance": "Critical",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency covers establishing and maintaining standards that protect data accuracy, security, and integrity within HR information systems.",
+                "why_it_matters": "It preserves trust in workforce data by preventing errors and unauthorized access, forming the foundation for dependable HR decision-making processes.",
+                "professional_context": "Analysts apply governance standards when defining data entry protocols, managing access permissions, and monitoring information quality across HR systems and downstream reporting processes."
+            },
+            {
+                "name": "HR Systems Management",
+                "category": "Technical",
+                "importance": "Critical",
+                "expected_level": "Expert",
+                "what_it_is": "This competency encompasses overseeing the operation, maintenance, and administration of HR information systems that store and process employee data.",
+                "why_it_matters": "It ensures workforce processes function reliably by keeping HR systems operational, accurate, and capable of supporting daily people operations activities.",
+                "professional_context": "Analysts perform system upkeep, troubleshoot technical issues, and administer user access, ensuring HR platforms consistently support payroll, benefits, and employee record functions."
+            },
+            {
+                "name": "Process Optimization",
+                "category": "Analytical",
+                "importance": "High",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency involves identifying inefficiencies within HR data and system workflows and redesigning processes to improve accuracy and consistency.",
+                "why_it_matters": "It increases operational efficiency by reducing errors and delays, allowing people operations activities to run more smoothly and reliably.",
+                "professional_context": "Analysts examine existing workflows, pinpoint bottlenecks, and implement revised procedures that streamline data entry, approvals, and system-driven HR transactions."
+            },
+            {
+                "name": "Reporting and Data Analytics",
+                "category": "Analytical",
+                "importance": "High",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency involves analyzing workforce data to generate accurate reports and insights that inform HR and organizational decision-making.",
+                "why_it_matters": "It provides leadership with reliable information for planning workforce strategy, enabling informed choices based on verified data rather than assumptions.",
+                "professional_context": "Analysts extract, interpret, and present workforce metrics, compiling reports that support HR functions such as staffing analysis, turnover tracking, and organizational planning."
+            },
+            {
+                "name": "Stakeholder Management",
+                "category": "Behavioural",
+                "importance": "Medium",
+                "expected_level": "Intermediate",
+                "what_it_is": "This competency covers managing relationships with HR leaders, employees, and system vendors to gather requirements and align on initiatives.",
+                "why_it_matters": "It ensures HR technology initiatives reflect stakeholder needs, reducing resistance and fostering support for system changes and process improvements.",
+                "professional_context": "Analysts communicate with stakeholders throughout system projects, addressing concerns, clarifying requirements, and maintaining alignment between technical solutions and organizational expectations."
+            },
+            {
+                "name": "System Implementation & Configuration",
+                "category": "Technical",
+                "importance": "High",
+                "expected_level": "Advanced",
+                "what_it_is": "This competency involves planning and executing the setup, customization, and deployment of HR systems to meet organizational requirements.",
+                "why_it_matters": "It ensures HR systems are properly configured to support accurate data handling and organizational processes from initial deployment onward.",
+                "professional_context": "Analysts configure system settings, test functionality, and coordinate deployment activities to align HR platforms with established data requirements and process workflows."
+            },
+            {
+                "name": "Written and Verbal Communication",
+                "category": "Behavioural",
+                "importance": "Medium",
+                "expected_level": "Intermediate",
+                "what_it_is": "This competency involves conveying system requirements, data insights, and process changes clearly through documentation and interpersonal exchanges with stakeholders.",
+                "why_it_matters": "It ensures HR staff and business stakeholders understand system changes and data findings, supporting accurate implementation and informed decision-making.",
+                "professional_context": "Analysts prepare documentation, present findings, and explain technical concepts to non-technical stakeholders, ensuring clarity across HR system projects and reporting activities."
+            }
+        ]
+    }
+}
