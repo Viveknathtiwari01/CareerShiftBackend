@@ -3,17 +3,21 @@ import json
 import logging
 import time
 from typing import Dict, Any, Callable
-from anthropic import Anthropic
-from dotenv import load_dotenv
+from anthropic import Anthropic, APIStatusError
+
+from app.core.anthropic_client import (
+    create_sync_client,
+    get_anthropic_model,
+    get_anthropic_temperature,
+)
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-MODEL_NAME = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+client = create_sync_client()
+MODEL_NAME = get_anthropic_model()
+TEMPERATURE = get_anthropic_temperature()
 
 
 def extract_text(response: Any) -> str:
@@ -101,6 +105,7 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         response = client.messages.create(
             model=MODEL_NAME,
             max_tokens=8192,
+            temperature=TEMPERATURE,
             system=system_prompt,
             messages=[
                 {

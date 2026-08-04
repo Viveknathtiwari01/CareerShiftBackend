@@ -1,0 +1,373 @@
+import logging
+from uuid import UUID, uuid4
+
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.constants import (
+    COMPETENCY_PIPELINE_VERSION,
+    PIPELINE_STATUS_COMPLETED,
+    PIPELINE_STATUS_FAILED,
+    PIPELINE_STATUS_PENDING,
+    PIPELINE_STATUS_PROCESSING,
+    PIPELINE_TYPE_COMPETENCY_MAPPING,
+)
+from app.database.session import AsyncSessionLocal
+from app.models.assessment import Assessment
+from app.models.competency_mapping import CareerCompetencyMapping
+from app.pipelines.context import CompetencyPipelineContext
+from app.pipelines.prompt_registry import get_prompt_versions
+from app.pipelines.stages import PipelineStage
+from app.repositories.assessment import AssessmentRepository, assessment_repo
+from app.repositories.competency_mapping import CompetencyMappingRepository, competency_mapping_repo
+from app.repositories.profile import profile_repo
+from app.schemas.assessment import AssessmentPublicResponse, AssessmentStartResult
+from app.schemas.pipeline import (
+    AssessmentDebugResponse,
+    CompetencyItem,
+    CompetencyMappingOutput,
+    PipelineError,
+    PipelineMetadata,
+)
+from app.services.competency_pipeline import CompetencyPipeline
+from app.services.profile_mapper import profile_to_pipeline_input
+
+logger = logging.getLogger(__name__)
+
+
+class AssessmentService:
+    def __init__(
+        self,
+        competency_pipeline: CompetencyPipeline,
+        assessment_repository: AssessmentRepository | None = None,
+        mapping_repository: CompetencyMappingRepository | None = None,
+    ) -> None:
+        self._pipeline = competency_pipeline
+        self._assessment_repo = assessment_repository or assessment_repo
+        self._mapping_repo = mapping_repository or competency_mapping_repo
+
+    async def start_assessment(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+    ) -> AssessmentStartResult:
+        profile = await profile_repo.get_by_user_id(db, user_id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found. Complete the career assessment wizard first.",
+            )
+
+        await self._assessment_repo.acquire_user_lock(db, user_id)
+
+        active = await self._assessment_repo.get_active_for_user(
+            db,
+            user_id=user_id,
+            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
+        )
+        if active:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=active.id)
+            if mapping:
+                logger.info(
+                    "Duplicate pipeline request — returning existing run",
+                    extra={
+                        "assessment_id": str(active.id),
+                        "pipeline_run_id": str(mapping.pipeline_run_id),
+                        "user_id": str(user_id),
+                    },
+                )
+                return AssessmentStartResult(
+                    assessment_id=active.id,
+                    pipeline_run_id=mapping.pipeline_run_id,
+                    status=active.status,
+                    already_running=True,
+                )
+
+        pipeline_run_id = uuid4()
+        assessment = await self._assessment_repo.create(
+            db,
+            user_id=user_id,
+            profile_id=profile.id,
+            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
+            status=PIPELINE_STATUS_PENDING,
+        )
+        await self._mapping_repo.create_for_assessment(
+            db,
+            assessment_id=assessment.id,
+            pipeline_run_id=pipeline_run_id,
+            pipeline_version=COMPETENCY_PIPELINE_VERSION,
+            model_name=self._pipeline.model_name,
+            prompt_versions=get_prompt_versions(),
+            status=PIPELINE_STATUS_PENDING,
+        )
+        await db.commit()
+
+        return AssessmentStartResult(
+            assessment_id=assessment.id,
+            pipeline_run_id=pipeline_run_id,
+            status=PIPELINE_STATUS_PENDING,
+            already_running=False,
+            created_at=assessment.created_at,
+        )
+
+    async def retry_assessment(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+    ) -> AssessmentStartResult:
+        assessment = await self._assessment_repo.get_by_id_for_user(
+            db, assessment_id=assessment_id, user_id=user_id
+        )
+        if not assessment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+        if assessment.status != PIPELINE_STATUS_FAILED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only failed assessments can be retried.",
+            )
+
+        mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment.id)
+        if not mapping:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Competency mapping not found.")
+
+        new_run_id = uuid4()
+        await self._mapping_repo.mark_processing(db, mapping_id=mapping.id, pipeline_run_id=new_run_id)
+        await self._assessment_repo.update_status(
+            db, assessment_id=assessment.id, status=PIPELINE_STATUS_PROCESSING
+        )
+        await db.commit()
+
+        return AssessmentStartResult(
+            assessment_id=assessment.id,
+            pipeline_run_id=new_run_id,
+            status=PIPELINE_STATUS_PROCESSING,
+            already_running=False,
+        )
+
+    async def run_competency_pipeline(self, assessment_id: UUID) -> None:
+        """Background entry point — opens its own DB session."""
+        async with AsyncSessionLocal() as db:
+            try:
+                await self._execute_pipeline(db, assessment_id)
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                logger.exception(
+                    "Unexpected error running competency pipeline",
+                    extra={"assessment_id": str(assessment_id)},
+                )
+                raise
+
+    async def _execute_pipeline(self, db: AsyncSession, assessment_id: UUID) -> None:
+        assessment = await self._assessment_repo.get_by_id(db, assessment_id=assessment_id)
+        if not assessment:
+            logger.error("Assessment not found for pipeline run", extra={"assessment_id": str(assessment_id)})
+            return
+
+        mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment_id)
+        if not mapping:
+            logger.error("Mapping not found for pipeline run", extra={"assessment_id": str(assessment_id)})
+            return
+
+        profile = await profile_repo.get_by_user_id(db, assessment.user_id)
+        if not profile:
+            await self._mark_failure(
+                db,
+                assessment=assessment,
+                mapping=mapping,
+                failed_stage="profile_load",
+                error_message="User profile not found for assessment.",
+            )
+            return
+
+        await self._mapping_repo.mark_processing(
+            db, mapping_id=mapping.id, pipeline_run_id=mapping.pipeline_run_id
+        )
+        await self._assessment_repo.update_status(
+            db, assessment_id=assessment.id, status=PIPELINE_STATUS_PROCESSING
+        )
+        await db.commit()
+
+        profile_data = profile_to_pipeline_input(profile)
+        ctx = self._mapping_repo.build_context_from_mapping(mapping, profile_data)
+        pipeline_run_id = mapping.pipeline_run_id
+        ctx.assessment_id = assessment.id
+        ctx.pipeline_run_id = pipeline_run_id
+        ctx.model_name = self._pipeline.model_name
+
+        async def on_stage_complete(stage: PipelineStage, output: object, duration: float) -> None:
+            await self._mapping_repo.save_stage_output(
+                db,
+                mapping_id=mapping.id,
+                stage=stage,
+                output=output,
+                duration=duration,
+            )
+            await db.commit()
+
+        pipeline_result = await self._pipeline.execute(ctx, on_stage_complete=on_stage_complete)
+
+        if not pipeline_result.success:
+            await self._mark_failure(
+                db,
+                assessment=assessment,
+                mapping=mapping,
+                failed_stage=pipeline_result.failed_stage or "unknown",
+                error_message=pipeline_result.error_message or "Pipeline stage failed.",
+                total_duration=pipeline_result.total_duration_seconds,
+            )
+            await db.commit()
+            return
+
+        if ctx.competency_explanation is None:
+            await self._mark_failure(
+                db,
+                assessment=assessment,
+                mapping=mapping,
+                failed_stage=PipelineStage.COMPETENCY_EXPLANATION.value,
+                error_message="Pipeline completed without explanation output.",
+                total_duration=pipeline_result.total_duration_seconds,
+            )
+            await db.commit()
+            return
+
+        final_output = CompetencyPipeline.assemble_final_output(ctx.competency_explanation)
+        await self._mapping_repo.mark_completed(
+            db,
+            mapping_id=mapping.id,
+            final_output=final_output,
+            total_duration=pipeline_result.total_duration_seconds,
+        )
+        await self._assessment_repo.update_status(
+            db, assessment_id=assessment.id, status=PIPELINE_STATUS_COMPLETED
+        )
+        await db.commit()
+
+        logger.info(
+            "Competency pipeline completed",
+            extra={
+                "assessment_id": str(assessment.id),
+                "pipeline_run_id": str(pipeline_run_id),
+                "total_duration_seconds": pipeline_result.total_duration_seconds,
+            },
+        )
+
+    async def _mark_failure(
+        self,
+        db: AsyncSession,
+        *,
+        assessment: Assessment,
+        mapping: CareerCompetencyMapping,
+        failed_stage: str,
+        error_message: str,
+        total_duration: float | None = None,
+    ) -> None:
+        error_details = CompetencyPipeline.build_error_details(failed_stage, error_message)
+        await self._mapping_repo.mark_failed(
+            db,
+            mapping_id=mapping.id,
+            failed_stage=failed_stage,
+            error_message=error_message,
+            error_details=error_details,
+            total_duration=total_duration,
+        )
+        await self._assessment_repo.update_status(
+            db, assessment_id=assessment.id, status=PIPELINE_STATUS_FAILED
+        )
+
+    async def get_assessment_public(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+    ) -> AssessmentPublicResponse:
+        assessment, mapping = await self._get_assessment_and_mapping(db, user_id, assessment_id)
+        return self._to_public_response(assessment, mapping)
+
+    async def get_assessment_debug(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+    ) -> AssessmentDebugResponse:
+        assessment, mapping = await self._get_assessment_and_mapping(db, user_id, assessment_id)
+        metadata = self._build_metadata(assessment, mapping)
+        error = self._build_error(mapping)
+        return AssessmentDebugResponse(
+            assessment_id=assessment.id,
+            status=assessment.status,
+            role_understanding=mapping.role_understanding_json,
+            competency_discovery=mapping.competency_discovery_json,
+            competency_structuring=mapping.competency_structuring_json,
+            competency_validation=mapping.competency_validation_json,
+            competency_explanation=mapping.competency_explanation_json,
+            metadata=metadata,
+            error=error,
+        )
+
+    async def _get_assessment_and_mapping(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+    ) -> tuple[Assessment, CareerCompetencyMapping]:
+        assessment = await self._assessment_repo.get_by_id_for_user(
+            db, assessment_id=assessment_id, user_id=user_id
+        )
+        if not assessment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+        mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment.id)
+        if not mapping:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Competency mapping not found.")
+
+        return assessment, mapping
+
+    def _to_public_response(
+        self,
+        assessment: Assessment,
+        mapping: CareerCompetencyMapping,
+    ) -> AssessmentPublicResponse:
+        competency_mapping = None
+        if assessment.status == PIPELINE_STATUS_COMPLETED and mapping.final_output_json:
+            raw = mapping.final_output_json
+            competencies = [
+                CompetencyItem(**item) if isinstance(item, dict) else CompetencyItem.model_validate(item)
+                for item in raw.get("competencies", [])
+            ]
+            competency_mapping = CompetencyMappingOutput(
+                profession_summary=raw.get("profession_summary"),
+                competencies=competencies,
+            )
+
+        return AssessmentPublicResponse(
+            assessment_id=assessment.id,
+            status=assessment.status,
+            competency_mapping=competency_mapping,
+            metadata=self._build_metadata(assessment, mapping),
+            error=self._build_error(mapping),
+        )
+
+    def _build_metadata(
+        self,
+        assessment: Assessment,
+        mapping: CareerCompetencyMapping,
+    ) -> PipelineMetadata:
+        return PipelineMetadata(
+            pipeline_run_id=mapping.pipeline_run_id,
+            pipeline_version=mapping.pipeline_version,
+            model_name=mapping.model_name,
+            started_at=mapping.started_at,
+            completed_at=mapping.completed_at,
+            total_duration_seconds=mapping.total_duration_seconds,
+            engine_metrics=dict(mapping.engine_metrics or {}),
+        )
+
+    def _build_error(self, mapping: CareerCompetencyMapping) -> PipelineError | None:
+        if mapping.status != PIPELINE_STATUS_FAILED:
+            return None
+        return PipelineError(
+            message=mapping.error_message or "Pipeline execution failed.",
+            failed_stage=mapping.failed_stage,
+        )

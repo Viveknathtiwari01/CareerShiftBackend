@@ -84,24 +84,29 @@ async def generate_skills_api(
     req: GenerateSkillsRequest,
     current_user: User = Depends(get_current_user)
 ):
-    skills = await generate_skills_from_ai(
-        job_title=req.job_title,
-        industry=req.industry,
-        business_function=req.business_function,
-        functional_domain=req.functional_domain,
-        specialization=req.specialization,
-        experience=req.experience
-    )
-    
-    if not any(skills.values()):
-        return APIResponse(
-            success=False,
-            message="Unable to fetch skills",
-            data={}
+    try:
+        skills = await generate_skills_from_ai(
+            job_title=req.job_title,
+            industry=req.industry,
+            business_function=req.business_function,
+            functional_domain=req.functional_domain,
+            specialization=req.specialization,
+            experience=req.experience,
         )
-        
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        )
+
+    if not any(skills.values()):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI returned empty skill lists. Please try again.",
+        )
+
     return APIResponse(
         success=True,
         message="Skills generated successfully",
-        data=skills
+        data=skills,
     )

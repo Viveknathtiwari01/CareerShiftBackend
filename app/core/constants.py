@@ -19,3 +19,15 @@ STATUS_ACTIVE = "active"
 STATUS_INACTIVE = "inactive"
 STATUS_LOCKED = "locked"
 STATUS_PENDING = "pending"
+
+# Pipeline statuses
+PIPELINE_STATUS_PENDING = "PENDING"
+PIPELINE_STATUS_PROCESSING = "PROCESSING"
+PIPELINE_STATUS_COMPLETED = "COMPLETED"
+PIPELINE_STATUS_FAILED = "FAILED"
+
+# Pipeline types
+PIPELINE_TYPE_COMPETENCY_MAPPING = "competency_mapping"
+
+# Competency pipeline code version (bump on orchestration changes)
+COMPETENCY_PIPELINE_VERSION = "1.0.0"
