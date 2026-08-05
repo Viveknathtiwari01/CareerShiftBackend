@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
     ANTHROPIC_TEMPERATURE: float = 0.0
+    # Used for models that reject temperature (e.g. claude-sonnet-5): low | medium | high
+    ANTHROPIC_EFFORT: str = "low"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 

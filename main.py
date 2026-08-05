@@ -29,6 +29,8 @@ def create_app() -> FastAPI:
     from app.api.v1.profile.routes import router as profile_router
     from app.api.v1.master.routes import router as master_router
     from app.api.v1.assessment.routes import router as assessment_router
+    from app.api.v1.assessment.task_routes import router as assessment_task_router
+    from app.api.v1.assessment.analysis_routes import router as assessment_analysis_router
     from app.middleware.exception_handler import add_exception_handlers
     
     app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
@@ -36,6 +38,16 @@ def create_app() -> FastAPI:
     app.include_router(profile_router, prefix=f"{settings.API_V1_STR}/profile", tags=["Profile"])
     app.include_router(master_router, prefix=f"{settings.API_V1_STR}/master", tags=["Master Data"])
     app.include_router(assessment_router, prefix=f"{settings.API_V1_STR}/assessment", tags=["Assessment"])
+    app.include_router(
+        assessment_task_router,
+        prefix=f"{settings.API_V1_STR}/assessment",
+        tags=["Assessment Tasks"],
+    )
+    app.include_router(
+        assessment_analysis_router,
+        prefix=f"{settings.API_V1_STR}/assessment",
+        tags=["Assessment 3B Analysis"],
+    )
 
     add_exception_handlers(app)
 

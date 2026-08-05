@@ -6,9 +6,12 @@ from typing import Any
 from anthropic import AsyncAnthropic, AuthenticationError, APIStatusError
 
 from app.core.anthropic_client import (
+    build_messages_create_kwargs,
     create_async_client,
+    get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
+    model_supports_sampling_params,
 )
 from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
@@ -72,20 +75,34 @@ async def generate_skills_from_ai(
         raise ValueError("ANTHROPIC_API_KEY is not configured on the server.") from exc
 
     model = get_anthropic_model()
-    temperature = get_anthropic_temperature()
     api_key = get_anthropic_api_key()
     masked_key = api_key[:12] + "****" if api_key.startswith("sk-") else "****"
-    logger.info("Generating skills with model=%s temperature=%s key=%s", model, temperature, masked_key)
+    if model_supports_sampling_params(model):
+        logger.info(
+            "Generating skills with model=%s temperature=%s key=%s",
+            model,
+            get_anthropic_temperature(),
+            masked_key,
+        )
+    else:
+        logger.info(
+            "Generating skills with model=%s effort=%s key=%s",
+            model,
+            get_anthropic_effort(),
+            masked_key,
+        )
+
+    request_kwargs = build_messages_create_kwargs(
+        model,
+        max_tokens=2048,
+        temperature=get_anthropic_temperature(),
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_prompt}],
+    )
 
     client = _get_client()
     try:
-        response = await client.messages.create(
-            model=model,
-            max_tokens=2048,
-            temperature=temperature,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
+        response = await client.messages.create(**request_kwargs)
     except AuthenticationError as exc:
         logger.error("Anthropic authentication failed: %s", exc)
         raise ValueError(

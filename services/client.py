@@ -6,6 +6,7 @@ from typing import Dict, Any, Callable
 from anthropic import Anthropic, APIStatusError
 
 from app.core.anthropic_client import (
+    build_messages_create_kwargs,
     create_sync_client,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -102,8 +103,8 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     Maintains the exact public API required.
     """
     def _make_api_call():
-        response = client.messages.create(
-            model=MODEL_NAME,
+        request_kwargs = build_messages_create_kwargs(
+            MODEL_NAME,
             max_tokens=8192,
             temperature=TEMPERATURE,
             system=system_prompt,
@@ -112,8 +113,9 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
                     "role": "user",
                     "content": user_prompt
                 }
-            ]
+            ],
         )
+        response = client.messages.create(**request_kwargs)
         
         response_text = extract_text(response)
         block_types = [getattr(b, 'type', type(b).__name__) for b in response.content]

@@ -1,18 +1,48 @@
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.dependencies.auth import get_current_user
 from app.dependencies.pipeline import get_assessment_service
 from app.models.user import User
-from app.schemas.assessment import AssessmentPublicResponse, AssessmentStartResponse
+from app.schemas.assessment import (
+    AssessmentCurrentResponse,
+    AssessmentPublicResponse,
+    AssessmentStartResponse,
+    AssessmentSummaryResponse,
+)
 from app.schemas.common import APIResponse
 from app.schemas.pipeline import AssessmentDebugResponse
 from app.services.assessment import AssessmentService
 
 router = APIRouter()
+
+
+@router.get("", response_model=APIResponse[list[AssessmentSummaryResponse]])
+async def list_assessments(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    assessment_service: AssessmentService = Depends(get_assessment_service),
+):
+    data = await assessment_service.list_assessments_for_user(db, current_user.id)
+    return APIResponse(success=True, message="Assessments retrieved", data=data)
+
+
+@router.get("/current", response_model=APIResponse[AssessmentCurrentResponse])
+async def get_current_assessment(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    assessment_service: AssessmentService = Depends(get_assessment_service),
+):
+    data = await assessment_service.resolve_current_assessment(db, current_user.id)
+    message = (
+        "Existing assessment loaded"
+        if data.reused_existing
+        else "No reusable assessment — sync required"
+    )
+    return APIResponse(success=True, message=message, data=data)
 
 
 @router.post(
@@ -22,13 +52,15 @@ router = APIRouter()
 async def start_assessment(
     background_tasks: BackgroundTasks,
     response: Response,
+    force: bool = Query(default=False, description="Force a new assessment even if a valid one exists"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     assessment_service: AssessmentService = Depends(get_assessment_service),
 ):
-    result = await assessment_service.start_assessment(db, current_user.id)
+    result = await assessment_service.start_assessment(db, current_user.id, force=force)
 
-    if not result.already_running:
+    should_dispatch = (not result.already_running) or result.needs_pipeline_dispatch
+    if should_dispatch:
         background_tasks.add_task(
             assessment_service.run_competency_pipeline,
             result.assessment_id,
@@ -37,14 +69,25 @@ async def start_assessment(
     else:
         response.status_code = status.HTTP_200_OK
 
+    if result.reused_existing and result.status == "COMPLETED":
+        message = "Existing competency mapping loaded"
+    elif result.reused_existing and not result.needs_pipeline_dispatch:
+        message = "Assessment already in progress"
+    elif result.profile_stale:
+        message = "Profile updated — regenerating competency mapping"
+    else:
+        message = "Assessment started"
+
     return APIResponse(
         success=True,
-        message="Assessment already in progress" if result.already_running else "Assessment started",
+        message=message,
         data=AssessmentStartResponse(
             assessment_id=result.assessment_id,
             pipeline_run_id=result.pipeline_run_id,
-            status=result.status if result.already_running else "PROCESSING",
+            status=result.status if result.reused_existing else "PROCESSING",
             already_running=result.already_running,
+            reused_existing=result.reused_existing,
+            profile_stale=result.profile_stale,
         ),
     )
 

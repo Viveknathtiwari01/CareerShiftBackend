@@ -31,3 +31,13 @@ PIPELINE_TYPE_COMPETENCY_MAPPING = "competency_mapping"
 
 # Competency pipeline code version (bump on orchestration changes)
 COMPETENCY_PIPELINE_VERSION = "1.0.0"
+
+# Task sources
+TASK_SOURCE_AI = "AI_GENERATED"
+TASK_SOURCE_USER = "USER"
+
+# 3B classification categories
+CATEGORY_BUILD = "BUILD"
+CATEGORY_BOT = "BOT"
+CATEGORY_BLEND = "BLEND"
+VALID_3B_CATEGORIES = {CATEGORY_BUILD, CATEGORY_BOT, CATEGORY_BLEND}

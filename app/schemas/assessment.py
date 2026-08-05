@@ -15,6 +15,8 @@ class AssessmentStartResponse(BaseModel):
     pipeline_run_id: UUID
     status: str
     already_running: bool = False
+    reused_existing: bool = False
+    profile_stale: bool = False
 
 
 class AssessmentPublicResponse(BaseModel):
@@ -32,4 +34,26 @@ class AssessmentStartResult(BaseModel):
     pipeline_run_id: UUID
     status: str
     already_running: bool = False
+    needs_pipeline_dispatch: bool = False
+    reused_existing: bool = False
+    profile_stale: bool = False
     created_at: datetime | None = None
+
+
+class AssessmentSummaryResponse(BaseModel):
+    assessment_id: UUID
+    status: str
+    created_at: datetime
+    completed_at: datetime | None = None
+    competency_count: int | None = None
+
+
+class AssessmentCurrentResponse(BaseModel):
+    """Read-only resolution of which assessment session the client should use."""
+
+    assessment_id: UUID | None = None
+    pipeline_run_id: UUID | None = None
+    status: str | None = None
+    needs_sync: bool = True
+    profile_stale: bool = False
+    reused_existing: bool = False

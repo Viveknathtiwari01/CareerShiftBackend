@@ -34,6 +34,11 @@ class Assessment(AuditMixin, Base):
         back_populates="assessment",
         uselist=False,
     )
+    tasks = relationship(
+        "AssessmentTask",
+        back_populates="assessment",
+        order_by="AssessmentTask.sort_order",
+    )
 
     __table_args__ = (
         Index(

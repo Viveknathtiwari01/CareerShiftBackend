@@ -7,6 +7,8 @@ from app.models.audit import AuditLog
 from app.models.otp import OTPCode
 from app.models.profile import UserProfile
 from app.models.assessment import Assessment
+from app.models.assessment_task import AssessmentTask
+from app.models.assessment_task_analysis import AssessmentTaskAnalysis
 from app.models.competency_mapping import CareerCompetencyMapping
 
 # This file is used by Alembic to import all models and discover metadata.

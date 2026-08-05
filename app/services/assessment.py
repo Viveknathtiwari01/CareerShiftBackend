@@ -21,7 +21,12 @@ from app.pipelines.stages import PipelineStage
 from app.repositories.assessment import AssessmentRepository, assessment_repo
 from app.repositories.competency_mapping import CompetencyMappingRepository, competency_mapping_repo
 from app.repositories.profile import profile_repo
-from app.schemas.assessment import AssessmentPublicResponse, AssessmentStartResult
+from app.schemas.assessment import (
+    AssessmentCurrentResponse,
+    AssessmentPublicResponse,
+    AssessmentStartResult,
+    AssessmentSummaryResponse,
+)
 from app.schemas.pipeline import (
     AssessmentDebugResponse,
     CompetencyItem,
@@ -46,10 +51,134 @@ class AssessmentService:
         self._assessment_repo = assessment_repository or assessment_repo
         self._mapping_repo = mapping_repository or competency_mapping_repo
 
+    async def resolve_current_assessment(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+    ) -> AssessmentCurrentResponse:
+        profile = await profile_repo.get_by_user_id(db, user_id)
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found. Complete the career assessment wizard first.",
+            )
+
+        existing, profile_stale = await self._try_resolve_existing(db, user_id, profile)
+        if existing:
+            return AssessmentCurrentResponse(
+                assessment_id=existing.assessment_id,
+                pipeline_run_id=existing.pipeline_run_id,
+                status=existing.status,
+                needs_sync=existing.needs_pipeline_dispatch,
+                profile_stale=False,
+                reused_existing=True,
+            )
+
+        return AssessmentCurrentResponse(
+            needs_sync=True,
+            profile_stale=profile_stale,
+            reused_existing=False,
+        )
+
+    async def _try_resolve_existing(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        profile,
+    ) -> tuple[AssessmentStartResult | None, bool]:
+        profile_stale_for_new = False
+
+        active = await self._assessment_repo.get_active_for_user(
+            db,
+            user_id=user_id,
+            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
+        )
+        if active and active.status == PIPELINE_STATUS_PROCESSING:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=active.id)
+            if mapping:
+                return (
+                    AssessmentStartResult(
+                        assessment_id=active.id,
+                        pipeline_run_id=mapping.pipeline_run_id,
+                        status=active.status,
+                        already_running=True,
+                        needs_pipeline_dispatch=False,
+                        reused_existing=True,
+                    ),
+                    False,
+                )
+
+        completed = await self._assessment_repo.get_latest_completed_for_user(
+            db,
+            user_id=user_id,
+            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
+        )
+        if completed:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=completed.id)
+            if mapping:
+                if not self._is_profile_stale(profile, completed, mapping):
+                    return (
+                        AssessmentStartResult(
+                            assessment_id=completed.id,
+                            pipeline_run_id=mapping.pipeline_run_id,
+                            status=completed.status,
+                            already_running=True,
+                            needs_pipeline_dispatch=False,
+                            reused_existing=True,
+                            profile_stale=False,
+                        ),
+                        False,
+                    )
+                profile_stale_for_new = True
+
+        if active:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=active.id)
+            if mapping:
+                needs_dispatch = active.status == PIPELINE_STATUS_PENDING
+                return (
+                    AssessmentStartResult(
+                        assessment_id=active.id,
+                        pipeline_run_id=mapping.pipeline_run_id,
+                        status=active.status,
+                        already_running=True,
+                        needs_pipeline_dispatch=needs_dispatch,
+                        reused_existing=True,
+                    ),
+                    False,
+                )
+
+        latest = await self._assessment_repo.get_latest_for_user(
+            db,
+            user_id=user_id,
+            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
+        )
+        if latest:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=latest.id)
+            if mapping:
+                profile_stale_for_new = self._is_profile_stale(profile, latest, mapping)
+
+                if latest.status == PIPELINE_STATUS_FAILED and not profile_stale_for_new:
+                    return (
+                        AssessmentStartResult(
+                            assessment_id=latest.id,
+                            pipeline_run_id=mapping.pipeline_run_id,
+                            status=latest.status,
+                            already_running=True,
+                            needs_pipeline_dispatch=False,
+                            reused_existing=True,
+                            profile_stale=False,
+                        ),
+                        False,
+                    )
+
+        return None, profile_stale_for_new
+
     async def start_assessment(
         self,
         db: AsyncSession,
         user_id: UUID,
+        *,
+        force: bool = False,
     ) -> AssessmentStartResult:
         profile = await profile_repo.get_by_user_id(db, user_id)
         if not profile:
@@ -60,27 +189,42 @@ class AssessmentService:
 
         await self._assessment_repo.acquire_user_lock(db, user_id)
 
-        active = await self._assessment_repo.get_active_for_user(
-            db,
-            user_id=user_id,
-            pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING,
-        )
-        if active:
-            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=active.id)
-            if mapping:
+        profile_stale_for_new = False
+
+        if not force:
+            existing, profile_stale_for_new = await self._try_resolve_existing(db, user_id, profile)
+            if existing:
+                if existing.status == PIPELINE_STATUS_COMPLETED:
+                    logger.info(
+                        "Reusing completed assessment — profile unchanged",
+                        extra={
+                            "assessment_id": str(existing.assessment_id),
+                            "user_id": str(user_id),
+                        },
+                    )
+                elif existing.status == PIPELINE_STATUS_FAILED:
+                    logger.info(
+                        "Returning failed assessment for retry",
+                        extra={
+                            "assessment_id": str(existing.assessment_id),
+                            "user_id": str(user_id),
+                        },
+                    )
+                else:
+                    logger.info(
+                        "Returning in-progress assessment",
+                        extra={
+                            "assessment_id": str(existing.assessment_id),
+                            "user_id": str(user_id),
+                            "status": existing.status,
+                            "needs_pipeline_dispatch": existing.needs_pipeline_dispatch,
+                        },
+                    )
+                return existing
+            if profile_stale_for_new:
                 logger.info(
-                    "Duplicate pipeline request — returning existing run",
-                    extra={
-                        "assessment_id": str(active.id),
-                        "pipeline_run_id": str(mapping.pipeline_run_id),
-                        "user_id": str(user_id),
-                    },
-                )
-                return AssessmentStartResult(
-                    assessment_id=active.id,
-                    pipeline_run_id=mapping.pipeline_run_id,
-                    status=active.status,
-                    already_running=True,
+                    "Profile updated since last assessment — creating new run",
+                    extra={"user_id": str(user_id)},
                 )
 
         pipeline_run_id = uuid4()
@@ -107,8 +251,28 @@ class AssessmentService:
             pipeline_run_id=pipeline_run_id,
             status=PIPELINE_STATUS_PENDING,
             already_running=False,
+            profile_stale=profile_stale_for_new,
             created_at=assessment.created_at,
         )
+
+    @staticmethod
+    def _is_profile_stale(
+        profile,
+        assessment: Assessment,
+        mapping: CareerCompetencyMapping,
+    ) -> bool:
+        """True when the user profile changed after the last competency mapping finished."""
+        if assessment.profile_id != profile.id:
+            return True
+        reference = mapping.completed_at or assessment.created_at
+        if reference is None:
+            return False
+        profile_updated = profile.updated_at
+        if profile_updated.tzinfo is None and reference.tzinfo is not None:
+            profile_updated = profile_updated.replace(tzinfo=reference.tzinfo)
+        elif profile_updated.tzinfo is not None and reference.tzinfo is None:
+            reference = reference.replace(tzinfo=profile_updated.tzinfo)
+        return profile_updated > reference
 
     async def retry_assessment(
         self,
@@ -151,13 +315,30 @@ class AssessmentService:
             try:
                 await self._execute_pipeline(db, assessment_id)
                 await db.commit()
-            except Exception:
+            except Exception as exc:
                 await db.rollback()
                 logger.exception(
                     "Unexpected error running competency pipeline",
                     extra={"assessment_id": str(assessment_id)},
                 )
-                raise
+                try:
+                    assessment = await self._assessment_repo.get_by_id(db, assessment_id=assessment_id)
+                    mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment_id)
+                    if assessment and mapping and assessment.status != PIPELINE_STATUS_FAILED:
+                        await self._mark_failure(
+                            db,
+                            assessment=assessment,
+                            mapping=mapping,
+                            failed_stage="pipeline_runtime",
+                            error_message=str(exc)[:500],
+                        )
+                        await db.commit()
+                except Exception:
+                    await db.rollback()
+                    logger.exception(
+                        "Failed to persist pipeline failure state",
+                        extra={"assessment_id": str(assessment_id)},
+                    )
 
     async def _execute_pipeline(self, db: AsyncSession, assessment_id: UUID) -> None:
         assessment = await self._assessment_repo.get_by_id(db, assessment_id=assessment_id)
@@ -285,6 +466,32 @@ class AssessmentService:
         assessment, mapping = await self._get_assessment_and_mapping(db, user_id, assessment_id)
         return self._to_public_response(assessment, mapping)
 
+    async def list_assessments_for_user(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+    ) -> list[AssessmentSummaryResponse]:
+        assessments = await self._assessment_repo.list_for_user(db, user_id=user_id)
+        summaries: list[AssessmentSummaryResponse] = []
+        for assessment in assessments:
+            mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment.id)
+            competency_count = None
+            completed_at = None
+            if mapping:
+                completed_at = mapping.completed_at
+                if assessment.status == PIPELINE_STATUS_COMPLETED and mapping.final_output_json:
+                    competency_count = len(mapping.final_output_json.get("competencies", []))
+            summaries.append(
+                AssessmentSummaryResponse(
+                    assessment_id=assessment.id,
+                    status=assessment.status,
+                    created_at=assessment.created_at,
+                    completed_at=completed_at,
+                    competency_count=competency_count,
+                )
+            )
+        return summaries
+
     async def get_assessment_debug(
         self,
         db: AsyncSession,
@@ -346,7 +553,7 @@ class AssessmentService:
             status=assessment.status,
             competency_mapping=competency_mapping,
             metadata=self._build_metadata(assessment, mapping),
-            error=self._build_error(mapping),
+            error=self._build_error_from_assessment(assessment, mapping),
         )
 
     def _build_metadata(
@@ -371,3 +578,15 @@ class AssessmentService:
             message=mapping.error_message or "Pipeline execution failed.",
             failed_stage=mapping.failed_stage,
         )
+
+    def _build_error_from_assessment(
+        self,
+        assessment: Assessment,
+        mapping: CareerCompetencyMapping,
+    ) -> PipelineError | None:
+        if assessment.status == PIPELINE_STATUS_FAILED:
+            return PipelineError(
+                message=mapping.error_message or "Pipeline execution failed.",
+                failed_stage=mapping.failed_stage,
+            )
+        return self._build_error(mapping)

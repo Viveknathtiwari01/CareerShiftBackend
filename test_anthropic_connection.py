@@ -4,16 +4,23 @@ import traceback
 from anthropic import AuthenticationError, APIStatusError
 
 from app.core.anthropic_client import (
+    build_messages_create_kwargs,
     create_async_client,
+    get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
+    model_supports_sampling_params,
 )
 
 
 async def test_connection():
     print("--- Testing Anthropic Connection ---")
-    print(f"Model configured: {get_anthropic_model()}")
-    print(f"Temperature: {get_anthropic_temperature()}")
+    model = get_anthropic_model()
+    print(f"Model configured: {model}")
+    if model_supports_sampling_params(model):
+        print(f"Temperature: {get_anthropic_temperature()}")
+    else:
+        print(f"Effort: {get_anthropic_effort()} (temperature not supported for this model)")
 
     try:
         client = create_async_client()
@@ -23,8 +30,8 @@ async def test_connection():
 
     try:
         print("Sending prompt...")
-        response = await client.messages.create(
-            model=get_anthropic_model(),
+        request_kwargs = build_messages_create_kwargs(
+            model,
             max_tokens=100,
             temperature=get_anthropic_temperature(),
             messages=[
@@ -34,6 +41,7 @@ async def test_connection():
                 }
             ],
         )
+        response = await client.messages.create(**request_kwargs)
         print("Request successful!")
         print(f"Raw API response: {response.content[0].text}")
 

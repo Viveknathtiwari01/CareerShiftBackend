@@ -6,6 +6,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import (
+    PIPELINE_STATUS_COMPLETED,
     PIPELINE_STATUS_PENDING,
     PIPELINE_STATUS_PROCESSING,
     PIPELINE_TYPE_COMPETENCY_MAPPING,
@@ -99,6 +100,65 @@ class AssessmentRepository:
             )
         )
         return result.scalars().first()
+
+    async def get_latest_for_user(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: UUID,
+        pipeline_type: str = PIPELINE_TYPE_COMPETENCY_MAPPING,
+    ) -> Optional[Assessment]:
+        result = await db.execute(
+            select(Assessment)
+            .where(
+                Assessment.user_id == user_id,
+                Assessment.pipeline_type == pipeline_type,
+                Assessment.is_deleted == False,  # noqa: E712
+            )
+            .order_by(Assessment.created_at.desc())
+            .limit(1)
+        )
+        return result.scalars().first()
+
+    async def get_latest_completed_for_user(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: UUID,
+        pipeline_type: str = PIPELINE_TYPE_COMPETENCY_MAPPING,
+    ) -> Optional[Assessment]:
+        result = await db.execute(
+            select(Assessment)
+            .where(
+                Assessment.user_id == user_id,
+                Assessment.pipeline_type == pipeline_type,
+                Assessment.status == PIPELINE_STATUS_COMPLETED,
+                Assessment.is_deleted == False,  # noqa: E712
+            )
+            .order_by(Assessment.created_at.desc())
+            .limit(1)
+        )
+        return result.scalars().first()
+
+    async def list_for_user(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: UUID,
+        pipeline_type: str = PIPELINE_TYPE_COMPETENCY_MAPPING,
+        limit: int = 20,
+    ) -> list[Assessment]:
+        result = await db.execute(
+            select(Assessment)
+            .where(
+                Assessment.user_id == user_id,
+                Assessment.pipeline_type == pipeline_type,
+                Assessment.is_deleted == False,  # noqa: E712
+            )
+            .order_by(Assessment.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
 
 
 assessment_repo = AssessmentRepository()
