@@ -1,58 +1,66 @@
-import os
-import json
 import asyncio
-from anthropic import AsyncAnthropic
 import traceback
 
-# If you have a settings module, you can import it here, or load from .env directly.
-# Since this is a standalone script, we'll try to use the project's settings.
-try:
-    from app.core.config import settings
-    api_key = settings.ANTHROPIC_API_KEY
-except ImportError:
-    # Fallback if run completely outside the project context
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+from anthropic import AuthenticationError, APIStatusError
+
+from app.core.anthropic_client import (
+    build_messages_create_kwargs,
+    create_async_client,
+    get_anthropic_effort,
+    get_anthropic_model,
+    get_anthropic_temperature,
+    model_supports_sampling_params,
+)
+
 
 async def test_connection():
     print("--- Testing Anthropic Connection ---")
-    
-    if not api_key:
-        print("ERROR: ANTHROPIC_API_KEY is not set.")
-        return
-        
-    masked_key = api_key[:7] + "********" if api_key.startswith("sk-") else api_key[:4] + "****"
-    print(f"API Key loaded: {masked_key}")
-    
-    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
+    model = get_anthropic_model()
     print(f"Model configured: {model}")
-    
-    client = AsyncAnthropic(api_key=api_key)
-    
+    if model_supports_sampling_params(model):
+        print(f"Temperature: {get_anthropic_temperature()}")
+    else:
+        print(f"Effort: {get_anthropic_effort()} (temperature not supported for this model)")
+
+    try:
+        client = create_async_client()
+    except ValueError as exc:
+        print(f"ERROR: {exc}")
+        return
+
     try:
         print("Sending prompt...")
-        response = await client.messages.create(
-            model=model,
+        request_kwargs = build_messages_create_kwargs(
+            model,
             max_tokens=100,
+            temperature=get_anthropic_temperature(),
             messages=[
                 {
                     "role": "user",
-                    "content": 'Reply only with:\n{"status":"ok"}'
+                    "content": 'Reply only with:\n{"status":"ok"}',
                 }
-            ]
+            ],
         )
+        response = await client.messages.create(**request_kwargs)
         print("Request successful!")
-        
-        raw_output = response.content[0].text
-        print(f"Raw API response: {raw_output}")
-        
+        print(f"Raw API response: {response.content[0].text}")
+
+    except AuthenticationError as e:
+        print("--- Authentication Error (401) ---")
+        print("The ANTHROPIC_API_KEY in Backend/.env is invalid or revoked.")
+        print(f"Detail: {e}")
+    except APIStatusError as e:
+        print(f"--- API Error ({e.status_code}) ---")
+        print(f"Detail: {e.message}")
+        if e.status_code == 400 and "credit balance" in (e.message or "").lower():
+            print("\nKey is VALID but account has no credits.")
+            print("Add credits: https://console.anthropic.com/settings/billing")
     except Exception as e:
         print("--- Exception Occurred ---")
         print(f"Exception type: {type(e)}")
         print(f"Exception message: {str(e)}")
-        if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            print(f"Raw error response body: {e.response.text}")
-        print("Stack trace:")
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(test_connection())
