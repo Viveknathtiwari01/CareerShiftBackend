@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.schemas.auth import (
-    RegisterRequest, LoginRequest, TokenResponse, 
-    OTPRequest, VerifyOTPRequest, OTPVerificationResponse, ResetPasswordRequest
+    RegisterRequest, LoginRequest, TokenResponse,
+    OTPRequest, VerifyOTPRequest, OTPVerificationResponse, ResetPasswordRequest,
+    RefreshTokenRequest, LogoutRequest,
 )
 from app.schemas.common import APIResponse
 from app.services.auth import AuthService
+from app.services.security import SecurityService
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 
@@ -60,7 +62,7 @@ async def reset_password(req: ResetPasswordRequest, db: AsyncSession = Depends(g
 @router.post("/login", response_model=APIResponse[TokenResponse])
 async def login(req: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
     auth_service = AuthService(db)
-    ip = request.client.host
+    ip = request.client.host if request.client else ""
     user_agent = request.headers.get("user-agent", "")
     try:
         tokens = await auth_service.login(req, ip=ip, user_agent=user_agent)
@@ -68,6 +70,31 @@ async def login(req: LoginRequest, request: Request, db: AsyncSession = Depends(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
+
+@router.post("/refresh", response_model=APIResponse[TokenResponse])
+async def refresh_tokens(req: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+    auth_service = AuthService(db)
+    try:
+        tokens = await auth_service.refresh_tokens(req.refresh_token)
+        return APIResponse(success=True, message="Token refreshed", data=tokens)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
 @router.post("/logout", response_model=APIResponse[None])
-async def logout(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def logout(
+    req: LogoutRequest | None = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    auth_service = AuthService(db)
+    token_jti = None
+    if req and req.refresh_token:
+        try:
+            payload = SecurityService.decode_token(req.refresh_token)
+            if payload.get("type") == "refresh":
+                token_jti = payload.get("jti")
+        except ValueError:
+            token_jti = None
+    await auth_service.logout(current_user.id, token_jti=token_jti)
     return APIResponse(success=True, message="Logged out successfully")

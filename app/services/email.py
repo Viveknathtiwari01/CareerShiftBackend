@@ -184,3 +184,60 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             raise ValueError("Failed to send verification email. Please try again later.")
+
+    @staticmethod
+    async def send_report_ready_email(
+        *,
+        to_email: str,
+        recipient_name: str,
+        job_title: str,
+        score: int,
+        tier_label: str,
+        report_url: str,
+    ) -> None:
+        if not settings.REPORT_READY_EMAIL_ENABLED:
+            return
+
+        subject = f"Your Career Intelligence Report is ready — {score}/100"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html><body style="font-family: Arial, sans-serif; color: #1a273d; line-height: 1.6;">
+          <h1 style="color: #1a273d;">Your report is ready</h1>
+          <p>Hi {recipient_name},</p>
+          <p>Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
+          <p><strong>AI Readiness:</strong> {score}/100 ({tier_label})</p>
+          <p><a href="{report_url}" style="background:#1a273d;color:#fff;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">View Your Report</a></p>
+          <p style="color:#64748b;font-size:13px;">If the button does not work, copy this link:<br>{report_url}</p>
+        </body></html>
+        """
+
+        if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+            logger.info(
+                "Report ready email (mock) to=%s score=%s url=%s",
+                to_email,
+                score,
+                report_url,
+            )
+            print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
+            return
+
+        message = EmailMessage()
+        message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+        message["To"] = to_email
+        message["Subject"] = subject
+        message.set_content(f"Your CareerShift report is ready. Score: {score}/100. View: {report_url}")
+        message.add_alternative(html_content, subtype="html")
+
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_USER,
+                password=settings.SMTP_PASSWORD,
+                use_tls=False,
+                start_tls=settings.SMTP_TLS,
+            )
+            logger.info("Report ready email sent to %s", to_email)
+        except Exception as e:
+            logger.error("Failed to send report ready email to %s: %s", to_email, str(e))
