@@ -51,6 +51,20 @@ class Settings(BaseSettings):
     # Used for models that reject temperature (e.g. claude-sonnet-5): low | medium | high
     ANTHROPIC_EFFORT: str = "low"
 
+    # Production hardening (Phase 8)
+    COMPETENCY_PIPELINE_TIMEOUT_SECONDS: int = 600
+    PIPELINE_STALE_AFTER_SECONDS: int = 900
+    ASSESSMENT_START_RATE_LIMIT: int = 5
+    ASSESSMENT_START_RATE_WINDOW_SECONDS: int = 3600
+    REPORT_GENERATE_RATE_LIMIT: int = 10
+    REPORT_GENERATE_RATE_WINDOW_SECONDS: int = 3600
+    DEFAULT_RATE_LIMIT: int = 60
+    DEFAULT_RATE_WINDOW_SECONDS: int = 60
+    REPORT_READY_EMAIL_ENABLED: bool = True
+    APP_PUBLIC_URL: str = "http://localhost:5173"
+    USE_CELERY: bool = False
+    CELERY_BROKER_URL: str | None = None
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 settings = Settings()

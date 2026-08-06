@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.dependencies.auth import get_current_user
 from app.dependencies.pipeline import get_assessment_service
+from app.dependencies.rate_limit import rate_limit_assessment_start
 from app.models.user import User
 from app.schemas.assessment import (
     AssessmentCurrentResponse,
@@ -53,7 +54,7 @@ async def start_assessment(
     background_tasks: BackgroundTasks,
     response: Response,
     force: bool = Query(default=False, description="Force a new assessment even if a valid one exists"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(rate_limit_assessment_start),
     db: AsyncSession = Depends(get_db),
     assessment_service: AssessmentService = Depends(get_assessment_service),
 ):
