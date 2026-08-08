@@ -42,3 +42,6 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     verification_token: str
     new_password: str = Field(..., pattern=PASSWORD_REGEX)
+
+class LogoutRequest(BaseModel):
+    refresh_token: str | None = None

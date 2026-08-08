@@ -50,7 +50,42 @@ class Settings(BaseSettings):
     ANTHROPIC_TEMPERATURE: float = 0.0
     # Used for models that reject temperature (e.g. claude-sonnet-5): low | medium | high
     ANTHROPIC_EFFORT: str = "low"
+    APP_PUBLIC_URL: str = "http://localhost:5173"
+
+    # Production hardening (Phase 8)
+    COMPETENCY_PIPELINE_TIMEOUT_SECONDS: int = 600
+    PIPELINE_STALE_AFTER_SECONDS: int = 900
+    ASSESSMENT_START_RATE_LIMIT: int = 5
+    ASSESSMENT_START_RATE_WINDOW_SECONDS: int = 3600
+    REPORT_GENERATE_RATE_LIMIT: int = 10
+    REPORT_GENERATE_RATE_WINDOW_SECONDS: int = 3600
+    REPORT_READY_EMAIL_ENABLED: bool = True
+    USE_CELERY: bool = False
+    CELERY_BROKER_URL: str | None = None
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT.lower() == "production"
+
+    @property
+    def email_configured(self) -> bool:
+        return bool(self.SMTP_HOST and self.SMTP_USER and self.SMTP_PASSWORD and self.EMAILS_FROM_EMAIL)
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
+
 settings = Settings()
+
+
+def validate_production_settings() -> None:
+    if not settings.is_production:
+        return
+    missing: list[str] = []
+    if not settings.email_configured:
+        missing.append("SMTP (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, EMAILS_FROM_EMAIL)")
+    if not settings.ANTHROPIC_API_KEY:
+        missing.append("ANTHROPIC_API_KEY")
+    if missing:
+        raise RuntimeError(
+            "Production startup blocked. Missing required settings: " + ", ".join(missing)
+        )

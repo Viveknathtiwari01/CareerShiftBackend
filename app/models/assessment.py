@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy import String, ForeignKey, Index, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.database.base import Base, AuditMixin
 from app.core.constants import (
@@ -26,6 +26,7 @@ class Assessment(AuditMixin, Base):
     status: Mapped[str] = mapped_column(
         String, nullable=False, default=PIPELINE_STATUS_PENDING
     )
+    ai_toolkit_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     user = relationship("User", backref="assessments")
     profile = relationship("UserProfile", backref="assessments")

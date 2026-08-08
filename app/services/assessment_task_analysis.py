@@ -16,6 +16,7 @@ from app.repositories.competency_mapping import competency_mapping_repo
 from app.repositories.profile import profile_repo
 from app.schemas.assessment_task_analysis import TaskAnalysisItem, TaskAnalysisRunResponse
 from app.services.profile_mapper import profile_to_pipeline_input
+from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,20 @@ class AssessmentTaskAnalysisService:
             future_impact=row.future_impact,
             recommended_tools=list(row.recommended_tools or []),
         )
+
+    @staticmethod
+    def _task_title_for_row(row: AssessmentTaskAnalysis) -> str:
+        return row.task.title if row.task else ""
+
+    async def _persist_toolkit_snapshot(
+        self,
+        db: AsyncSession,
+        assessment,
+        analyses: list[dict],
+    ) -> None:
+        assessment.ai_toolkit_json = {"tools": build_toolkit_from_analyses(analyses)}
+        db.add(assessment)
+        await db.flush()
 
     async def get_analysis(
         self,
@@ -105,6 +120,13 @@ class AssessmentTaskAnalysisService:
             and existing_task_ids == selected_ids
             and len(existing) == len(selected_tasks)
         ):
+            if not (assessment.ai_toolkit_json or {}).get("tools"):
+                analyses_payload = analysis_dicts_from_rows(
+                    existing,
+                    task_title_for=self._task_title_for_row,
+                )
+                await self._persist_toolkit_snapshot(db, assessment, analyses_payload)
+                await db.commit()
             summary = self._average_confidence(existing)
             return TaskAnalysisRunResponse(
                 analyses=[self._to_item(r) for r in existing],
@@ -189,6 +211,21 @@ class AssessmentTaskAnalysisService:
             )
 
         created = await self._repo.bulk_create(db, rows=new_rows)
+        analyses_payload = [
+            {
+                "task_id": str(row.task_id),
+                "task_title": task.title,
+                "category": row.category,
+                "rationale": row.rationale,
+                "reason": row.reason,
+                "future_impact": row.future_impact,
+                "auto_potential": row.auto_potential,
+                "risk_level": row.risk_level,
+                "recommended_tools": list(row.recommended_tools or []),
+            }
+            for row, task in zip(created, selected_tasks)
+        ]
+        await self._persist_toolkit_snapshot(db, assessment, analyses_payload)
         await db.commit()
 
         logger.info("3B analysis saved for assessment %s (%d tasks)", assessment_id, len(created))

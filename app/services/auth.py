@@ -203,10 +203,46 @@ class AuthService:
         
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
-    async def logout(self, user_id: uuid.UUID, token_jti: str) -> None:
-        session = await session_repo.get_by_token_jti(self.db, token_jti=token_jti)
-        if session and session.user_id == user_id:
-            session.is_revoked = True
-            session.logout_time = datetime.now(timezone.utc)
-            self.db.add(session)
-            await self.db.commit()
+    async def refresh_tokens(self, refresh_token: str) -> TokenResponse:
+        from app.services.security import SecurityService
+
+        try:
+            payload = SecurityService.decode_token(refresh_token)
+        except ValueError as exc:
+            raise ValueError("Invalid or expired refresh token") from exc
+
+        if payload.get("type") != "refresh":
+            raise ValueError("Invalid refresh token")
+
+        jti = payload.get("jti")
+        user_id_str = payload.get("sub")
+        if not jti or not user_id_str:
+            raise ValueError("Invalid refresh token")
+
+        user_id = uuid.UUID(user_id_str)
+        session = await session_repo.get_by_token_jti(self.db, token_jti=jti)
+        if not session or session.user_id != user_id or session.is_revoked or session.is_expired:
+            raise ValueError("Session revoked or expired")
+
+        user = await user_repo.get(self.db, id=user_id)
+        if not user or user.status != "active":
+            raise ValueError("User account is not active")
+
+        session.last_activity = datetime.now(timezone.utc)
+        self.db.add(session)
+        await self.db.commit()
+
+        access_token = SecurityService.create_access_token(subject=user.id)
+        return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+    async def logout(self, user_id: uuid.UUID, token_jti: str | None = None) -> None:
+        if token_jti:
+            session = await session_repo.get_by_token_jti(self.db, token_jti=token_jti)
+            if session and session.user_id == user_id:
+                session.is_revoked = True
+                session.logout_time = datetime.now(timezone.utc)
+                self.db.add(session)
+                await self.db.commit()
+            return
+
+        await session_repo.revoke_all_user_sessions(self.db, user_id=user_id)

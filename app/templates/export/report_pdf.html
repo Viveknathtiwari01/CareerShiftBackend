@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Career Intelligence Report — {{ overview.job_title }}</title>
+  <style>
+    @page { size: A4; margin: 1.5cm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a273d; line-height: 1.45; }
+    h1 { font-size: 22pt; margin: 0 0 6pt; color: #1a273d; }
+    h2 { font-size: 14pt; margin: 18pt 0 8pt; color: #1a273d; border-bottom: 1px solid #cbd5e1; padding-bottom: 4pt; }
+    h3 { font-size: 11pt; margin: 12pt 0 6pt; color: #334155; }
+    .meta { color: #64748b; font-size: 9pt; margin-bottom: 16pt; }
+    .kpi-table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+    .kpi-table td { border: 1px solid #e2e8f0; padding: 8pt; text-align: center; width: 16%; }
+    .kpi-value { font-size: 16pt; font-weight: bold; color: #0f766e; }
+    .kpi-label { font-size: 8pt; color: #64748b; text-transform: uppercase; }
+    .score-box { background: #0f766e; color: #fff; padding: 14pt; text-align: center; margin: 12pt 0; }
+    .score-box .score { font-size: 28pt; font-weight: bold; }
+    .summary { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10pt; margin: 10pt 0; }
+    .task { border: 1px solid #e2e8f0; padding: 8pt; margin-bottom: 8pt; page-break-inside: avoid; }
+    .badge-build { background: #dcfce7; color: #166534; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
+    .badge-blend { background: #dbeafe; color: #1e40af; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
+    .badge-bot { background: #ccfbf1; color: #0f766e; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
+    ul { margin: 4pt 0; padding-left: 16pt; }
+    li { margin-bottom: 3pt; }
+    .footer { margin-top: 24pt; font-size: 8pt; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8pt; }
+    table.data { width: 100%; border-collapse: collapse; margin: 8pt 0; }
+    table.data th, table.data td { border: 1px solid #e2e8f0; padding: 6pt; text-align: left; font-size: 9pt; }
+    table.data th { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <h1>Career Intelligence Report</h1>
+  <p class="meta">
+    Prepared for <strong>{{ recipient_name }}</strong> · {{ overview.job_title }} · {{ overview.industry }}<br/>
+    Generated {{ generated_date }} · Version {{ report_version }} · Assessment {{ assessment_id[:8] }}…
+  </p>
+
+  <div class="score-box">
+    <div>AI Readiness Score</div>
+    <div class="score">{{ ai_readiness.overall_score }}/100</div>
+    <div>{{ ai_readiness.tier_label }} — {{ ai_readiness.tier_description }}</div>
+  </div>
+
+  <h2>Executive Overview</h2>
+  {% if strategic_note %}
+  <div class="summary"><strong>Strategic Note:</strong> {{ strategic_note }}</div>
+  {% endif %}
+  {% if career_identity.executive_summary %}
+  <div class="summary">{{ career_identity.executive_summary }}</div>
+  {% endif %}
+
+  <table class="kpi-table">
+    <tr>
+      <td><div class="kpi-value">{{ overview.overall_score }}</div><div class="kpi-label">Overall Score</div></td>
+      <td><div class="kpi-value">{{ overview.tasks_analyzed }}</div><div class="kpi-label">Tasks Analyzed</div></td>
+      <td><div class="kpi-value">{{ overview.competency_count }}</div><div class="kpi-label">Competencies</div></td>
+      <td><div class="kpi-value">{{ overview.automation_pct }}%</div><div class="kpi-label">Automation</div></td>
+      <td><div class="kpi-value">{{ overview.career_risk }}</div><div class="kpi-label">Career Risk</div></td>
+      <td><div class="kpi-value">{{ overview.ai_tools_count }}</div><div class="kpi-label">AI Tools</div></td>
+    </tr>
+  </table>
+
+  <p><strong>Experience:</strong> {{ overview.experience_years }} years ·
+     <strong>3B mix:</strong> {{ build_count }} BUILD · {{ blend_count }} BLEND · {{ bot_count }} BOT</p>
+  {% if overview.profession_summary %}
+  <p><strong>Profession Summary:</strong> {{ overview.profession_summary }}</p>
+  {% endif %}
+
+  <h2>AI Readiness Dimensions</h2>
+  <table class="data">
+    <tr><th>Dimension</th><th>Score</th></tr>
+    {% for dim in ai_readiness.dimensions %}
+    <tr><td>{{ dim.name }}</td><td>{{ dim.score }}/100</td></tr>
+    {% endfor %}
+  </table>
+
+  {% if ai_readiness.strengths %}
+  <h3>Strengths</h3>
+  <ul>{% for s in ai_readiness.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if ai_readiness.improvement_areas %}
+  <h3>Improvement Areas</h3>
+  <ul>{% for s in ai_readiness.improvement_areas %}<li>{{ s }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <h2>Career Identity</h2>
+  <p><strong>{{ career_identity.identity_title }}</strong> ({{ career_identity.confidence_pct }}% alignment)</p>
+  {% if career_identity.growth_strategy %}
+  <p>{{ career_identity.growth_strategy }}</p>
+  {% endif %}
+
+  <h2>3B Task Analysis</h2>
+  {% for task in task_routing %}
+  <div class="task">
+    <strong>{{ task.task_title }}</strong>
+    {% if task.category == 'BUILD' %}<span class="badge-build">BUILD</span>
+    {% elif task.category == 'BOT' %}<span class="badge-bot">BOT</span>
+    {% else %}<span class="badge-blend">BLEND</span>{% endif %}
+    {% if task.rationale %}<p>{{ task.rationale }}</p>{% endif %}
+    {% if task.reason %}<p><em>{{ task.reason }}</em></p>{% endif %}
+    {% if task.next_actions %}
+    <ul>{% for action in task.next_actions %}<li>{{ action }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if task.recommended_tools %}
+    <p><strong>Tools:</strong> {{ task.recommended_tools | join(', ') }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <h2>Competencies</h2>
+  {% for group in competencies %}
+  <h3>{{ group.category }}</h3>
+  <ul>
+    {% for item in group['items'] %}
+    <li><strong>{{ item.name }}</strong>{% if item.importance %} — {{ item.importance }}{% endif %}{% if item.expected_level %} ({{ item.expected_level }}){% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+
+  <h2>Daily Work Profile</h2>
+  <p>Total hours/week analyzed: {{ daily_work.total_hours_per_week }}</p>
+  <table class="data">
+    <tr><th>Task</th><th>Hours/week</th><th>Complexity</th><th>AI Usage</th></tr>
+    {% for t in daily_work.tasks %}
+    <tr>
+      <td>{{ t.title }}</td>
+      <td>{{ t.hours_per_week }}</td>
+      <td>{{ t.complexity }}</td>
+      <td>{{ t.ai_assistance or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Learning Roadmap</h2>
+  {% for phase in learning_roadmap %}
+  <h3>{{ phase.horizon }} — {{ phase.title }}</h3>
+  <ul>{% for item in phase['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endfor %}
+
+  <h2>Action Plan</h2>
+  {% if action_plan.start %}
+  <h3>Start</h3><ul>{% for i in action_plan.start %}<li>{{ i }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if action_plan.automate %}
+  <h3>Automate</h3><ul>{% for i in action_plan.automate %}<li>{{ i }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if action_plan.learn %}
+  <h3>Learn</h3><ul>{% for i in action_plan.learn %}<li>{{ i }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <h2>Recommended AI Toolkit</h2>
+  <table class="data">
+    <tr><th>Priority</th><th>Recommended AI Toolkit</th><th>Tool Category</th><th>Why</th></tr>
+    {% for tool in ai_toolkit %}
+    <tr>
+      <td>{% if tool.priority_rank %}#{{ tool.priority_rank }} {{ tool.priority_label or '' }}{% else %}—{% endif %}</td>
+      <td>{{ tool.name }}</td>
+      <td>{{ tool.category }}</td>
+      <td>{% if tool.priority_reason %}<strong>Priority:</strong> {{ tool.priority_reason }}<br/>{% endif %}<strong>Why:</strong> {{ tool.use_case }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  {% if cost_roi.hours_automatable_per_week is defined %}
+  <h2>Automation Opportunity</h2>
+  <p>Estimated automatable hours/week (BOT tasks): {{ cost_roi.hours_automatable_per_week }}</p>
+  {% endif %}
+
+  <div class="footer">
+    CareerShift Career Intelligence Report · Confidential · Generated from your assessment data only.<br/>
+    © CareerShift · {{ generated_date }}
+  </div>
+</body>
+</html>

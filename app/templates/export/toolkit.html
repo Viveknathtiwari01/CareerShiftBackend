@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Toolkit — {{ overview.job_title }}</title>
+  <style>
+    body { font-family: Helvetica, Arial, sans-serif; max-width: 900px; margin: 40px auto; color: #1a273d; }
+    h1 { color: #0f766e; }
+    .meta { color: #64748b; font-size: 14px; margin-bottom: 24px; }
+    table.data { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    table.data th, table.data td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; vertical-align: top; }
+    table.data th { background: #f8fafc; color: #0f766e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    table.data td:first-child { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Your Personalized AI Toolkit</h1>
+  <p class="meta">{{ recipient_name }} · {{ overview.job_title }} · {{ overview.industry }}</p>
+  <p>Tools recommended from your 3B task analysis and profile (score {{ ai_readiness.overall_score }}/100).</p>
+
+  <h2 style="margin-top: 32px; color: #0f766e;">Recommended AI Toolkit</h2>
+  {% if ai_toolkit %}
+  <table class="data">
+    <tr>
+      <th>Priority</th>
+      <th>Recommended AI Toolkit</th>
+      <th>Tool Category</th>
+      <th>Why</th>
+    </tr>
+    {% for tool in ai_toolkit %}
+    <tr>
+      <td>{% if tool.priority_rank %}#{{ tool.priority_rank }} {{ tool.priority_label or '' }}{% else %}—{% endif %}</td>
+      <td>{{ tool.name }}</td>
+      <td>{{ tool.category }}{% if tool.source %} · {{ tool.source }}{% endif %}</td>
+      <td>{% if tool.priority_reason %}<strong>Priority:</strong> {{ tool.priority_reason }}<br/>{% endif %}<strong>Why:</strong> {{ tool.use_case }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>No tools in this report. Regenerate after completing 3B analysis.</p>
+  {% endif %}
+</body>
+</html>

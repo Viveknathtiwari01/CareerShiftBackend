@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
     from app.api.v1.assessment.routes import router as assessment_router
     from app.api.v1.assessment.task_routes import router as assessment_task_router
     from app.api.v1.assessment.analysis_routes import router as assessment_analysis_router
+    from app.api.v1.assessment.report_routes import router as assessment_report_router
     from app.middleware.exception_handler import add_exception_handlers
     
     app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
@@ -48,8 +49,17 @@ def create_app() -> FastAPI:
         prefix=f"{settings.API_V1_STR}/assessment",
         tags=["Assessment 3B Analysis"],
     )
+    app.include_router(
+        assessment_report_router,
+        prefix=f"{settings.API_V1_STR}/assessment",
+        tags=["Career Intelligence Report"],
+    )
 
     add_exception_handlers(app)
+
+    from app.core.config import validate_production_settings
+
+    validate_production_settings()
 
     @app.get("/health", tags=["Health"])
     async def health_check():

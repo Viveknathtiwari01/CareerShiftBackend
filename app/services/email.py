@@ -154,8 +154,10 @@ class EmailService:
 
     @staticmethod
     async def send_otp_email(to_email: str, otp: str, purpose: str) -> None:
-        if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-            logger.warning("SMTP credentials are not fully configured. Email not sent.")
+        if not settings.email_configured:
+            if settings.is_production:
+                raise ValueError("Email service is not configured.")
+            logger.warning("SMTP not configured — OTP logged for development only.")
             print(f"--- MOCK EMAIL --- To: {to_email} | OTP: {otp} | Purpose: {purpose}")
             return
 
@@ -184,3 +186,62 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             raise ValueError("Failed to send verification email. Please try again later.")
+
+    @staticmethod
+    async def send_report_ready_email(
+        *,
+        to_email: str,
+        recipient_name: str,
+        job_title: str,
+        score: int,
+        tier_label: str,
+        report_url: str,
+    ) -> None:
+        if not settings.REPORT_READY_EMAIL_ENABLED:
+            return
+
+        subject = f"Your Career Intelligence Report is ready — {score}/100"
+        plain = (
+            f"Hi {recipient_name},\n\n"
+            f"Your CareerShift report for {job_title} is ready.\n"
+            f"AI Readiness: {score}/100 ({tier_label})\n\n"
+            f"View report: {report_url}\n"
+        )
+        html = f"""
+        <html><body style="font-family:Arial,sans-serif;color:#1a273d;">
+          <h2>Your report is ready</h2>
+          <p>Hi {recipient_name},</p>
+          <p>Your Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
+          <p><strong>AI Readiness:</strong> {score}/100 ({tier_label})</p>
+          <p><a href="{report_url}" style="background:#0f766e;color:#fff;padding:12px 20px;text-decoration:none;border-radius:8px;">View Your Report</a></p>
+          <p style="color:#64748b;font-size:13px;">{report_url}</p>
+        </body></html>
+        """
+
+        if not settings.email_configured:
+            if settings.is_production:
+                raise ValueError("Email service is not configured.")
+            logger.info("Report ready email (dev) to=%s score=%s", to_email, score)
+            print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
+            return
+
+        message = EmailMessage()
+        message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+        message["To"] = to_email
+        message["Subject"] = subject
+        message.set_content(plain)
+        message.add_alternative(html, subtype="html")
+
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_USER,
+                password=settings.SMTP_PASSWORD,
+                use_tls=False,
+                start_tls=settings.SMTP_TLS,
+            )
+            logger.info("Report ready email sent to %s", to_email)
+        except Exception as e:
+            logger.error("Failed to send report ready email to %s: %s", to_email, str(e))
