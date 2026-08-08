@@ -204,8 +204,6 @@ class AuthService:
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
     async def refresh_tokens(self, refresh_token: str) -> TokenResponse:
-        from app.services.security import SecurityService
-
         try:
             payload = SecurityService.decode_token(refresh_token)
         except ValueError as exc:

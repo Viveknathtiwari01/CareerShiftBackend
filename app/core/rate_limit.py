@@ -22,8 +22,8 @@ async def enforce_rate_limit(
     window_seconds: int | None = None,
     label: str = "requests",
 ) -> None:
-    max_requests = limit if limit is not None else 5
-    window = window_seconds if window_seconds is not None else 3600
+    max_requests = limit if limit is not None else settings.DEFAULT_RATE_LIMIT
+    window = window_seconds if window_seconds is not None else settings.DEFAULT_RATE_WINDOW_SECONDS
     now = time.monotonic()
 
     async with _lock:
@@ -39,4 +39,5 @@ async def enforce_rate_limit(
 
 
 def reset_rate_limits() -> None:
+    """Test helper."""
     _buckets.clear()

@@ -29,6 +29,9 @@ class RegisterRequest(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
 
+class LogoutRequest(BaseModel):
+    refresh_token: Optional[str] = None
+
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 

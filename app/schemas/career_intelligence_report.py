@@ -1,100 +1,166 @@
-from datetime import datetime
 from uuid import UUID
+
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.ai_readiness import AIReadinessResponse
+from app.schemas.assessment_task_analysis import TaskAnalysisRunResponse
 
-class ReadinessDimension(BaseModel):
+
+class ReportKpi(BaseModel):
+    label: str
+    value: str
+    tone: str = "default"
+
+
+class ReportSnapshotItem(BaseModel):
+    label: str
+    value: str
+
+
+class ReportOverviewSection(BaseModel):
+    kpis: list[ReportKpi] = Field(default_factory=list)
+    career_snapshot: list[ReportSnapshotItem] = Field(default_factory=list)
+    insight: str | None = None
+
+
+class ReportCompetencyItem(BaseModel):
     name: str
-    score: int
+    importance: str | None = None
+    proficiency: int = Field(ge=0, le=100)
+    growth: str
 
 
-class AIReadinessSection(BaseModel):
-    overall_score: int
-    tier_label: str
-    tier_description: str
-    dimensions: list[ReadinessDimension] = Field(default_factory=list)
-    strengths: list[str] = Field(default_factory=list)
-    improvement_areas: list[str] = Field(default_factory=list)
-    factors: list[dict] = Field(default_factory=list)
-
-
-class ReportOverview(BaseModel):
-    overall_score: int
-    tasks_analyzed: int
-    competency_count: int
-    ai_tools_count: int
-    automation_pct: int
-    career_risk: str
-    job_title: str
-    industry: str
-    experience_years: int
-    profession_summary: str | None = None
-    reading_time_minutes: int = 12
-
-
-class CompetencyGroup(BaseModel):
-    category: str
-    items: list[dict] = Field(default_factory=list)
-
-
-class DailyWorkTask(BaseModel):
+class ReportCompetencyGroup(BaseModel):
     title: str
+    category_key: str
+    items: list[ReportCompetencyItem] = Field(default_factory=list)
+
+
+class ReportDailyWorkTask(BaseModel):
+    name: str
     hours_per_week: float
-    category: str | None = None
-    complexity: str
-    ai_assistance: str | None = None
+    time_label: str
+    criticality: str | None = None
+    ai_usage: str | None = None
+    confidence: str | None = None
+    category_3b: str | None = None
 
 
-class TaskRoutingItem(BaseModel):
-    task_id: str
-    task_title: str
-    category: str
-    rationale: str | None = None
-    reason: str | None = None
-    next_actions: list[str] = Field(default_factory=list)
-    auto_potential: int | None = None
-    risk_level: str | None = None
-    recommended_tools: list[str] = Field(default_factory=list)
-
-
-class CareerIdentitySection(BaseModel):
-    identity_title: str
-    confidence_pct: int
-    executive_summary: str
-    ideal_roles: list[str] = Field(default_factory=list)
-    superpowers: list[str] = Field(default_factory=list)
-    blind_spots: list[str] = Field(default_factory=list)
-    growth_strategy: str
-
-
-class RoadmapPhase(BaseModel):
-    horizon: str
-    title: str
-    items: list[str] = Field(default_factory=list)
-
-
-class ToolkitItem(BaseModel):
+class ReportTimeSlice(BaseModel):
     name: str
-    category: str
-    use_case: str
-    source: str = "3B Analysis"
-    priority_rank: int | None = None
-    priority_label: str | None = None
-    priority_reason: str | None = None
+    value: float
+    color: str
 
 
-class ActionPlanSection(BaseModel):
-    start: list[str] = Field(default_factory=list)
-    stop: list[str] = Field(default_factory=list)
-    automate: list[str] = Field(default_factory=list)
-    learn: list[str] = Field(default_factory=list)
+class ReportDailyWorkSection(BaseModel):
+    tasks: list[ReportDailyWorkTask] = Field(default_factory=list)
+    time_allocation: list[ReportTimeSlice] = Field(default_factory=list)
+    total_hours: float = 0
+    summary: str = ""
+
+
+class ReportBeforeAfterSection(BaseModel):
+    role_today: str
+    role_future: str
+    hours_freed_per_week: float
+    narrative: str
+    shifts: list[str] = Field(default_factory=list)
+
+
+class ReportRoadmapItem(BaseModel):
+    title: str
+    priority: str
+    effort: str
+    impact: str
+
+
+class ReportRoadmapPhase(BaseModel):
+    period: str
+    items: list[ReportRoadmapItem] = Field(default_factory=list)
+
+
+class ReportToolkitTool(BaseModel):
+    name: str
+    description: str
+    use_cases: str
+    why: str
+    efficiency_gain: str
+
+
+class ReportToolkitCategory(BaseModel):
+    title: str
+    category_key: str
+    tools: list[ReportToolkitTool] = Field(default_factory=list)
+
+
+class ReportCostRoiSection(BaseModel):
+    annual_salary_estimate: float | None = None
+    ld_investment: float
+    ai_tools_cost: float
+    hours_saved_weekly: float
+    payback_months: float | None = None
+    roi_summary: str
+    breakdown: list[ReportSnapshotItem] = Field(default_factory=list)
+
+
+class ReportUrgencyBar(BaseModel):
+    label: str
+    value: int
+    tone: str = "default"
+
+
+class ReportMarketUrgencySection(BaseModel):
+    urgency_score: int = Field(ge=0, le=100)
+    demand_pct: int
+    roles_at_risk_pct: int
+    salary_premium_pct: int
+    urgency_bars: list[ReportUrgencyBar] = Field(default_factory=list)
+    summary: str
+
+
+class ReportActionItem(BaseModel):
+    text: str
+    priority: str
+    impact: str
+    time: str
+    difficulty: str
+
+
+class ReportActionPlanSection(BaseModel):
+    start_doing: list[ReportActionItem] = Field(default_factory=list)
+    stop_doing: list[ReportActionItem] = Field(default_factory=list)
+    automate_with_ai: list[ReportActionItem] = Field(default_factory=list)
+    learn_next: list[ReportActionItem] = Field(default_factory=list)
+
+
+class ReportCareerNode(BaseModel):
+    label: str
+    role: str
+
+
+class ReportIdealRole(BaseModel):
+    role: str
+    reason: str
+
+
+class ReportCareerIdentitySection(BaseModel):
+    title: str
+    subtitle: str
+    narrative: str
+    strengths: list[str] = Field(default_factory=list)
+    blind_spots: list[str] = Field(default_factory=list)
+    roadmap_nodes: list[ReportCareerNode] = Field(default_factory=list)
+    ideal_roles: list[ReportIdealRole] = Field(default_factory=list)
+    closing_note: str
 
 
 class CareerIntelligenceReportResponse(BaseModel):
     assessment_id: UUID
     report_version: str
     generated_at: datetime
+<<<<<<< HEAD
     strategic_note: str | None = None
     overview: ReportOverview
     ai_readiness: AIReadinessSection
@@ -108,3 +174,18 @@ class CareerIntelligenceReportResponse(BaseModel):
     before_after: dict = Field(default_factory=dict)
     cost_roi: dict = Field(default_factory=dict)
     market_urgency: dict = Field(default_factory=dict)
+=======
+    strategic_note: str
+    overview: ReportOverviewSection
+    ai_readiness: AIReadinessResponse
+    task_routing: TaskAnalysisRunResponse
+    before_after: ReportBeforeAfterSection
+    upskill_roadmap: list[ReportRoadmapPhase]
+    ai_toolkit: list[ReportToolkitCategory]
+    cost_roi: ReportCostRoiSection
+    market_urgency: ReportMarketUrgencySection
+    action_plan: ReportActionPlanSection
+    career_identity: ReportCareerIdentitySection
+    competencies: list[ReportCompetencyGroup]
+    daily_work: ReportDailyWorkSection
+>>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba

@@ -32,13 +32,14 @@ class CareerIntelligenceReportRepository:
         if existing:
             for key, value in payload.items():
                 setattr(existing, key, value)
-            await db.flush()
+            db.add(existing)
+            await db.commit()
             await db.refresh(existing)
             return existing
 
         row = CareerIntelligenceReport(assessment_id=assessment_id, **payload)
         db.add(row)
-        await db.flush()
+        await db.commit()
         await db.refresh(row)
         return row
 

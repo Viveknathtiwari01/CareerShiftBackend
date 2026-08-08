@@ -201,27 +201,25 @@ class EmailService:
             return
 
         subject = f"Your Career Intelligence Report is ready — {score}/100"
-        plain = (
-            f"Hi {recipient_name},\n\n"
-            f"Your CareerShift report for {job_title} is ready.\n"
-            f"AI Readiness: {score}/100 ({tier_label})\n\n"
-            f"View report: {report_url}\n"
-        )
-        html = f"""
-        <html><body style="font-family:Arial,sans-serif;color:#1a273d;">
-          <h2>Your report is ready</h2>
+        html_content = f"""
+        <!DOCTYPE html>
+        <html><body style="font-family: Arial, sans-serif; color: #1a273d; line-height: 1.6;">
+          <h1 style="color: #1a273d;">Your report is ready</h1>
           <p>Hi {recipient_name},</p>
-          <p>Your Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
+          <p>Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
           <p><strong>AI Readiness:</strong> {score}/100 ({tier_label})</p>
-          <p><a href="{report_url}" style="background:#0f766e;color:#fff;padding:12px 20px;text-decoration:none;border-radius:8px;">View Your Report</a></p>
-          <p style="color:#64748b;font-size:13px;">{report_url}</p>
+          <p><a href="{report_url}" style="background:#1a273d;color:#fff;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">View Your Report</a></p>
+          <p style="color:#64748b;font-size:13px;">If the button does not work, copy this link:<br>{report_url}</p>
         </body></html>
         """
 
-        if not settings.email_configured:
-            if settings.is_production:
-                raise ValueError("Email service is not configured.")
-            logger.info("Report ready email (dev) to=%s score=%s", to_email, score)
+        if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+            logger.info(
+                "Report ready email (mock) to=%s score=%s url=%s",
+                to_email,
+                score,
+                report_url,
+            )
             print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
             return
 
@@ -229,8 +227,8 @@ class EmailService:
         message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
         message["To"] = to_email
         message["Subject"] = subject
-        message.set_content(plain)
-        message.add_alternative(html, subtype="html")
+        message.set_content(f"Your CareerShift report is ready. Score: {score}/100. View: {report_url}")
+        message.add_alternative(html_content, subtype="html")
 
         try:
             await aiosmtplib.send(

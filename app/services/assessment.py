@@ -99,10 +99,8 @@ class AssessmentService:
         if active and active.status == PIPELINE_STATUS_PROCESSING:
             recovered = await self._recover_stale_processing(db, active)
             if recovered:
-                active = await self._assessment_repo.get_active_for_user(
-                    db, user_id=user_id, pipeline_type=PIPELINE_TYPE_COMPETENCY_MAPPING
-                )
-            if active and active.status == PIPELINE_STATUS_PROCESSING:
+                active = None
+            else:
                 mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=active.id)
                 if mapping:
                     return (
@@ -324,6 +322,32 @@ class AssessmentService:
             try:
                 await self._execute_pipeline(db, assessment_id)
                 await db.commit()
+            except asyncio.TimeoutError:
+                await db.rollback()
+                logger.error(
+                    "Competency pipeline timed out",
+                    extra={
+                        "assessment_id": str(assessment_id),
+                        "timeout_seconds": settings.COMPETENCY_PIPELINE_TIMEOUT_SECONDS,
+                    },
+                )
+                try:
+                    assessment = await self._assessment_repo.get_by_id(db, assessment_id=assessment_id)
+                    mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment_id)
+                    if assessment and mapping and assessment.status != PIPELINE_STATUS_FAILED:
+                        await self._mark_failure(
+                            db,
+                            assessment=assessment,
+                            mapping=mapping,
+                            failed_stage="pipeline_timeout",
+                            error_message=(
+                                f"Competency pipeline exceeded "
+                                f"{settings.COMPETENCY_PIPELINE_TIMEOUT_SECONDS}s timeout."
+                            ),
+                        )
+                        await db.commit()
+                except Exception:
+                    await db.rollback()
             except Exception as exc:
                 await db.rollback()
                 logger.exception(
@@ -396,21 +420,10 @@ class AssessmentService:
             )
             await db.commit()
 
-        try:
-            pipeline_result = await asyncio.wait_for(
-                self._pipeline.execute(ctx, on_stage_complete=on_stage_complete),
-                timeout=settings.COMPETENCY_PIPELINE_TIMEOUT_SECONDS,
-            )
-        except asyncio.TimeoutError:
-            await self._mark_failure(
-                db,
-                assessment=assessment,
-                mapping=mapping,
-                failed_stage="pipeline_timeout",
-                error_message="Competency pipeline exceeded maximum runtime. You can retry.",
-            )
-            await db.commit()
-            return
+        pipeline_result = await asyncio.wait_for(
+            self._pipeline.execute(ctx, on_stage_complete=on_stage_complete),
+            timeout=settings.COMPETENCY_PIPELINE_TIMEOUT_SECONDS,
+        )
 
         if not pipeline_result.success:
             await self._mark_failure(
@@ -502,6 +515,33 @@ class AssessmentService:
         await self._assessment_repo.update_status(
             db, assessment_id=assessment.id, status=PIPELINE_STATUS_FAILED
         )
+
+    async def _recover_stale_processing(self, db: AsyncSession, assessment: Assessment) -> bool:
+        """Mark long-running PROCESSING assessments as failed so users can retry."""
+        mapping = await self._mapping_repo.get_by_assessment_id(db, assessment_id=assessment.id)
+        if not mapping or not mapping.started_at:
+            return False
+
+        stale_after = timedelta(seconds=settings.PIPELINE_STALE_AFTER_SECONDS)
+        if datetime.now(timezone.utc) - mapping.started_at < stale_after:
+            return False
+
+        logger.warning(
+            "Recovering stale competency pipeline",
+            extra={
+                "assessment_id": str(assessment.id),
+                "started_at": mapping.started_at.isoformat(),
+            },
+        )
+        await self._mark_failure(
+            db,
+            assessment=assessment,
+            mapping=mapping,
+            failed_stage="pipeline_stale",
+            error_message="Pipeline did not complete in time. You can retry the assessment.",
+        )
+        await db.commit()
+        return True
 
     async def get_assessment_public(
         self,

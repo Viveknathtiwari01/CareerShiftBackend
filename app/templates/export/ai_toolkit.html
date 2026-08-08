@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Toolkit — {{ job_title }} · CareerShift</title>
+  <style>
+    :root { --ink: #1a273d; --gold: #c9a84c; --teal: #0d9488; --muted: #64748b; --bg: #f8fafc; }
+    * { box-sizing: border-box; }
+    body { font-family: Georgia, 'Times New Roman', serif; margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6; }
+    header { background: var(--ink); color: #fff; padding: 2.5rem 2rem; }
+    header h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
+    header p { margin: 0; opacity: 0.85; font-family: Arial, sans-serif; font-size: 0.95rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-family: Arial, sans-serif; font-size: 1.25rem; color: var(--ink); border-bottom: 2px solid var(--gold); padding-bottom: 0.35rem; margin-bottom: 1rem; }
+    .tool { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .tool h3 { margin: 0 0 0.35rem; font-family: Arial, sans-serif; font-size: 1.1rem; }
+    .gain { display: inline-block; background: #fef9ec; color: #8a6d1f; border: 1px solid var(--gold); border-radius: 999px; padding: 0.15rem 0.65rem; font-size: 0.75rem; font-family: Arial, sans-serif; font-weight: bold; margin-bottom: 0.5rem; }
+    .label { font-family: Arial, sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: bold; margin-top: 0.75rem; }
+    footer { text-align: center; padding: 1.5rem; font-family: Arial, sans-serif; font-size: 0.8rem; color: var(--muted); border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Personal AI Toolkit</h1>
+    <p>{{ job_title }} · Generated {{ generated_date }} · CareerShift</p>
+  </header>
+  <main>
+    <p>Tools recommended from your 3B analysis and AI readiness profile. Use offline or print this page as your quick reference.</p>
+    {% for category in report.ai_toolkit %}
+    <section>
+      <h2>{{ category.title }}</h2>
+      {% for tool in category.tools %}
+      <article class="tool">
+        <span class="gain">+{{ tool.efficiency_gain }} efficiency</span>
+        <h3>{{ tool.name }}</h3>
+        <p>{{ tool.description }}</p>
+        <div class="label">Best for</div>
+        <p>{{ tool.use_cases }}</p>
+        <div class="label">Why we recommend it</div>
+        <p>{{ tool.why }}</p>
+      </article>
+      {% endfor %}
+    </section>
+    {% endfor %}
+  </main>
+  <footer>CareerShift AI Toolkit · Report v{{ report.report_version }}</footer>
+</body>
+</html>
