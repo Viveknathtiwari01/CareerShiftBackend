@@ -48,6 +48,16 @@ def create_app() -> FastAPI:
         prefix=f"{settings.API_V1_STR}/assessment",
         tags=["Assessment 3B Analysis"],
     )
+    app.include_router(
+        assessment_readiness_router,
+        prefix=f"{settings.API_V1_STR}/assessment",
+        tags=["Assessment AI Readiness"],
+    )
+    app.include_router(
+        assessment_report_router,
+        prefix=f"{settings.API_V1_STR}/assessment",
+        tags=["Career Intelligence Report"],
+    )
 
     add_exception_handlers(app)
 
