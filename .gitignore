@@ -8,6 +8,18 @@ env.bak/
 venv.bak/
 .env.production
 
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Keep safe templates
+!.env.example
+!.env.production.sample
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
