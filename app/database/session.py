@@ -9,6 +9,7 @@ engine = create_async_engine(
     future=True,
     pool_size=10,
     max_overflow=20,
+    connect_args=settings.database_connect_args,
 )
 
 # Create an async session maker

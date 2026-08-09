@@ -77,16 +77,22 @@ def create_app() -> FastAPI:
 
     @app.get("/health/ready", tags=["Health"])
     async def readiness_check():
+        import logging
+
         from sqlalchemy import text
 
         from app.database.session import AsyncSessionLocal
+
+        logger = logging.getLogger(__name__)
 
         try:
             async with AsyncSessionLocal() as db:
                 await db.execute(text("SELECT 1"))
             return {"status": "ready", "database": "ok"}
-        except Exception:
+        except Exception as exc:
             from fastapi.responses import JSONResponse
+
+            logger.error("Database readiness check failed: %s", exc)
 
             return JSONResponse(
                 status_code=503,

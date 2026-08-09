@@ -1,7 +1,7 @@
 import os
 from typing import List, Union
 
-from pydantic import AliasChoices, Field, validator
+from pydantic import AliasChoices, Field, model_validator, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,22 +17,56 @@ class Settings(BaseSettings):
     APP_NAME: str = "CareerShift API"
     API_V1_STR: str = "/api/v1"
 
-    # Database
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASSWORD: str
-    DB_NAME: str
+    # Database — set DATABASE_URL (Render Postgres) or individual DB_* vars
+    DB_CONNECTION_URL: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("DATABASE_URL", "DB_CONNECTION_URL"),
+    )
+    DB_HOST: str | None = None
+    DB_PORT: int | None = None
+    DB_USER: str | None = None
+    DB_PASSWORD: str | None = None
+    DB_NAME: str | None = None
+    DB_SSL: bool = False
+
+    @staticmethod
+    def _normalize_database_url(url: str) -> str:
+        normalized = url.strip()
+        if normalized.startswith("postgres://"):
+            return normalized.replace("postgres://", "postgresql+asyncpg://", 1)
+        if normalized.startswith("postgresql://"):
+            return normalized.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return normalized
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.DB_CONNECTION_URL:
+            return self._normalize_database_url(self.DB_CONNECTION_URL)
+
         from urllib.parse import quote_plus
+
+        if not all([self.DB_HOST, self.DB_PORT, self.DB_USER, self.DB_PASSWORD is not None, self.DB_NAME]):
+            raise ValueError(
+                "Database is not configured. Set DATABASE_URL or "
+                "DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, and DB_NAME."
+            )
 
         encoded_password = quote_plus(self.DB_PASSWORD)
         return (
             f"postgresql+asyncpg://{self.DB_USER}:{encoded_password}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
+
+    @model_validator(mode="after")
+    def validate_database_settings(self) -> "Settings":
+        if self.DB_CONNECTION_URL:
+            return self
+        if not all([self.DB_HOST, self.DB_PORT, self.DB_USER, self.DB_PASSWORD is not None, self.DB_NAME]):
+            raise ValueError(
+                "Database is not configured. Set DATABASE_URL or "
+                "DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, and DB_NAME."
+            )
+        return self
 
     # Security
     SECRET_KEY: str
@@ -113,6 +147,29 @@ class Settings(BaseSettings):
                 return origin.rstrip("/")
 
         return self.APP_PUBLIC_URL.rstrip("/")
+
+    @property
+    def database_connect_args(self) -> dict:
+        args: dict = {}
+        host = (self.DB_HOST or "").lower()
+        port = self.DB_PORT
+
+        use_ssl = self.DB_SSL or (
+            self.is_production
+            and (
+                "supabase.com" in host
+                or host.endswith(".neon.tech")
+                or (host and host not in {"localhost", "127.0.0.1"})
+            )
+        )
+        if use_ssl:
+            args["ssl"] = True
+
+        # Supabase transaction pooler (port 6543) does not support prepared statements.
+        if "pooler.supabase.com" in host or port == 6543:
+            args["statement_cache_size"] = 0
+
+        return args
 
 
 settings = Settings()
