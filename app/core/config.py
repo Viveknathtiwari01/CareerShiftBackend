@@ -1,4 +1,5 @@
 import os
+import ssl
 from typing import List, Union
 
 from pydantic import AliasChoices, Field, model_validator, validator
@@ -163,7 +164,7 @@ class Settings(BaseSettings):
             )
         )
         if use_ssl:
-            args["ssl"] = True
+            args["ssl"] = ssl.create_default_context()
 
         # Supabase transaction pooler (port 6543) does not support prepared statements.
         if "pooler.supabase.com" in host or port == 6543:

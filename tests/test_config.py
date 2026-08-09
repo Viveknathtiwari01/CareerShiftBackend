@@ -29,6 +29,8 @@ def test_database_url_normalizes_render_postgres_url():
 
 
 def test_supabase_pooler_connect_args_enable_ssl_and_disable_statement_cache():
+    import ssl
+
     settings = Settings(
         ENVIRONMENT="production",
         DB_HOST="aws-0-ap-northeast-1.pooler.supabase.com",
@@ -38,7 +40,9 @@ def test_supabase_pooler_connect_args_enable_ssl_and_disable_statement_cache():
         DB_NAME="postgres",
         SECRET_KEY="x" * 32,
     )
-    assert settings.database_connect_args == {"ssl": True, "statement_cache_size": 0}
+    args = settings.database_connect_args
+    assert args["statement_cache_size"] == 0
+    assert isinstance(args["ssl"], ssl.SSLContext)
 
 
 def test_effective_app_public_url_falls_back_to_https_cors_origin():
