@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.schemas.career_intelligence_report import CareerIntelligenceReportResponse
 from app.schemas.report_export import ReportScorecardResponse
+from app.services.report_version import format_report_version
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "export"
 
@@ -165,7 +166,7 @@ def build_pdf_export_context(
     return {
         "recipient_name": recipient_name,
         "generated_date": _format_date(report.generated_at),
-        "report_version": report.report_version,
+        "report_version": format_report_version(report.report_version),
         "assessment_id": str(report.assessment_id),
         "strategic_note": report.strategic_note,
         "overview": overview,
@@ -291,6 +292,24 @@ def _add_bullet_list(doc, items: list[str]) -> None:
 
 
 def render_report_docx(
+    report: CareerIntelligenceReportResponse,
+    *,
+    recipient_name: str | None = None,
+    job_title: str | None = None,
+) -> bytes:
+    try:
+        return _render_report_docx_document(
+            report,
+            recipient_name=recipient_name,
+            job_title=job_title,
+        )
+    except ImportError as exc:
+        raise RuntimeError(
+            "Word export requires python-docx. Install with: pip install python-docx"
+        ) from exc
+
+
+def _render_report_docx_document(
     report: CareerIntelligenceReportResponse,
     *,
     recipient_name: str | None = None,

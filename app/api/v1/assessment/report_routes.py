@@ -100,7 +100,7 @@ async def download_report_docx(
         assessment_id,
         recipient_name=_display_name(current_user),
     )
-    filename = f"career-intelligence-report-{assessment_id}.docx"
+    filename = "careershift-report.docx"
     return StreamingResponse(
         BytesIO(docx_bytes),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

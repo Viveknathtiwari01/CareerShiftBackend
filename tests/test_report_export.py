@@ -94,6 +94,18 @@ def test_render_report_html_contains_key_sections():
     assert "Strategic Note" in html
 
 
+def test_render_report_docx_produces_valid_docx():
+    from io import BytesIO
+    from zipfile import ZipFile
+
+    from app.services.report_export import render_report_docx
+
+    payload = render_report_docx(_sample_report(), recipient_name="Alex", job_title="HR Manager")
+    assert payload[:2] == b"PK"
+    with ZipFile(BytesIO(payload)) as archive:
+        assert "word/document.xml" in archive.namelist()
+
+
 def test_render_toolkit_html_empty_categories():
     html = render_toolkit_html(_sample_report(), job_title="HR Manager")
     assert "Personal AI Toolkit" in html

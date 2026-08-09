@@ -17,12 +17,8 @@ from app.repositories.competency_mapping import competency_mapping_repo
 from app.repositories.profile import profile_repo
 from app.repositories.user import user_repo
 from app.schemas.career_intelligence_report import CareerIntelligenceReportResponse
-from app.services.report_generator import (
-    REPORT_VERSION,
-    ReportGeneratorInput,
-    generate_career_intelligence_report,
-    resolve_report_toolkit,
-)
+from app.services.report_generator import ReportGeneratorInput, generate_career_intelligence_report, resolve_report_toolkit
+from app.services.report_version import REPORT_VERSION, format_report_version, next_report_version, revision_number
 from app.services.report_export import (
     generate_scorecard,
     render_report_docx,
@@ -39,14 +35,7 @@ logger = logging.getLogger(__name__)
 def _next_report_version(existing: CareerIntelligenceReport | None) -> str:
     if not existing:
         return REPORT_VERSION
-    current = existing.report_version or REPORT_VERSION
-    if current.count(".") >= 1:
-        major, minor = current.split(".", 1)
-        try:
-            return f"{major}.{int(minor) + 1}"
-        except ValueError:
-            pass
-    return f"{current}.1"
+    return next_report_version(existing.report_version)
 
 
 def _profile_to_dict(profile) -> dict:

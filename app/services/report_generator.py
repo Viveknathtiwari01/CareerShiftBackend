@@ -36,7 +36,7 @@ from app.schemas.career_intelligence_report import (
 )
 from app.services.ai_readiness_scorer import ScorerInput, compute_ai_readiness
 
-REPORT_VERSION = "1.0"
+from app.services.report_version import REPORT_VERSION
 
 CATEGORY_ICONS: dict[str, str] = {
     "technical": "technical",
