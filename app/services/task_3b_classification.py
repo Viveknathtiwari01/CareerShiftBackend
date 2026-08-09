@@ -72,6 +72,7 @@ async def classify_tasks_3b_from_ai(
             "description": t.get("description"),
             "category": t.get("category"),
             "hours_per_week": t.get("hours_per_week"),
+            "time_allocation": t.get("time_allocation"),
             "complexity": t.get("complexity"),
             "creativity": t.get("creativity"),
             "human_touch": t.get("human_touch"),
@@ -79,6 +80,7 @@ async def classify_tasks_3b_from_ai(
             "business_criticality": t.get("business_criticality"),
             "ai_assistance": t.get("ai_assistance"),
             "confidence_score": t.get("confidence_score"),
+            "manual_notes": t.get("manual_notes"),
         }
         for idx, t in enumerate(tasks)
     ]

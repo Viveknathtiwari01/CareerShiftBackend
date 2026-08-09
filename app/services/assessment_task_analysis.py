@@ -144,10 +144,18 @@ class AssessmentTaskAnalysisService:
             profession_summary = mapping.final_output_json.get("profession_summary")
 
         profile_data = profile_to_pipeline_input(profile)
-        profile_data["industry"] = profile.industry
-        profile_data["business_function"] = profile.business_function
-        profile_data["domain"] = profile.domain
-        profile_data["specialization"] = profile.specialization
+        profile_data.update(
+            {
+                "salary": profile.salary,
+                "professional_skills": profile.professional_skills or [],
+                "soft_skills": profile.soft_skills or [],
+                "behavioural_skills": profile.behavioural_skills or [],
+                "digital_skills": profile.digital_skills or [],
+                "ai_frequency": profile.ai_frequency,
+                "ai_tools": profile.ai_tools or [],
+                "ai_comfort_level": profile.ai_comfort_level,
+            }
+        )
 
         task_payloads = [
             {
@@ -155,13 +163,15 @@ class AssessmentTaskAnalysisService:
                 "description": t.description,
                 "category": t.category,
                 "hours_per_week": t.hours_per_week,
+                "time_allocation": t.time_allocation if t.time_allocation is not None else t.hours_per_week,
                 "complexity": t.complexity,
                 "creativity": t.creativity,
                 "human_touch": t.human_touch,
                 "frequency": t.frequency,
                 "business_criticality": t.business_criticality,
                 "ai_assistance": t.ai_assistance,
-                "confidence_score": t.confidence_score,
+                "confidence_score": t.confidence_score if t.confidence_score is not None else 5,
+                "manual_notes": t.manual_notes,
             }
             for t in selected_tasks
         ]
