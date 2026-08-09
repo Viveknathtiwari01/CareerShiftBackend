@@ -268,7 +268,9 @@ class CareerIntelligenceReportService:
             return
 
         recipient = user.first_name or user.username
-        report_url = f"{settings.APP_PUBLIC_URL.rstrip('/')}/report?assessmentId={report.assessment_id}"
+        report_url = (
+            f"{settings.effective_app_public_url}/report?assessmentId={report.assessment_id}"
+        )
         try:
             await EmailService.send_report_ready_email(
                 to_email=user.email,

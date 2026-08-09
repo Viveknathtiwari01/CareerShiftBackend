@@ -1,7 +1,15 @@
+import os
 from typing import List, Union
 
-from pydantic import validator
+from pydantic import AliasChoices, Field, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _settings_env_files() -> tuple[str, ...]:
+    files = [".env"]
+    if os.environ.get("ENVIRONMENT", "").lower() == "production":
+        files.append(".env.production")
+    return tuple(files)
 
 
 class Settings(BaseSettings):
@@ -55,7 +63,10 @@ class Settings(BaseSettings):
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
     ANTHROPIC_TEMPERATURE: float = 0.0
     ANTHROPIC_EFFORT: str = "low"
-    APP_PUBLIC_URL: str = "http://localhost:5173"
+    APP_PUBLIC_URL: str = Field(
+        default="http://localhost:5173",
+        validation_alias=AliasChoices("APP_PUBLIC_URL", "FRONTEND_URL"),
+    )
 
     # Production hardening (Phase 8)
     COMPETENCY_PIPELINE_TIMEOUT_SECONDS: int = 600
@@ -72,7 +83,12 @@ class Settings(BaseSettings):
     USE_CELERY: bool = False
     CELERY_BROKER_URL: str | None = None
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=_settings_env_files(),
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+    )
 
     @property
     def is_production(self) -> bool:
@@ -83,6 +99,20 @@ class Settings(BaseSettings):
         return bool(
             self.SMTP_HOST and self.SMTP_USER and self.SMTP_PASSWORD and self.EMAILS_FROM_EMAIL
         )
+
+    @property
+    def effective_app_public_url(self) -> str:
+        if self.APP_PUBLIC_URL and not self.APP_PUBLIC_URL.startswith("http://localhost"):
+            return self.APP_PUBLIC_URL.rstrip("/")
+
+        origins = self.BACKEND_CORS_ORIGINS
+        if isinstance(origins, str):
+            origins = [origins]
+        for origin in origins:
+            if isinstance(origin, str) and origin.startswith("https://") and origin != "*":
+                return origin.rstrip("/")
+
+        return self.APP_PUBLIC_URL.rstrip("/")
 
 
 settings = Settings()
@@ -108,8 +138,14 @@ def validate_production_settings() -> None:
         missing.append("SMTP (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, EMAILS_FROM_EMAIL)")
     if not settings.ANTHROPIC_API_KEY:
         missing.append("ANTHROPIC_API_KEY")
-    if not settings.APP_PUBLIC_URL or settings.APP_PUBLIC_URL.startswith("http://localhost"):
-        missing.append("APP_PUBLIC_URL (must be a public HTTPS URL)")
+    public_url = settings.effective_app_public_url
+    if settings.REPORT_READY_EMAIL_ENABLED and (
+        not public_url or public_url.startswith("http://localhost")
+    ):
+        missing.append(
+            "APP_PUBLIC_URL or FRONTEND_URL (must be a public HTTPS URL, "
+            "or set BACKEND_CORS_ORIGINS to your frontend origin)"
+        )
     if not settings.BACKEND_CORS_ORIGINS:
         missing.append("BACKEND_CORS_ORIGINS")
     if settings.SECRET_KEY.lower() in _INSECURE_SECRET_KEYS or len(settings.SECRET_KEY) < 32:
@@ -119,5 +155,8 @@ def validate_production_settings() -> None:
 
     if missing:
         raise RuntimeError(
-            "Production startup blocked. Missing or invalid settings: " + ", ".join(missing)
+            "Production startup blocked. Missing or invalid settings: "
+            + ", ".join(missing)
+            + ". Configure these in your Render dashboard (Environment) or upload a "
+            + ".env.production secret file."
         )
