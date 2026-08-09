@@ -30,8 +30,8 @@ from app.schemas.career_intelligence_report import (
     ReportRoadmapPhase,
     ReportSnapshotItem,
     ReportTimeSlice,
-    ReportToolkitCategory,
-    ReportToolkitTool,
+    ReportToolkitItem,
+    ReportToolkitTaskLink,
     ReportUrgencyBar,
 )
 from app.services.ai_readiness_scorer import ScorerInput, compute_ai_readiness
@@ -481,49 +481,133 @@ def _build_roadmap(data: ReportGeneratorInput, readiness: AIReadinessResponse) -
     ]
 
 
-def _build_toolkit(data: ReportGeneratorInput, readiness: AIReadinessResponse) -> list[ReportToolkitCategory]:
-    seen: set[str] = set()
-    buckets: dict[str, list[ReportToolkitTool]] = {}
+def _task_links_from_entries(entries: list[dict]) -> list[ReportToolkitTaskLink]:
+    links: list[ReportToolkitTaskLink] = []
+    for entry in entries[:5]:
+        task_title = (entry.get("task_title") or "").strip()
+        reason = (entry.get("reason") or entry.get("rationale") or "").strip()
+        if task_title and reason:
+            links.append(ReportToolkitTaskLink(task_title=task_title, reason=reason))
+    return links
 
-    def add_tool(name: str, why_override: str | None = None) -> None:
-        key = _tool_key(name)
+
+def _tool_category_label(name: str) -> str:
+    meta = _lookup_tool(name)
+    category = meta.get("category", "general")
+    return CATEGORY_TITLES.get(category, category.replace("_", " ").title())
+
+
+def _build_enriched_toolkit(
+    data: ReportGeneratorInput,
+    readiness: AIReadinessResponse,
+) -> list[ReportToolkitItem]:
+    """Ranked toolkit with task-specific reasons derived from 3B analysis."""
+    items = _aggregate_tools(data.analyses)
+    seen = {_tool_key(item["name"]) for item in items}
+
+    start_rank = len(items) + 1
+    extra_rank = start_rank
+    for tool in readiness.recommended_tools[:3]:
+        key = _tool_key(tool.name)
         if key in seen:
-            return
+            continue
         seen.add(key)
-        meta = _lookup_tool(name)
-        category = meta.get("category", "general")
-        buckets.setdefault(category, []).append(
-            ReportToolkitTool(
-                name=name.strip(),
-                description=meta["description"],
-                use_cases=meta["use_cases"],
-                why=why_override or meta["why"],
-                efficiency_gain=meta["efficiency_gain"],
+        items.append(
+            _build_toolkit_item(
+                tool.name,
+                entries=[],
+                rank=extra_rank,
+                category=_tool_category_label(tool.name),
+                source="Profile",
             )
         )
-
-    for row in data.analyses:
-        for tool in row.get("recommended_tools") or []:
-            add_tool(str(tool), why_override=row.get("rationale"))
-
-    for tool in readiness.recommended_tools[:3]:
-        add_tool(tool.name, why_override=tool.fit)
+        extra_rank += 1
 
     for tool in data.profile.get("ai_tools") or []:
-        add_tool(str(tool))
-
-    if not buckets:
-        add_tool("ChatGPT")
-        add_tool("Claude")
-
-    return [
-        ReportToolkitCategory(
-            title=CATEGORY_TITLES.get(key, "Recommended AI Tools"),
-            category_key=key,
-            tools=tools[:4],
+        name = str(tool)
+        key = _tool_key(name)
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(
+            _build_toolkit_item(
+                name,
+                entries=[],
+                rank=extra_rank,
+                category=_tool_category_label(name),
+                source="Profile",
+            )
         )
-        for key, tools in buckets.items()
-    ]
+        extra_rank += 1
+
+    if not items:
+        for rank, fallback in enumerate(["ChatGPT", "Claude"], start=1):
+            items.append(
+                _build_toolkit_item(
+                    fallback,
+                    entries=[],
+                    rank=rank,
+                    category=_tool_category_label(fallback),
+                    source="Recommended",
+                )
+            )
+
+    return [ReportToolkitItem(**item) for item in items[:12]]
+
+
+def _legacy_categories_to_tool_dicts(categories: list[dict]) -> list[dict]:
+    tools: list[dict] = []
+    for category in categories:
+        category_title = category.get("title") or category.get("category_key") or "Recommended"
+        for tool in category.get("tools") or []:
+            tools.append(
+                {
+                    "name": tool.get("name") or "Tool",
+                    "category": category_title,
+                    "use_case": tool.get("why") or tool.get("use_cases") or tool.get("description") or "",
+                    "source": "3B Analysis",
+                }
+            )
+    return tools
+
+
+def resolve_report_toolkit(
+    raw: object,
+    task_routing: list[dict],
+) -> list[ReportToolkitItem]:
+    """Normalize stored toolkit JSON and enrich with 3B task reasons when needed."""
+    tools: list[dict]
+    if isinstance(raw, dict) and isinstance(raw.get("tools"), list):
+        tools = [dict(item) for item in raw["tools"]]
+    elif isinstance(raw, list):
+        if raw and isinstance(raw[0], dict) and raw[0].get("tools") is not None:
+            tools = _legacy_categories_to_tool_dicts(raw)
+        else:
+            tools = [dict(item) for item in raw if isinstance(item, dict)]
+    else:
+        tools = []
+
+    if not tools:
+        return []
+
+    if task_routing and (
+        needs_legacy_toolkit_enrichment(tools)
+        or needs_toolkit_priority_backfill(tools)
+        or any(not (tool.get("use_case") or "").strip() for tool in tools)
+    ):
+        tools = enrich_ai_toolkit(tools, task_routing)
+        tools = ensure_toolkit_priorities(tools, task_routing)
+
+    resolved: list[ReportToolkitItem] = []
+    for tool in tools:
+        payload = dict(tool)
+        links = payload.pop("task_links", None)
+        if not links and task_routing:
+            entries = _collect_tool_task_entries(task_routing).get(payload.get("name") or "", [])
+            links = [link.model_dump() for link in _task_links_from_entries(entries)]
+        payload["task_links"] = links or []
+        resolved.append(ReportToolkitItem.model_validate(payload))
+    return resolved
 
 
 def _build_cost_roi(data: ReportGeneratorInput, hours_saved: float) -> ReportCostRoiSection:
@@ -872,6 +956,7 @@ def _build_toolkit_item(
         "priority_rank": rank,
         "priority_label": _priority_label(rank),
         "priority_reason": _priority_reason_from_entries(entries, rank),
+        "task_links": [link.model_dump() for link in _task_links_from_entries(entries)],
     }
 
 
@@ -979,7 +1064,7 @@ def _aggregate_tools(analyses: list[dict]) -> list[dict]:
     ]
     scored.sort(key=lambda item: (-item[2], item[0]))
     return [
-        _build_toolkit_item(name, entries=entries, rank=rank)
+        _build_toolkit_item(name, entries=entries, rank=rank, category=_tool_category_label(name))
         for rank, (name, entries, _score) in enumerate(scored[:12], start=1)
     ]
 
@@ -992,7 +1077,7 @@ def generate_career_intelligence_report(data: ReportGeneratorInput) -> CareerInt
     overview = _build_overview(data, readiness, daily_work)
     before_after = _build_before_after(data, readiness)
     upskill_roadmap = _build_roadmap(data, readiness)
-    ai_toolkit = _build_toolkit(data, readiness)
+    ai_toolkit = _build_enriched_toolkit(data, readiness)
     cost_roi = _build_cost_roi(data, before_after.hours_freed_per_week)
     market_urgency = _build_market_urgency(data, readiness)
     action_plan = _build_action_plan(data, readiness)

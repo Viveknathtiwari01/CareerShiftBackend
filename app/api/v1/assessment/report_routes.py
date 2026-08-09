@@ -87,6 +87,30 @@ async def download_report_pdf(
     )
 
 
+@router.get("/{assessment_id}/report/docx")
+async def download_report_docx(
+    assessment_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    report_service: CareerIntelligenceReportService = Depends(get_report_service),
+):
+    docx_bytes = await report_service.export_report_docx(
+        db,
+        current_user.id,
+        assessment_id,
+        recipient_name=_display_name(current_user),
+    )
+    filename = f"career-intelligence-report-{assessment_id}.docx"
+    return StreamingResponse(
+        BytesIO(docx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers=_attachment(
+            filename,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ),
+    )
+
+
 @router.get("/{assessment_id}/report/toolkit")
 async def download_toolkit_html(
     assessment_id: UUID,

@@ -89,6 +89,8 @@ def test_generate_report_returns_all_sections():
     assert report.before_after.hours_freed_per_week >= 0
     assert len(report.upskill_roadmap) == 3
     assert len(report.ai_toolkit) >= 1
+    assert any("Policy drafting" in tool.use_case for tool in report.ai_toolkit)
+    assert any(tool.task_links for tool in report.ai_toolkit)
     assert report.cost_roi.ld_investment > 0
     assert report.market_urgency.urgency_score >= 20
     assert report.action_plan.start_doing

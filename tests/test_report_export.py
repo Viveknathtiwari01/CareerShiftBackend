@@ -90,7 +90,7 @@ def test_render_report_html_contains_key_sections():
     html = render_report_html(_sample_report(), recipient_name="Alex", job_title="HR Manager")
     assert "Career Intelligence Report" in html
     assert "Alex" in html
-    assert "3B Task Portfolio" in html
+    assert "3B Task Analysis" in html
     assert "Strategic Note" in html
 
 

@@ -17,9 +17,15 @@ from app.repositories.competency_mapping import competency_mapping_repo
 from app.repositories.profile import profile_repo
 from app.repositories.user import user_repo
 from app.schemas.career_intelligence_report import CareerIntelligenceReportResponse
-from app.services.report_generator import REPORT_VERSION, ReportGeneratorInput, generate_career_intelligence_report
+from app.services.report_generator import (
+    REPORT_VERSION,
+    ReportGeneratorInput,
+    generate_career_intelligence_report,
+    resolve_report_toolkit,
+)
 from app.services.report_export import (
     generate_scorecard,
+    render_report_docx,
     render_report_pdf,
     render_toolkit_html,
 )
@@ -63,8 +69,19 @@ def _profile_to_dict(profile) -> dict:
     }
 
 
+def _task_routing_analyses(task_routing_json: dict | list | None) -> list[dict]:
+    if isinstance(task_routing_json, dict):
+        analyses = task_routing_json.get("analyses") or []
+        return [dict(row) for row in analyses if isinstance(row, dict)]
+    if isinstance(task_routing_json, list):
+        return [dict(row) for row in task_routing_json if isinstance(row, dict)]
+    return []
+
+
 def _row_to_response(row: CareerIntelligenceReport) -> CareerIntelligenceReportResponse:
     supplemental = dict(row.supplemental_json or {})
+    task_routing_analyses = _task_routing_analyses(row.task_routing_json)
+    ai_toolkit = resolve_report_toolkit(row.ai_toolkit_json, task_routing_analyses)
     payload = {
         "assessment_id": row.assessment_id,
         "report_version": row.report_version,
@@ -75,7 +92,7 @@ def _row_to_response(row: CareerIntelligenceReport) -> CareerIntelligenceReportR
         "task_routing": row.task_routing_json,
         "before_after": row.before_after_json,
         "upskill_roadmap": row.upskill_roadmap_json,
-        "ai_toolkit": row.ai_toolkit_json,
+        "ai_toolkit": ai_toolkit,
         "cost_roi": row.cost_roi_json,
         "market_urgency": row.market_urgency_json,
         "action_plan": supplemental.get("action_plan"),
@@ -92,7 +109,7 @@ def _response_to_db_payload(response: CareerIntelligenceReportResponse) -> dict:
         "task_routing_json": response.task_routing.model_dump(mode="json"),
         "before_after_json": response.before_after.model_dump(mode="json"),
         "upskill_roadmap_json": [phase.model_dump(mode="json") for phase in response.upskill_roadmap],
-        "ai_toolkit_json": [cat.model_dump(mode="json") for cat in response.ai_toolkit],
+        "ai_toolkit_json": {"tools": [item.model_dump(mode="json") for item in response.ai_toolkit]},
         "cost_roi_json": response.cost_roi.model_dump(mode="json"),
         "market_urgency_json": response.market_urgency.model_dump(mode="json"),
         "supplemental_json": {
@@ -298,6 +315,19 @@ class CareerIntelligenceReportService:
         profile = await profile_repo.get_by_user_id(db, user_id)
         job_title = profile.job_title if profile else report.before_after.role_today
         return render_report_pdf(report, recipient_name=recipient_name, job_title=job_title)
+
+    async def export_report_docx(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+        *,
+        recipient_name: str,
+    ) -> bytes:
+        report = await self.get_report(db, user_id, assessment_id)
+        profile = await profile_repo.get_by_user_id(db, user_id)
+        job_title = profile.job_title if profile else report.before_after.role_today
+        return render_report_docx(report, recipient_name=recipient_name, job_title=job_title)
 
     async def export_toolkit_html(
         self,

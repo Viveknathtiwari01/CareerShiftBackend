@@ -95,6 +95,22 @@ class ReportToolkitCategory(BaseModel):
     tools: list[ReportToolkitTool] = Field(default_factory=list)
 
 
+class ReportToolkitTaskLink(BaseModel):
+    task_title: str
+    reason: str
+
+
+class ReportToolkitItem(BaseModel):
+    name: str
+    category: str = "Recommended"
+    use_case: str
+    source: str = "3B Analysis"
+    priority_rank: int | None = None
+    priority_label: str | None = None
+    priority_reason: str | None = None
+    task_links: list[ReportToolkitTaskLink] = Field(default_factory=list)
+
+
 class ReportCostRoiSection(BaseModel):
     annual_salary_estimate: float | None = None
     ld_investment: float
@@ -166,7 +182,7 @@ class CareerIntelligenceReportResponse(BaseModel):
     task_routing: TaskAnalysisRunResponse
     before_after: ReportBeforeAfterSection
     upskill_roadmap: list[ReportRoadmapPhase]
-    ai_toolkit: list[ReportToolkitCategory]
+    ai_toolkit: list[ReportToolkitItem]
     cost_roi: ReportCostRoiSection
     market_urgency: ReportMarketUrgencySection
     action_plan: ReportActionPlanSection
