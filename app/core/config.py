@@ -164,7 +164,11 @@ class Settings(BaseSettings):
             )
         )
         if use_ssl:
-            args["ssl"] = ssl.create_default_context()
+            # Supabase pooler uses a cert chain that fails strict verification on asyncpg.
+            if "supabase.com" in host:
+                args["ssl"] = "require"
+            else:
+                args["ssl"] = ssl.create_default_context()
 
         # Supabase transaction pooler (port 6543) does not support prepared statements.
         if "pooler.supabase.com" in host or port == 6543:
