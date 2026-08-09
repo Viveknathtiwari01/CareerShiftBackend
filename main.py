@@ -31,6 +31,8 @@ def create_app() -> FastAPI:
     from app.api.v1.assessment.routes import router as assessment_router
     from app.api.v1.assessment.task_routes import router as assessment_task_router
     from app.api.v1.assessment.analysis_routes import router as assessment_analysis_router
+    from app.api.v1.assessment.readiness_routes import router as assessment_readiness_router
+    from app.api.v1.assessment.report_routes import router as assessment_report_router
     from app.middleware.exception_handler import add_exception_handlers
     
     app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
@@ -67,7 +69,29 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["Health"])
     async def health_check():
-        return {"status": "ok", "environment": settings.ENVIRONMENT}
+        return {
+            "status": "ok",
+            "environment": settings.ENVIRONMENT,
+            "use_celery": settings.USE_CELERY,
+        }
+
+    @app.get("/health/ready", tags=["Health"])
+    async def readiness_check():
+        from sqlalchemy import text
+
+        from app.database.session import AsyncSessionLocal
+
+        try:
+            async with AsyncSessionLocal() as db:
+                await db.execute(text("SELECT 1"))
+            return {"status": "ready", "database": "ok"}
+        except Exception:
+            from fastapi.responses import JSONResponse
+
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "database": "unavailable"},
+            )
 
     return app
 

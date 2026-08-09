@@ -26,3 +26,13 @@ async def rate_limit_report_generate(current_user: User = Depends(get_current_us
         label="report generation",
     )
     return current_user
+
+
+async def rate_limit_analyze(current_user: User = Depends(get_current_user)) -> User:
+    await enforce_rate_limit(
+        f"analyze:{current_user.id}",
+        limit=settings.ANALYZE_RATE_LIMIT,
+        window_seconds=settings.ANALYZE_RATE_WINDOW_SECONDS,
+        label="3B analysis",
+    )
+    return current_user

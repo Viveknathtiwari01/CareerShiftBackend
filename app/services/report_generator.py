@@ -133,20 +133,6 @@ CATEGORY_TITLES: dict[str, str] = {
 @dataclass
 class ReportGeneratorInput:
     assessment_id: UUID
-<<<<<<< HEAD
-    profile: dict
-    profession_summary: str | None
-    competencies: list[dict]
-    tasks: list[dict]
-    analyses: list[dict]
-    toolkit: list[dict] | None = None
-
-
-def _risk_from_bot_pct(bot_pct: float) -> str:
-    if bot_pct >= 0.45:
-        return "High"
-    if bot_pct >= 0.25:
-=======
     profile: dict[str, Any]
     tasks: list[dict[str, Any]]
     analyses: list[dict[str, Any]]
@@ -606,26 +592,146 @@ def _impact_from_auto(potential: int | None) -> str:
     if potential >= 75:
         return "High"
     if potential >= 45:
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba
         return "Medium"
     return "Low"
 
 
-<<<<<<< HEAD
-def _group_competencies(competencies: list[dict]) -> list[dict]:
-    grouped: dict[str, list[dict]] = defaultdict(list)
-    for item in competencies:
-        category = item.get("category") or "General"
-        grouped[category].append(
-            {
-                "name": item.get("name"),
-                "importance": item.get("importance"),
-                "expected_level": item.get("expected_level"),
-                "what_it_is": item.get("what_it_is"),
-                "why_it_matters": item.get("why_it_matters"),
-            }
+def _build_action_plan(data: ReportGeneratorInput, readiness: AIReadinessResponse) -> ReportActionPlanSection:
+    start_doing: list[ReportActionItem] = []
+    stop_doing: list[ReportActionItem] = []
+    automate: list[ReportActionItem] = []
+    learn_next: list[ReportActionItem] = []
+
+    for row in data.analyses:
+        category = (row.get("category") or "BLEND").upper()
+        actions = list(row.get("next_actions") or [])[:3]
+        title = row.get("task_title") or "task"
+        potential = row.get("auto_potential")
+
+        if category == "BLEND" and actions:
+            start_doing.append(
+                ReportActionItem(
+                    text=actions[0],
+                    priority="High",
+                    impact="High",
+                    time="2–4h/wk",
+                    difficulty="Medium",
+                )
+            )
+        if category == "BOT":
+            stop_doing.append(
+                ReportActionItem(
+                    text=f"Manual repetition on {title.lower()}",
+                    priority="High",
+                    impact=_impact_from_auto(potential),
+                    time="Instant",
+                    difficulty="Low",
+                )
+            )
+            automate.append(
+                ReportActionItem(
+                    text=actions[0] if actions else f"Automate {title.lower()} with recommended AI tools",
+                    priority="High",
+                    impact="High",
+                    time=f"{max(1, round((potential or 50) / 25))}h/wk saved",
+                    difficulty="Medium",
+                )
+            )
+
+    for item in readiness.improvements[:2]:
+        learn_next.append(
+            ReportActionItem(
+                text=item.title,
+                priority="High",
+                impact=item.impact,
+                time="10–20h",
+                difficulty=item.difficulty,
+            )
         )
-    return [{"category": cat, "items": items} for cat, items in grouped.items()]
+
+    if not start_doing:
+        start_doing = [
+            ReportActionItem(
+                text="Use AI for one recurring weekly deliverable",
+                priority="High",
+                impact="High",
+                time="2h/wk",
+                difficulty="Low",
+            )
+        ]
+
+    return ReportActionPlanSection(
+        start_doing=start_doing[:3],
+        stop_doing=stop_doing[:3],
+        automate_with_ai=automate[:3],
+        learn_next=learn_next[:3],
+    )
+
+
+def _build_career_identity(
+    data: ReportGeneratorInput,
+    readiness: AIReadinessResponse,
+) -> ReportCareerIdentitySection:
+    job_title = data.profile.get("job_title") or "Professional"
+    domain = data.profile.get("domain") or data.profile.get("specialization") or "your field"
+    strengths = [item.title for item in readiness.strengths[:4]]
+    blind_spots = [item.title for item in readiness.improvements[:4]]
+    if not strengths:
+        strengths = ["Domain expertise", "Problem solving", "Professional reliability"]
+    if not blind_spots:
+        blind_spots = ["Advanced AI workflow design", "Cross-team AI change leadership"]
+
+    narrative = (
+        data.profession_summary
+        or readiness.summary
+        or f"You are a capable {job_title} operating in {domain} with room to expand AI-native delivery."
+    )
+    nodes = [
+        ReportCareerNode(label="Current", role=job_title),
+        ReportCareerNode(label="Target (Near Term)", role=f"AI-Augmented {job_title}"),
+        ReportCareerNode(label="Future (Mid Term)", role=f"Strategic {job_title}"),
+    ]
+    ideal_roles = [
+        ReportIdealRole(
+            role=f"AI-Enabled {job_title}",
+            reason="Builds on your current scope while integrating AI into daily delivery.",
+        ),
+        ReportIdealRole(
+            role=f"{data.profile.get('business_function') or 'Functional'} Lead",
+            reason="Leverages domain depth plus improved AI fluency.",
+        ),
+        ReportIdealRole(
+            role="AI Workflow Architect",
+            reason="Natural progression if you automate and blend high-volume tasks successfully.",
+        ),
+    ]
+    closing = (
+        "AI is not replacing your career. It is changing how exceptional professionals create value. "
+        "Your strongest advantage comes from combining deep domain expertise with intelligent AI collaboration."
+    )
+    return ReportCareerIdentitySection(
+        title=f"AI-Augmented {job_title}",
+        subtitle=f"{domain} Specialist",
+        narrative=narrative,
+        strengths=strengths,
+        blind_spots=blind_spots,
+        roadmap_nodes=nodes,
+        ideal_roles=ideal_roles,
+        closing_note=closing,
+    )
+
+
+def _build_strategic_note(
+    data: ReportGeneratorInput,
+    readiness: AIReadinessResponse,
+    before_after: ReportBeforeAfterSection,
+) -> str:
+    job_title = data.profile.get("job_title") or "professional"
+    return (
+        f"As a {job_title}, your AI readiness score of {readiness.overall_score}/100 ({readiness.tier_label}) "
+        f"signals a clear path forward: automate BOT work, blend AI into daily delivery, and deepen BUILD strengths. "
+        f"Executing the recommended actions could free {before_after.hours_freed_per_week:g} hours weekly within 12 months."
+    )
 
 
 _IMPACT_SCORE = {"High": 3, "Medium": 2, "Low": 1}
@@ -878,393 +984,6 @@ def _aggregate_tools(analyses: list[dict]) -> list[dict]:
     ]
 
 
-def generate_career_intelligence_report(data: ReportGeneratorInput) -> dict:
-    profile = data.profile
-    selected_tasks = [t for t in data.tasks if t.get("selected", True)]
-    analyses = data.analyses
-
-    build_count = sum(1 for a in analyses if a.get("category") == "BUILD")
-    bot_count = sum(1 for a in analyses if a.get("category") == "BOT")
-    blend_count = sum(1 for a in analyses if a.get("category") == "BLEND")
-    task_count = max(len(analyses), len(selected_tasks), 1)
-
-    auto_potentials = [a.get("auto_potential") for a in analyses if a.get("auto_potential") is not None]
-    avg_auto = sum(auto_potentials) / len(auto_potentials) if auto_potentials else None
-
-    readiness = compute_ai_readiness(
-        ReadinessInput(
-            ai_frequency=profile.get("ai_frequency") or "Never",
-            ai_tools=profile.get("ai_tools") or [],
-            ai_comfort_level=int(profile.get("ai_comfort_level") or 5),
-            task_ai_assistance=[t.get("ai_assistance") or "Never" for t in selected_tasks],
-            build_count=build_count,
-            bot_count=bot_count,
-            blend_count=blend_count,
-            task_count=task_count,
-            avg_auto_potential=avg_auto,
-        )
-    )
-
-    bot_pct = bot_count / task_count
-    automation_pct = round(bot_pct * 100)
-    career_risk = _risk_from_bot_pct(bot_pct)
-
-    job_title = profile.get("job_title") or "Professional"
-    industry = profile.get("industry") or "General"
-    experience_years = int(profile.get("experience_years") or 0)
-
-    overview = {
-        "overall_score": readiness.overall_score,
-        "tasks_analyzed": len(analyses) or len(selected_tasks),
-        "competency_count": len(data.competencies),
-        "ai_tools_count": len(profile.get("ai_tools") or []),
-        "automation_pct": automation_pct,
-        "career_risk": career_risk,
-        "job_title": job_title,
-        "industry": industry,
-        "experience_years": experience_years,
-        "profession_summary": data.profession_summary,
-        "reading_time_minutes": max(8, min(20, 6 + len(analyses) // 2)),
-    }
-
-    ai_readiness_json = {
-        "overall_score": readiness.overall_score,
-        "tier_label": readiness.tier_label,
-        "tier_description": readiness.tier_description,
-        "dimensions": [{"name": d.name, "score": d.score} for d in readiness.dimensions],
-        "strengths": readiness.strengths,
-        "improvement_areas": readiness.improvement_areas,
-        "factors": readiness.factors,
-    }
-
-    daily_work_tasks = [
-        {
-            "title": t.get("title"),
-            "hours_per_week": float(t.get("hours_per_week") or 0),
-            "category": t.get("category"),
-            "complexity": t.get("complexity") or "medium",
-            "ai_assistance": t.get("ai_assistance"),
-        }
-        for t in selected_tasks
-    ]
-    total_hours = sum(t["hours_per_week"] for t in daily_work_tasks) or 40.0
-
-    task_routing = [
-        {
-            "task_id": str(a.get("task_id")),
-            "task_title": a.get("task_title") or "",
-            "category": a.get("category"),
-            "rationale": a.get("rationale"),
-            "reason": a.get("reason"),
-            "next_actions": a.get("next_actions") or [],
-            "auto_potential": a.get("auto_potential"),
-            "risk_level": a.get("risk_level"),
-            "future_impact": a.get("future_impact"),
-            "recommended_tools": a.get("recommended_tools") or [],
-        }
-        for a in analyses
-    ]
-
-    identity_title = f"AI-Augmented {job_title}"
-    career_identity = {
-        "identity_title": identity_title,
-        "confidence_pct": min(98, max(55, readiness.overall_score + 10)),
-        "executive_summary": (
-            f"Your profile as a {job_title} in {industry} shows {readiness.tier_label.lower()} AI readiness "
-            f"({readiness.overall_score}/100). {readiness.tier_description}"
-        ),
-        "ideal_roles": [
-            f"AI-Augmented {job_title}",
-            f"Senior {job_title}",
-            f"{profile.get('business_function') or 'Cross-functional'} AI Lead",
-        ],
-        "superpowers": readiness.strengths[:3],
-        "blind_spots": readiness.improvement_areas[:3],
-        "growth_strategy": (
-            "Focus on deepening BUILD tasks while piloting AI workflows on BLEND tasks. "
-            "Automate repetitive BOT work to free time for high-judgment responsibilities."
-        ),
-    }
-
-    roadmap = [
-        {
-            "horizon": "30 days",
-            "title": "Quick wins",
-            "items": [
-                action
-                for a in analyses[:3]
-                for action in (a.get("next_actions") or [])[:1]
-            ][:4]
-            or ["Document your top 3 weekly tasks and identify one BOT candidate"],
-        },
-        {
-            "horizon": "90 days",
-            "title": "Capability building",
-            "items": readiness.improvement_areas[:4],
-        },
-        {
-            "horizon": "365 days",
-            "title": "Career positioning",
-            "items": [
-                f"Position as {identity_title}",
-                "Lead an AI workflow pilot in your team",
-                "Build a portfolio of AI-augmented outcomes",
-            ],
-        },
-    ]
-
-    toolkit = list(data.toolkit) if data.toolkit else _aggregate_tools(analyses)
-    if not toolkit and profile.get("ai_tools"):
-        toolkit = [
-            {
-                "name": tool,
-                "category": "Profile",
-                "use_case": "Listed in your assessment profile as a tool you already use.",
-                "source": "Profile",
-                "priority_rank": index,
-                "priority_label": "Existing",
-                "priority_reason": (
-                    "Already in your profile — continue building on familiar tools as you expand AI workflows."
-                ),
-            }
-            for index, tool in enumerate(profile.get("ai_tools", [])[:8], start=1)
-        ]
-
-    automate_actions = [
-        f"Automate: {a.get('task_title')}"
-        for a in analyses
-        if a.get("category") == "BOT"
-    ][:4]
-    learn_actions = [
-        action
-        for a in analyses
-        if a.get("category") == "BUILD"
-        for action in (a.get("next_actions") or [])[:1]
-    ][:4]
-
-    action_plan = {
-        "start": readiness.strengths[:3],
-        "stop": ["Manual rework on tasks already classified as BOT"] if bot_count else [],
-        "automate": automate_actions,
-        "learn": learn_actions or readiness.improvement_areas[:3],
-    }
-
-    strategic_note = (
-        f"{job_title} in {industry}: AI readiness {readiness.overall_score}/100 ({readiness.tier_label}). "
-        f"{bot_count} BOT, {blend_count} BLEND, {build_count} BUILD tasks analyzed. "
-        f"Prioritize {readiness.improvement_areas[0].lower() if readiness.improvement_areas else 'targeted upskilling'}."
-    )
-
-    now = datetime.now(timezone.utc)
-
-    return {
-        "assessment_id": str(data.assessment_id),
-        "report_version": REPORT_VERSION,
-        "generated_at": now.isoformat(),
-        "strategic_note": strategic_note,
-        "overview": overview,
-        "ai_readiness": ai_readiness_json,
-        "competencies": _group_competencies(data.competencies),
-        "daily_work": {"tasks": daily_work_tasks, "total_hours_per_week": total_hours},
-        "task_routing": task_routing,
-        "career_identity": career_identity,
-        "learning_roadmap": roadmap,
-        "ai_toolkit": toolkit,
-        "action_plan": action_plan,
-        "before_after": {
-            "current_role": job_title,
-            "future_role": identity_title,
-            "shift_summary": strategic_note,
-        },
-        "cost_roi": {
-            "hours_automatable_per_week": round(
-                sum(
-                    float(t.get("hours_per_week") or 0)
-                    for t, a in zip(selected_tasks, analyses)
-                    if a.get("category") == "BOT"
-                ),
-                1,
-            ),
-            "note": "Estimated from BOT-classified task hours",
-        },
-        "market_urgency": {
-            "risk_level": career_risk,
-            "automation_pct": automation_pct,
-            "message": f"{career_risk} displacement exposure based on current task mix",
-        },
-        "_persist": {
-            "ai_readiness_json": ai_readiness_json,
-            "task_routing_json": {"items": task_routing, "daily_tasks": daily_work_tasks},
-            "before_after_json": {
-                "current_role": job_title,
-                "future_role": identity_title,
-                "shift_summary": strategic_note,
-            },
-            "upskill_roadmap_json": {"phases": roadmap},
-            "ai_toolkit_json": {"tools": toolkit},
-            "cost_roi_json": {
-                "hours_automatable_per_week": round(
-                    sum(
-                        float(t.get("hours_per_week") or 0)
-                        for t, a in zip(selected_tasks, analyses)
-                        if a.get("category") == "BOT"
-                    ),
-                    1,
-                ),
-                "note": "Estimated from BOT-classified task hours",
-            },
-            "market_urgency_json": {"risk_level": career_risk, "automation_pct": automation_pct},
-            "overview_json": {
-                **overview,
-                "competency_groups": _group_competencies(data.competencies),
-                "total_hours_per_week": total_hours,
-            },
-            "career_identity_json": career_identity,
-            "action_plan_json": action_plan,
-            "strategic_note": strategic_note,
-            "report_version": REPORT_VERSION,
-            "generated_at": now,
-        },
-    }
-=======
-def _build_action_plan(data: ReportGeneratorInput, readiness: AIReadinessResponse) -> ReportActionPlanSection:
-    start_doing: list[ReportActionItem] = []
-    stop_doing: list[ReportActionItem] = []
-    automate: list[ReportActionItem] = []
-    learn_next: list[ReportActionItem] = []
-
-    for row in data.analyses:
-        category = (row.get("category") or "BLEND").upper()
-        actions = list(row.get("next_actions") or [])[:3]
-        title = row.get("task_title") or "task"
-        potential = row.get("auto_potential")
-
-        if category == "BLEND" and actions:
-            start_doing.append(
-                ReportActionItem(
-                    text=actions[0],
-                    priority="High",
-                    impact="High",
-                    time="2–4h/wk",
-                    difficulty="Medium",
-                )
-            )
-        if category == "BOT":
-            stop_doing.append(
-                ReportActionItem(
-                    text=f"Manual repetition on {title.lower()}",
-                    priority="High",
-                    impact=_impact_from_auto(potential),
-                    time="Instant",
-                    difficulty="Low",
-                )
-            )
-            automate.append(
-                ReportActionItem(
-                    text=actions[0] if actions else f"Automate {title.lower()} with recommended AI tools",
-                    priority="High",
-                    impact="High",
-                    time=f"{max(1, round((potential or 50) / 25))}h/wk saved",
-                    difficulty="Medium",
-                )
-            )
-
-    for item in readiness.improvements[:2]:
-        learn_next.append(
-            ReportActionItem(
-                text=item.title,
-                priority="High",
-                impact=item.impact,
-                time="10–20h",
-                difficulty=item.difficulty,
-            )
-        )
-
-    if not start_doing:
-        start_doing = [
-            ReportActionItem(
-                text="Use AI for one recurring weekly deliverable",
-                priority="High",
-                impact="High",
-                time="2h/wk",
-                difficulty="Low",
-            )
-        ]
-
-    return ReportActionPlanSection(
-        start_doing=start_doing[:3],
-        stop_doing=stop_doing[:3],
-        automate_with_ai=automate[:3],
-        learn_next=learn_next[:3],
-    )
-
-
-def _build_career_identity(
-    data: ReportGeneratorInput,
-    readiness: AIReadinessResponse,
-) -> ReportCareerIdentitySection:
-    job_title = data.profile.get("job_title") or "Professional"
-    domain = data.profile.get("domain") or data.profile.get("specialization") or "your field"
-    strengths = [item.title for item in readiness.strengths[:4]]
-    blind_spots = [item.title for item in readiness.improvements[:4]]
-    if not strengths:
-        strengths = ["Domain expertise", "Problem solving", "Professional reliability"]
-    if not blind_spots:
-        blind_spots = ["Advanced AI workflow design", "Cross-team AI change leadership"]
-
-    narrative = (
-        data.profession_summary
-        or readiness.summary
-        or f"You are a capable {job_title} operating in {domain} with room to expand AI-native delivery."
-    )
-    nodes = [
-        ReportCareerNode(label="Current", role=job_title),
-        ReportCareerNode(label="Target (Near Term)", role=f"AI-Augmented {job_title}"),
-        ReportCareerNode(label="Future (Mid Term)", role=f"Strategic {job_title}"),
-    ]
-    ideal_roles = [
-        ReportIdealRole(
-            role=f"AI-Enabled {job_title}",
-            reason="Builds on your current scope while integrating AI into daily delivery.",
-        ),
-        ReportIdealRole(
-            role=f"{data.profile.get('business_function') or 'Functional'} Lead",
-            reason="Leverages domain depth plus improved AI fluency.",
-        ),
-        ReportIdealRole(
-            role="AI Workflow Architect",
-            reason="Natural progression if you automate and blend high-volume tasks successfully.",
-        ),
-    ]
-    closing = (
-        "AI is not replacing your career. It is changing how exceptional professionals create value. "
-        "Your strongest advantage comes from combining deep domain expertise with intelligent AI collaboration."
-    )
-    return ReportCareerIdentitySection(
-        title=f"AI-Augmented {job_title}",
-        subtitle=f"{domain} Specialist",
-        narrative=narrative,
-        strengths=strengths,
-        blind_spots=blind_spots,
-        roadmap_nodes=nodes,
-        ideal_roles=ideal_roles,
-        closing_note=closing,
-    )
-
-
-def _build_strategic_note(
-    data: ReportGeneratorInput,
-    readiness: AIReadinessResponse,
-    before_after: ReportBeforeAfterSection,
-) -> str:
-    job_title = data.profile.get("job_title") or "professional"
-    return (
-        f"As a {job_title}, your AI readiness score of {readiness.overall_score}/100 ({readiness.tier_label}) "
-        f"signals a clear path forward: automate BOT work, blend AI into daily delivery, and deepen BUILD strengths. "
-        f"Executing the recommended actions could free {before_after.hours_freed_per_week:g} hours weekly within 12 months."
-    )
-
-
 def generate_career_intelligence_report(data: ReportGeneratorInput) -> CareerIntelligenceReportResponse:
     readiness = _build_readiness(data)
     task_routing = _build_task_routing(data)
@@ -1298,4 +1017,3 @@ def generate_career_intelligence_report(data: ReportGeneratorInput) -> CareerInt
         competencies=competencies,
         daily_work=daily_work,
     )
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba

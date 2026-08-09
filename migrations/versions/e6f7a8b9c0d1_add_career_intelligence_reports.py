@@ -45,24 +45,13 @@ def upgrade() -> None:
         sa.UniqueConstraint("assessment_id"),
     )
     op.create_index(
-<<<<<<< HEAD
-        "ix_career_intelligence_reports_assessment_id",
-        "career_intelligence_reports",
-        ["assessment_id"],
-        unique=True,
-=======
         "ix_career_reports_assessment_id",
         "career_intelligence_reports",
         ["assessment_id"],
         unique=False,
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba
     )
 
 
 def downgrade() -> None:
-<<<<<<< HEAD
-    op.drop_index("ix_career_intelligence_reports_assessment_id", table_name="career_intelligence_reports")
-=======
     op.drop_index("ix_career_reports_assessment_id", table_name="career_intelligence_reports")
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba
     op.drop_table("career_intelligence_reports")

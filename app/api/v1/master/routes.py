@@ -83,3 +83,10 @@ async def get_job_titles(
     
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+@router.get("/profile-options")
+async def get_profile_options():
+    from app.core.profile_options import PROFILE_OPTIONS
+
+    return PROFILE_OPTIONS

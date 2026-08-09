@@ -18,6 +18,7 @@ from app.schemas.assessment import (
 from app.schemas.common import APIResponse
 from app.schemas.pipeline import AssessmentDebugResponse
 from app.services.assessment import AssessmentService
+from app.services.task_dispatch import dispatch_competency_pipeline
 
 router = APIRouter()
 
@@ -63,9 +64,10 @@ async def start_assessment(
 
     should_dispatch = (not result.already_running) or result.needs_pipeline_dispatch
     if should_dispatch:
-        background_tasks.add_task(
-            assessment_service.run_competency_pipeline,
-            result.assessment_id,
+        dispatch_competency_pipeline(
+            background_tasks,
+            assessment_id=result.assessment_id,
+            run_pipeline=assessment_service.run_competency_pipeline,
         )
         response.status_code = status.HTTP_202_ACCEPTED
     else:

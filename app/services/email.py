@@ -213,12 +213,11 @@ class EmailService:
         </body></html>
         """
 
-        if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-            logger.info(
-                "Report ready email (mock) to=%s score=%s url=%s",
-                to_email,
-                score,
-                report_url,
+        if not settings.email_configured:
+            if settings.is_production:
+                raise ValueError("Email service is not configured.")
+            logger.warning(
+                "SMTP not configured — report ready email logged for development only."
             )
             print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
             return

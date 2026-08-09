@@ -180,21 +180,14 @@ class AssessmentTaskAnalysisService:
         for idx, task in enumerate(selected_tasks):
             item = analyses_by_index.get(idx)
             if not item:
-                logger.warning("Missing 3B analysis for task index %d — using BLEND default", idx)
-                item = {
-                    "category": "BLEND",
-                    "rationale": "Requires human-AI collaboration",
-                    "reason": "AI augments this task but human oversight remains important.",
-                    "next_actions": [
-                        "Identify repetitive sub-steps to automate",
-                        "Pilot an AI assistant for draft outputs",
-                        "Document a review checklist for quality control",
-                    ],
-                    "auto_potential": 50,
-                    "risk_level": "Medium",
-                    "future_impact": "High",
-                    "recommended_tools": ["ChatGPT", "Copilot"],
-                }
+                logger.error("Missing 3B analysis for task index %d (task_id=%s)", idx, task.id)
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=(
+                        "AI analysis did not return results for all tasks. "
+                        "Please retry the analysis."
+                    ),
+                )
 
             new_rows.append(
                 AssessmentTaskAnalysis(

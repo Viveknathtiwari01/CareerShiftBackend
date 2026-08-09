@@ -25,20 +25,6 @@ class CareerIntelligenceReport(AuditMixin, Base):
     ai_toolkit_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     cost_roi_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     market_urgency_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-<<<<<<< HEAD
-    overview_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    career_identity_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    action_plan_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    strategic_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    report_version: Mapped[str] = mapped_column(String(32), nullable=False, default="1.0.0")
-    generated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
-
-    assessment = relationship("Assessment", backref="career_intelligence_report")
-=======
     supplemental_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     strategic_note: Mapped[str] = mapped_column(Text, nullable=False, default="")
     report_version: Mapped[str] = mapped_column(String(32), nullable=False, default="1.0")
@@ -51,4 +37,3 @@ class CareerIntelligenceReport(AuditMixin, Base):
     __table_args__ = (
         Index("ix_career_reports_assessment_id", "assessment_id"),
     )
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba

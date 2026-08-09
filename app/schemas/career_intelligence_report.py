@@ -160,21 +160,6 @@ class CareerIntelligenceReportResponse(BaseModel):
     assessment_id: UUID
     report_version: str
     generated_at: datetime
-<<<<<<< HEAD
-    strategic_note: str | None = None
-    overview: ReportOverview
-    ai_readiness: AIReadinessSection
-    competencies: list[CompetencyGroup]
-    daily_work: dict
-    task_routing: list[TaskRoutingItem]
-    career_identity: CareerIdentitySection
-    learning_roadmap: list[RoadmapPhase]
-    ai_toolkit: list[ToolkitItem]
-    action_plan: ActionPlanSection
-    before_after: dict = Field(default_factory=dict)
-    cost_roi: dict = Field(default_factory=dict)
-    market_urgency: dict = Field(default_factory=dict)
-=======
     strategic_note: str
     overview: ReportOverviewSection
     ai_readiness: AIReadinessResponse
@@ -188,4 +173,3 @@ class CareerIntelligenceReportResponse(BaseModel):
     career_identity: ReportCareerIdentitySection
     competencies: list[ReportCompetencyGroup]
     daily_work: ReportDailyWorkSection
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba

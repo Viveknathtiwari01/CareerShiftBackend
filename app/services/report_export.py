@@ -39,55 +39,6 @@ def _portfolio_lines(mix: dict[str, int]) -> list[str]:
 def generate_scorecard(
     report: CareerIntelligenceReportResponse,
     *,
-<<<<<<< HEAD
-    recipient_name: str,
-) -> ReportScorecardResponse:
-    o = report.overview
-    r = report.ai_readiness
-    report_url = f"{settings.APP_PUBLIC_URL.rstrip('/')}/report?assessmentId={report.assessment_id}"
-
-    headline = (
-        f"My CareerShift AI Readiness Score: {r.overall_score}/100 ({r.tier_label}) — "
-        f"{o.job_title} in {o.industry}"
-    )
-
-    linkedin_text = (
-        f"I completed my CareerShift Career Intelligence Assessment.\n\n"
-        f"AI Readiness Score: {r.overall_score}/100 ({r.tier_label})\n"
-        f"Role: {o.job_title} | Industry: {o.industry}\n"
-        f"Tasks analyzed: {o.tasks_analyzed} | Automation exposure: {o.automation_pct}%\n"
-        f"Career risk: {o.career_risk}\n\n"
-        f"{r.tier_description}\n\n"
-        f"View the full framework: {report_url}\n\n"
-        f"#AIReadiness #CareerShift #FutureOfWork"
-    )
-
-    twitter_text = (
-        f"CareerShift AI Readiness: {r.overall_score}/100 ({r.tier_label}) | "
-        f"{o.job_title} | {o.automation_pct}% automation exposure | "
-        f"Risk: {o.career_risk} {report_url} #CareerShift"
-    )
-    if len(twitter_text) > 280:
-        twitter_text = twitter_text[:277] + "..."
-
-    return ReportScorecardResponse(
-        assessment_id=str(report.assessment_id),
-        score=r.overall_score,
-        tier_label=r.tier_label,
-        job_title=o.job_title,
-        industry=o.industry,
-        automation_pct=o.automation_pct,
-        career_risk=o.career_risk,
-        headline=headline,
-        linkedin_text=linkedin_text,
-        twitter_text=twitter_text,
-        report_url=report_url,
-    )
-
-
-def export_report_json(report: CareerIntelligenceReportResponse) -> dict:
-    return json.loads(report.model_dump_json())
-=======
     job_title: str | None = None,
 ) -> ReportScorecardResponse:
     readiness = report.ai_readiness
@@ -186,4 +137,3 @@ def render_report_pdf(
         job_title=job_title,
     )
     return html_to_pdf(html)
->>>>>>> 1a0215840eb4aaaacc5cb05263f14b2c781ae1ba
