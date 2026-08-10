@@ -26,122 +26,33 @@ class EmailService:
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                /* Email clients require inline or very simple CSS. These styles are fallbacks. */
-                body {{
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    background-color: #f3f4f6;
-                    margin: 0;
-                    padding: 0;
-                    -webkit-font-smoothing: antialiased;
-                }}
-                .wrapper {{
-                    width: 100%;
-                    background-color: #f3f4f6;
-                    padding: 40px 0;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background-color: #ffffff;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-                }}
-                .header {{
-                    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-                    padding: 40px 30px;
-                    text-align: center;
-                }}
-                .header h1 {{
-                    color: #ffffff;
-                    margin: 0;
-                    font-size: 28px;
-                    font-weight: 700;
-                    letter-spacing: -0.5px;
-                }}
-                .content {{
-                    padding: 40px 30px;
-                    text-align: center;
-                }}
-                .content h2 {{
-                    color: #1f2937;
-                    font-size: 22px;
-                    font-weight: 600;
-                    margin-top: 0;
-                    margin-bottom: 15px;
-                }}
-                .content p {{
-                    color: #4b5563;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin: 0 0 25px 0;
-                }}
-                .otp-wrapper {{
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 25px;
-                    margin: 30px auto;
-                    max-width: 300px;
-                }}
-                .otp-code {{
-                    font-family: monospace;
-                    font-size: 36px;
-                    font-weight: 700;
-                    letter-spacing: 8px;
-                    color: #2563eb;
-                    margin: 0;
-                    text-align: center;
-                }}
-                .warning {{
-                    font-size: 14px !important;
-                    color: #6b7280 !important;
-                    margin-bottom: 0 !important;
-                }}
-                .footer {{
-                    background-color: #f9fafb;
-                    padding: 25px 30px;
-                    text-align: center;
-                    border-top: 1px solid #f3f4f6;
-                }}
-                .footer p {{
-                    color: #9ca3af;
-                    font-size: 13px;
-                    margin: 0 0 10px 0;
-                }}
-                .footer a {{
-                    color: #6b7280;
-                    text-decoration: none;
-                }}
-            </style>
         </head>
-        <body>
-            <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+        <body style="font-family: 'DM Sans', Arial, Helvetica, sans-serif; background-color: #f6f5ec; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f5ec; padding: 40px 0;">
                 <tr>
                     <td align="center">
-                        <table class="container" cellpadding="0" cellspacing="0" role="presentation">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-top: 4px solid #c9a84c;">
                             <tr>
-                                <td class="header">
-                                    <h1>CareerShift</h1>
+                                <td style="background-color: #141f32; padding: 40px 30px; text-align: center;">
+                                    <h1 style="color: #ffffff; margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 700; letter-spacing: 0.5px;">CareerShift</h1>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="content">
-                                    <h2>{title}</h2>
-                                    <p>{message}</p>
+                                <td style="padding: 40px 30px; text-align: center;">
+                                    <h2 style="color: #141f32; margin-top: 0; margin-bottom: 15px; font-size: 24px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif;">{title}</h2>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">{message}</p>
                                     
-                                    <div class="otp-wrapper">
-                                        <p class="otp-code">{otp}</p>
+                                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; margin: 0 auto 30px auto; max-width: 300px;">
+                                        <p style="font-family: monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #141f32; margin: 0; text-align: center;">{otp}</p>
                                     </div>
                                     
-                                    <p class="warning">This secure code will expire in <strong>10 minutes</strong>.<br>If you did not request this, please safely ignore this email.</p>
+                                    <p style="font-size: 14px; color: #6b7280; line-height: 1.5; margin: 0;">This secure code will expire in <strong>10 minutes</strong>.<br>If you did not request this, please safely ignore this email.</p>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="footer">
-                                    <p>&copy; {datetime.now().year} CareerShift. All rights reserved.</p>
-                                    <p>Automated message. Please do not reply.</p>
+                                <td style="background-color: #f4f6f8; padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                    <p style="color: #5c6b7e; font-size: 13px; margin: 0 0 10px 0;">&copy; {datetime.now().year} CareerShift. All rights reserved.</p>
+                                    <p style="color: #5c6b7e; font-size: 13px; margin: 0;">Automated message. Please do not reply.</p>
                                 </td>
                             </tr>
                         </table>
@@ -221,14 +132,50 @@ class EmailService:
         subject = f"Your Career Intelligence Report is ready — {score}/100"
         html_content = f"""
         <!DOCTYPE html>
-        <html><body style="font-family: Arial, sans-serif; color: #1a273d; line-height: 1.6;">
-          <h1 style="color: #1a273d;">Your report is ready</h1>
-          <p>Hi {recipient_name},</p>
-          <p>Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
-          <p><strong>AI Readiness:</strong> {score}/100 ({tier_label})</p>
-          <p><a href="{report_url}" style="background:#1a273d;color:#fff;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">View Your Report</a></p>
-          <p style="color:#64748b;font-size:13px;">If the button does not work, copy this link:<br>{report_url}</p>
-        </body></html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: 'DM Sans', Arial, Helvetica, sans-serif; background-color: #f6f5ec; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f5ec; padding: 40px 0;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-top: 4px solid #c9a84c;">
+                            <tr>
+                                <td style="background-color: #141f32; padding: 40px 30px; text-align: center;">
+                                    <h1 style="color: #ffffff; margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 700; letter-spacing: 0.5px;">CareerShift</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 40px 30px; text-align: center;">
+                                    <h2 style="color: #141f32; margin-top: 0; margin-bottom: 15px; font-size: 24px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif;">Your report is ready!</h2>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">Hi {recipient_name},</p>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
+                                    
+                                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; margin: 0 auto 30px auto; max-width: 300px;">
+                                        <p style="font-size: 14px; color: #5c6b7e; margin: 0 0 5px 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">AI Readiness Score</p>
+                                        <p style="font-size: 42px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif; color: #c9a84c; margin: 0;">{score}<span style="font-size: 20px; color: #9ca3af;">/100</span></p>
+                                        <p style="font-size: 16px; font-weight: 700; color: #141f32; margin: 10px 0 0 0;">{tier_label}</p>
+                                    </div>
+                                    
+                                    <a href="{report_url}" style="background-color: #141f32; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; margin-bottom: 25px; border: 1px solid #141f32;">View Your Report</a>
+                                    
+                                    <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0; word-break: break-all;">If the button does not work, copy this link:<br><a href="{report_url}" style="color: #c9a84c; text-decoration: underline;">{report_url}</a></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f4f6f8; padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                    <p style="color: #5c6b7e; font-size: 13px; margin: 0 0 10px 0;">&copy; {datetime.now().year} CareerShift. All rights reserved.</p>
+                                    <p style="color: #5c6b7e; font-size: 13px; margin: 0;">Automated message. Please do not reply.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
         """
 
         if not settings.email_configured:
