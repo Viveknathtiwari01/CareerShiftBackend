@@ -173,15 +173,33 @@ class EmailService:
         message.add_alternative(html_content, subtype="html")
 
         try:
-            await aiosmtplib.send(
-                message,
-                hostname=settings.SMTP_HOST,
-                port=settings.SMTP_PORT,
-                username=settings.SMTP_USER,
-                password=settings.SMTP_PASSWORD,
-                use_tls=False,
-                start_tls=settings.SMTP_TLS,
-            )
+            if settings.RESEND_API_KEY:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "https://api.resend.com/emails",
+                        headers={
+                            "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "from": f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>",
+                            "to": [to_email],
+                            "subject": "Your CareerShift Verification Code",
+                            "html": html_content,
+                        }
+                    )
+                    response.raise_for_status()
+            else:
+                await aiosmtplib.send(
+                    message,
+                    hostname=settings.SMTP_HOST,
+                    port=settings.SMTP_PORT,
+                    username=settings.SMTP_USER,
+                    password=settings.SMTP_PASSWORD,
+                    use_tls=False,
+                    start_tls=settings.SMTP_TLS,
+                )
             logger.info(f"OTP email sent to {to_email}")
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
@@ -230,15 +248,33 @@ class EmailService:
         message.add_alternative(html_content, subtype="html")
 
         try:
-            await aiosmtplib.send(
-                message,
-                hostname=settings.SMTP_HOST,
-                port=settings.SMTP_PORT,
-                username=settings.SMTP_USER,
-                password=settings.SMTP_PASSWORD,
-                use_tls=False,
-                start_tls=settings.SMTP_TLS,
-            )
+            if settings.RESEND_API_KEY:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "https://api.resend.com/emails",
+                        headers={
+                            "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "from": f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>",
+                            "to": [to_email],
+                            "subject": subject,
+                            "html": html_content,
+                        }
+                    )
+                    response.raise_for_status()
+            else:
+                await aiosmtplib.send(
+                    message,
+                    hostname=settings.SMTP_HOST,
+                    port=settings.SMTP_PORT,
+                    username=settings.SMTP_USER,
+                    password=settings.SMTP_PASSWORD,
+                    use_tls=False,
+                    start_tls=settings.SMTP_TLS,
+                )
             logger.info("Report ready email sent to %s", to_email)
         except Exception as e:
             logger.error("Failed to send report ready email to %s: %s", to_email, str(e))

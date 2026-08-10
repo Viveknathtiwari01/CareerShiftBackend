@@ -87,6 +87,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     # Email / SMTP
+    RESEND_API_KEY: str | None = None
     SMTP_TLS: bool = True
     SMTP_PORT: int = 587
     SMTP_HOST: str | None = None
@@ -131,6 +132,8 @@ class Settings(BaseSettings):
 
     @property
     def email_configured(self) -> bool:
+        if self.RESEND_API_KEY and self.EMAILS_FROM_EMAIL:
+            return True
         return bool(
             self.SMTP_HOST and self.SMTP_USER and self.SMTP_PASSWORD and self.EMAILS_FROM_EMAIL
         )
