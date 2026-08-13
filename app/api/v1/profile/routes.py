@@ -1,15 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from app.database.session import get_db
 from app.dependencies.auth import get_current_user
+from app.dependencies.rate_limit import rate_limit_suggest_identity
 from app.models.user import User
-from app.schemas.profile import UserProfileCreate, UserProfileUpdate, UserProfileResponse, GenerateSkillsRequest
+from app.schemas.profile import (
+    UserProfileCreate,
+    UserProfileUpdate,
+    UserProfileResponse,
+    GenerateSkillsRequest,
+    SuggestIdentityRequest,
+    SuggestIdentityResponse,
+)
 from app.schemas.common import APIResponse
 from app.services.profile import profile_service
 from app.services.ai_skills import generate_skills_from_ai
-
+from app.services.ai_career_identity import (
+    AIParseError,
+    AISchemaValidationError,
+    AITimeoutError,
+    AIUnavailableError,
+    suggest_career_identity_from_ai,
+)
 router = APIRouter()
 
 @router.get("/me", response_model=APIResponse[UserProfileResponse])
@@ -109,4 +123,45 @@ async def generate_skills_api(
         success=True,
         message="Skills generated successfully",
         data=skills,
+    )
+
+
+@router.post("/suggest-identity", response_model=APIResponse[SuggestIdentityResponse])
+async def suggest_identity_api(
+    req: SuggestIdentityRequest,
+    request: Request,
+    current_user: User = Depends(rate_limit_suggest_identity),
+):
+    request_id = getattr(request.state, "request_id", None)
+    try:
+        suggestions = await suggest_career_identity_from_ai(
+            req.professional_background,
+            request_id=str(request_id) if request_id else None,
+            user_id=str(current_user.id),
+        )
+    except AITimeoutError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    except AIUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    except AIParseError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    except AISchemaValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+
+    return APIResponse(
+        success=True,
+        message="Career identity suggestions generated successfully",
+        data=suggestions,
     )

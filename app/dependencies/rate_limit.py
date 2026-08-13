@@ -36,3 +36,13 @@ async def rate_limit_analyze(current_user: User = Depends(get_current_user)) -> 
         label="3B analysis",
     )
     return current_user
+
+
+async def rate_limit_suggest_identity(current_user: User = Depends(get_current_user)) -> User:
+    await enforce_rate_limit(
+        f"suggest_identity:{current_user.id}",
+        limit=settings.SUGGEST_IDENTITY_RATE_LIMIT,
+        window_seconds=settings.SUGGEST_IDENTITY_RATE_WINDOW_SECONDS,
+        label="career identity suggestions",
+    )
+    return current_user

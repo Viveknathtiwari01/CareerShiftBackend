@@ -9,148 +9,126 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     @staticmethod
-    def _create_html_template(otp: str, purpose: str) -> str:
+    def _otp_copy(purpose: str) -> tuple[str, str, str]:
         if purpose == "registration":
-            title = "Welcome to CareerShift!"
-            message = "Thank you for starting your journey with us. Please use the verification code below to complete your registration."
-        elif purpose == "password_reset":
-            title = "Reset Your Password"
-            message = "We received a request to reset your CareerShift password. Use the verification code below to set a new password."
-        else:
-            title = "Your Verification Code"
-            message = "Please use the verification code below."
+            return (
+                "Welcome to CareerShift!",
+                "Verify your email address",
+                "Thank you for starting your career readiness journey. Enter the verification code below to complete your registration and access your personalized AI Career Readiness assessment.",
+            )
+        if purpose == "password_reset":
+            return (
+                "Reset your password",
+                "Password reset verification",
+                "We received a request to reset your CareerShift password. Enter the verification code below to continue. If you did not request this, you can safely ignore this email.",
+            )
+        return (
+            "Your verification code",
+            "Account verification",
+            "Please use the verification code below to continue.",
+        )
 
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                /* Email clients require inline or very simple CSS. These styles are fallbacks. */
-                body {{
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    background-color: #f3f4f6;
-                    margin: 0;
-                    padding: 0;
-                    -webkit-font-smoothing: antialiased;
-                }}
-                .wrapper {{
-                    width: 100%;
-                    background-color: #f3f4f6;
-                    padding: 40px 0;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background-color: #ffffff;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-                }}
-                .header {{
-                    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-                    padding: 40px 30px;
-                    text-align: center;
-                }}
-                .header h1 {{
-                    color: #ffffff;
-                    margin: 0;
-                    font-size: 28px;
-                    font-weight: 700;
-                    letter-spacing: -0.5px;
-                }}
-                .content {{
-                    padding: 40px 30px;
-                    text-align: center;
-                }}
-                .content h2 {{
-                    color: #1f2937;
-                    font-size: 22px;
-                    font-weight: 600;
-                    margin-top: 0;
-                    margin-bottom: 15px;
-                }}
-                .content p {{
-                    color: #4b5563;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin: 0 0 25px 0;
-                }}
-                .otp-wrapper {{
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 25px;
-                    margin: 30px auto;
-                    max-width: 300px;
-                }}
-                .otp-code {{
-                    font-family: monospace;
-                    font-size: 36px;
-                    font-weight: 700;
-                    letter-spacing: 8px;
-                    color: #2563eb;
-                    margin: 0;
-                    text-align: center;
-                }}
-                .warning {{
-                    font-size: 14px !important;
-                    color: #6b7280 !important;
-                    margin-bottom: 0 !important;
-                }}
-                .footer {{
-                    background-color: #f9fafb;
-                    padding: 25px 30px;
-                    text-align: center;
-                    border-top: 1px solid #f3f4f6;
-                }}
-                .footer p {{
-                    color: #9ca3af;
-                    font-size: 13px;
-                    margin: 0 0 10px 0;
-                }}
-                .footer a {{
-                    color: #6b7280;
-                    text-decoration: none;
-                }}
-            </style>
-        </head>
-        <body>
-            <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    @staticmethod
+    def _create_plain_text(otp: str, purpose: str) -> str:
+        title, _, message = EmailService._otp_copy(purpose)
+        year = datetime.now().year
+        return (
+            f"CareerShift\n"
+            f"{'=' * 40}\n\n"
+            f"{title}\n\n"
+            f"{message}\n\n"
+            f"Verification code: {otp}\n\n"
+            f"This code expires in 10 minutes.\n"
+            f"If you did not request this email, please ignore it.\n\n"
+            f"© {year} CareerShift. All rights reserved.\n"
+            f"Automated message — please do not reply."
+        )
+
+    @staticmethod
+    def _create_html_template(otp: str, purpose: str) -> str:
+        title, eyebrow, message = EmailService._otp_copy(purpose)
+        year = datetime.now().year
+
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{title} · CareerShift</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f6f5ec;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f5ec;margin:0;padding:0;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(10,18,31,0.08);">
+          <tr>
+            <td style="background-color:#0a121f;padding:28px 32px;text-align:center;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                    <td align="center">
-                        <table class="container" cellpadding="0" cellspacing="0" role="presentation">
-                            <tr>
-                                <td class="header">
-                                    <h1>CareerShift</h1>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="content">
-                                    <h2>{title}</h2>
-                                    <p>{message}</p>
-                                    
-                                    <div class="otp-wrapper">
-                                        <p class="otp-code">{otp}</p>
-                                    </div>
-                                    
-                                    <p class="warning">This secure code will expire in <strong>10 minutes</strong>.<br>If you did not request this, please safely ignore this email.</p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="footer">
-                                    <p>&copy; {datetime.now().year} CareerShift. All rights reserved.</p>
-                                    <p>Automated message. Please do not reply.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                  <td align="center" style="padding-bottom:12px;">
+                    <span style="display:inline-block;width:40px;height:40px;line-height:40px;border-radius:10px;background-color:#c9a84c;color:#0a121f;font-size:18px;font-weight:700;text-align:center;">C</span>
+                  </td>
                 </tr>
-            </table>
-        </body>
-        </html>
-        """
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.2px;font-family:Georgia,'Times New Roman',serif;">CareerShift</p>
+                    <p style="margin:8px 0 0;color:rgba(255,255,255,0.72);font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;">{eyebrow}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 32px 28px;text-align:center;">
+              <h1 style="margin:0 0 12px;color:#0a121f;font-size:24px;line-height:1.3;font-weight:700;font-family:Georgia,'Times New Roman',serif;">{title}</h1>
+              <p style="margin:0 0 28px;color:#5c6b7e;font-size:15px;line-height:1.65;">{message}</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 24px;max-width:360px;">
+                <tr>
+                  <td style="background-color:#faf8f0;border:1px solid #eadfb8;border-radius:12px;padding:22px 18px;text-align:center;">
+                    <p style="margin:0 0 10px;color:#8a6d1f;font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;">Your verification code</p>
+                    <p style="margin:0;color:#0a121f;font-size:34px;line-height:1;font-weight:700;letter-spacing:10px;font-family:'Courier New',Courier,monospace;">{otp}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;max-width:420px;">
+                <tr>
+                  <td style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;text-align:left;">
+                    <p style="margin:0;color:#5c6b7e;font-size:13px;line-height:1.6;">
+                      <strong style="color:#0a121f;">Expires in 10 minutes.</strong>
+                      For your security, never share this code with anyone. CareerShift will never ask for it by phone or message.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:20px 0 0;color:#94a3b8;font-size:13px;line-height:1.6;">
+                Didn't request this? You can safely ignore this email — no changes will be made to your account.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 32px;text-align:center;">
+              <p style="margin:0 0 6px;color:#64748b;font-size:12px;line-height:1.5;">© {year} CareerShift. All rights reserved.</p>
+              <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.5;">Automated message · Please do not reply</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+    @staticmethod
+    def _otp_subject(purpose: str) -> str:
+        if purpose == "registration":
+            return "Verify your CareerShift account"
+        if purpose == "password_reset":
+            return "Reset your CareerShift password"
+        return "Your CareerShift verification code"
 
     @staticmethod
     async def send_otp_email(to_email: str, otp: str, purpose: str) -> None:
@@ -164,12 +142,12 @@ class EmailService:
         message = EmailMessage()
         message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
         message["To"] = to_email
-        message["Subject"] = "Your CareerShift Verification Code"
+        message["Subject"] = EmailService._otp_subject(purpose)
 
-        from datetime import datetime
-        html_content = EmailService._create_html_template(otp, purpose).replace("{datetime.now().year}", str(datetime.now().year))
-        
-        message.set_content("Please enable HTML to view this email.")
+        html_content = EmailService._create_html_template(otp, purpose)
+        plain_content = EmailService._create_plain_text(otp, purpose)
+
+        message.set_content(plain_content)
         message.add_alternative(html_content, subtype="html")
 
         try:

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, UUID4
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, UUID4
 from typing import List, Optional
 from datetime import datetime
 
@@ -59,4 +59,30 @@ class GenerateSkillsRequest(BaseModel):
     functional_domain: str
     specialization: str
     experience: str
+
+
+class FieldSuggestion(BaseModel):
+    """One career-identity field extracted from professional background text."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    value: Optional[str] = None
+    confidence: StrictFloat = Field(..., ge=0.0, le=1.0)
+    reason: str = Field(..., min_length=1, max_length=160)
+
+
+class SuggestIdentityRequest(BaseModel):
+    professional_background: str = Field(..., min_length=10, max_length=8000)
+
+
+class SuggestIdentityResponse(BaseModel):
+    """AI career-identity suggestions. extra=ignore for minor model chatter; five keys required."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    industry: FieldSuggestion
+    department: FieldSuggestion
+    functional_domain: FieldSuggestion
+    specialization: FieldSuggestion
+    job_title: FieldSuggestion
 
