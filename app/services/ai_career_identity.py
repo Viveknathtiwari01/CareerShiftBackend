@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_async_client,
+    extract_response_text,
     get_anthropic_api_key,
     get_anthropic_effort,
     get_anthropic_model,
@@ -209,7 +210,7 @@ async def suggest_career_identity_from_ai(
         )
         raise AIUnavailableError("AI service is temporarily unavailable.") from exc
 
-    output_text = response.content[0].text if response.content else ""
+    output_text = extract_response_text(response)
     output_len = len(output_text or "")
 
     try:

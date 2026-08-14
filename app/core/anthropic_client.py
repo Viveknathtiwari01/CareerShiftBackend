@@ -69,3 +69,14 @@ def create_sync_client() -> Anthropic:
 
 def create_async_client() -> AsyncAnthropic:
     return AsyncAnthropic(api_key=get_anthropic_api_key())
+
+
+def extract_response_text(response: Any) -> str:
+    """Return concatenated text blocks; skip thinking/tool blocks (Claude 4+/5)."""
+    parts: list[str] = []
+    for block in getattr(response, "content", None) or []:
+        if getattr(block, "type", None) == "text":
+            text = getattr(block, "text", None)
+            if text:
+                parts.append(text)
+    return "".join(parts)

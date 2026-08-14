@@ -8,6 +8,7 @@ from anthropic import AsyncAnthropic, AuthenticationError, APIStatusError
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_async_client,
+    extract_response_text,
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -120,7 +121,9 @@ async def generate_skills_from_ai(
         logger.exception("Unexpected error calling Anthropic API")
         raise ValueError("AI service is temporarily unavailable.") from exc
 
-    output_text = response.content[0].text
+    output_text = extract_response_text(response)
+    if not output_text:
+        raise ValueError("AI returned no text content. Please try again.")
     logger.info("Raw model output (first 200 chars): %s", output_text[:200])
 
     try:

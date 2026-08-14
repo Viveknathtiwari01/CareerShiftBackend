@@ -8,6 +8,7 @@ from anthropic import Anthropic, APIStatusError
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_sync_client,
+    extract_response_text,
     get_anthropic_model,
     get_anthropic_temperature,
 )
@@ -23,12 +24,7 @@ TEMPERATURE = get_anthropic_temperature()
 
 def extract_text(response: Any) -> str:
     """Extracts only text blocks from the Anthropic response, ignoring Thinking or Tool blocks."""
-    response_text = ""
-    for block in response.content:
-        b_type = getattr(block, 'type', type(block).__name__)
-        if b_type == 'text':
-            response_text += getattr(block, 'text', '')
-    return response_text
+    return extract_response_text(response)
 
 
 def strip_markdown(text: str) -> str:
