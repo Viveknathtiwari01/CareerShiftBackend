@@ -181,6 +181,50 @@ def _ai_usage_label(ai_assistance: str | None) -> str:
     return "Low"
 
 
+# Review UI buckets (stored on assessment_tasks.time_allocation) → weekly hours for Daily Work.
+# Minute options: upper bound minutes × 4; hour options: upper bound hours × 2; 4+ hrs → 10.
+REVIEW_TIME_TO_WEEKLY_HOURS: dict[float, float] = {
+    0.25: 1.0,  # <15 min  → 15*4 min = 1h
+    0.5: 2.0,   # 15-30 min → 30*4 min = 2h
+    1.0: 4.0,   # 30-60 min → 60*4 min = 4h
+    2.0: 4.0,   # 1-2 hrs → 2*2 = 4h
+    4.0: 8.0,   # 2-4 hrs → 4*2 = 8h
+    8.0: 10.0,  # 4+ hrs → 10h/wk
+}
+
+
+def effective_task_hours(task: dict[str, Any]) -> float:
+    """Prefer reviewed time_allocation (mapped to weekly hours); else AI hours_per_week."""
+    if task.get("time_allocation") is not None:
+        raw = float(task.get("time_allocation") or 0)
+        for bucket, weekly in REVIEW_TIME_TO_WEEKLY_HOURS.items():
+            if abs(raw - bucket) < 1e-9:
+                return weekly
+        return raw
+    return float(task.get("hours_per_week") or 0)
+
+
+def _format_review_confidence(confidence: Any) -> str | None:
+    if confidence is None:
+        return None
+    try:
+        value = float(confidence)
+    except (TypeError, ValueError):
+        return None
+    if 1 <= value <= 10:
+        as_int = int(value)
+        return f"{as_int}/10" if value == as_int else f"{value}/10"
+    return f"{int(round(value))}%"
+
+
+def _daily_work_ai_usage(ai_assistance: str | None) -> str | None:
+    """Show the user's review choice literally (e.g. Sometimes), not High/Medium/None."""
+    if ai_assistance is None:
+        return None
+    text = str(ai_assistance).strip()
+    return text or None
+
+
 def _parse_salary_midpoint(salary: str | None) -> float | None:
     if not salary:
         return None
@@ -302,19 +346,21 @@ def _build_daily_work(data: ReportGeneratorInput) -> ReportDailyWorkSection:
     total_hours = 0.0
 
     for task in data.tasks:
-        hours = float(task.get("hours_per_week") or 0)
+        hours = effective_task_hours(task)
         total_hours += hours
         category = task.get("category") or "General"
         allocation[category] = allocation.get(category, 0) + hours
-        confidence = task.get("confidence_score") or task.get("confidence")
+        confidence = task.get("confidence_score")
+        if confidence is None:
+            confidence = task.get("confidence")
         tasks.append(
             ReportDailyWorkTask(
                 name=task.get("title") or "Task",
                 hours_per_week=hours,
                 time_label=f"{hours:g}h",
                 criticality=task.get("business_criticality"),
-                ai_usage=_ai_usage_label(task.get("ai_assistance")),
-                confidence=f"{confidence}%" if confidence is not None else None,
+                ai_usage=_daily_work_ai_usage(task.get("ai_assistance")),
+                confidence=_format_review_confidence(confidence),
                 category_3b=task.get("category_3b"),
             )
         )
@@ -396,7 +442,7 @@ def _hours_freed(data: ReportGeneratorInput) -> float:
         if (row.get("category") or "").upper() != "BOT":
             continue
         task = next((t for t in data.tasks if t.get("task_id") == row.get("task_id")), None)
-        hours = float(task.get("hours_per_week") or 0) if task else 0
+        hours = effective_task_hours(task) if task else 0.0
         potential = float(row.get("auto_potential") or 50) / 100
         freed += hours * potential * 0.65
     return round(freed, 1)

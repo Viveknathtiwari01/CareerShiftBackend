@@ -175,9 +175,16 @@ class CareerIntelligenceReportService:
                     "description": task.description,
                     "category": task.category,
                     "hours_per_week": task.hours_per_week,
+                    "time_allocation": task.time_allocation,
+                    "frequency": task.frequency,
                     "business_criticality": task.business_criticality,
                     "ai_assistance": task.ai_assistance,
-                    "confidence_score": task.confidence_score or task.confidence,
+                    "confidence_score": (
+                        task.confidence_score
+                        if task.confidence_score is not None
+                        else task.confidence
+                    ),
+                    "manual_notes": task.manual_notes,
                     "category_3b": analysis.category if analysis else None,
                 }
             )

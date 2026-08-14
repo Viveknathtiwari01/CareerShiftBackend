@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.career_intelligence_report import CareerIntelligenceReport
@@ -20,6 +20,20 @@ class CareerIntelligenceReportRepository:
             )
         )
         return result.scalars().first()
+
+    async def delete_for_assessment(
+        self,
+        db: AsyncSession,
+        *,
+        assessment_id: UUID,
+    ) -> None:
+        """Hard-delete report so the next generate rebuilds from current tasks."""
+        await db.execute(
+            delete(CareerIntelligenceReport).where(
+                CareerIntelligenceReport.assessment_id == assessment_id
+            )
+        )
+        await db.flush()
 
     async def upsert(
         self,

@@ -1,6 +1,10 @@
 from uuid import uuid4
 
-from app.services.report_generator import ReportGeneratorInput, generate_career_intelligence_report
+from app.services.report_generator import (
+    ReportGeneratorInput,
+    effective_task_hours,
+    generate_career_intelligence_report,
+)
 
 
 def _sample_input() -> ReportGeneratorInput:
@@ -105,3 +109,51 @@ def test_generate_report_competency_growth_labels():
     items = [item for group in report.competencies for item in group.items]
     growth_values = {item.growth for item in items}
     assert "Critical Focus" in growth_values or "Develop" in growth_values
+
+
+def test_effective_task_hours_maps_review_buckets():
+    assert effective_task_hours({"time_allocation": 0.25, "hours_per_week": 9}) == 1.0
+    assert effective_task_hours({"time_allocation": 0.5, "hours_per_week": 9}) == 2.0
+    assert effective_task_hours({"time_allocation": 1.0, "hours_per_week": 9}) == 4.0
+    assert effective_task_hours({"time_allocation": 2.0, "hours_per_week": 9}) == 4.0
+    assert effective_task_hours({"time_allocation": 4.0, "hours_per_week": 9}) == 8.0
+    assert effective_task_hours({"time_allocation": 8.0, "hours_per_week": 9}) == 10.0
+    assert effective_task_hours({"hours_per_week": 9}) == 9.0
+
+
+def test_daily_work_prefers_mapped_review_hours_and_literal_ai_usage():
+    task_id = uuid4()
+    data = _sample_input()
+    data.tasks = [
+        {
+            "task_id": task_id,
+            "title": "Feature development (React components)",
+            "category": "Frontend Development",
+            "hours_per_week": 9,
+            "time_allocation": 0.5,
+            "business_criticality": "High",
+            "ai_assistance": "Sometimes",
+            "confidence_score": 5,
+            "category_3b": "BLEND",
+        }
+    ]
+    data.analyses = [
+        {
+            "task_id": task_id,
+            "task_title": "Feature development (React components)",
+            "category": "BLEND",
+            "rationale": "Needs human design judgment",
+            "reason": "UI craft and product context.",
+            "next_actions": ["Use AI for boilerplate", "Keep reviews human", "Measure cycle time"],
+            "auto_potential": 40,
+            "recommended_tools": ["Cursor"],
+        }
+    ]
+
+    report = generate_career_intelligence_report(data)
+    task = report.daily_work.tasks[0]
+
+    assert task.hours_per_week == 2.0
+    assert report.daily_work.total_hours == 2.0
+    assert task.ai_usage == "Sometimes"
+    assert task.confidence == "5/10"

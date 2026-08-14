@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.constants import TASK_SOURCE_AI
 from app.models.assessment_task import AssessmentTask
 from app.repositories.assessment_task_analysis import assessment_task_analysis_repo
+from app.repositories.career_intelligence_report import career_intelligence_report_repo
 
 
 class AssessmentTaskRepository:
@@ -68,8 +69,11 @@ class AssessmentTaskRepository:
         assessment_id: UUID,
         tasks: list[AssessmentTask],
     ) -> list[AssessmentTask]:
-        # 3B analysis rows reference task IDs — clear them before replacing tasks.
+        # 3B analysis + report depend on task snapshot — clear before replacing tasks.
         await assessment_task_analysis_repo.delete_for_assessment(
+            db, assessment_id=assessment_id
+        )
+        await career_intelligence_report_repo.delete_for_assessment(
             db, assessment_id=assessment_id
         )
         await db.execute(
