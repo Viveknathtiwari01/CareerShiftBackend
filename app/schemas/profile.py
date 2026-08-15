@@ -10,7 +10,8 @@ class UserProfileBase(BaseModel):
     specialization: str = Field(..., description="Specialization")
     
     experience_years: int = Field(..., ge=0, description="Total Experience in years")
-    salary: Optional[str] = Field(None, description="Current Salary")    
+    salary: Optional[str] = Field(None, description="Current Salary")
+    salary_currency: Optional[str] = Field(None, description="Currency for Salary")
     technical_skills: List[str] = Field(default_factory=list, description="Technical Skills")
     professional_skills: List[str] = Field(default_factory=list, description="Professional Skills")
     soft_skills: List[str] = Field(default_factory=list, description="Soft Skills")
@@ -32,7 +33,8 @@ class UserProfileUpdate(BaseModel):
     specialization: Optional[str] = None
     
     experience_years: Optional[int] = Field(None, ge=0)
-    salary: Optional[str] = None    
+    salary: Optional[str] = None
+    salary_currency: Optional[str] = None
     technical_skills: Optional[List[str]] = None
     professional_skills: Optional[List[str]] = None
     soft_skills: Optional[List[str]] = None
