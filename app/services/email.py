@@ -57,23 +57,22 @@ class EmailService:
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>{title} · CareerShift</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f6f5ec;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f5ec;margin:0;padding:0;">
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;">
     <tr>
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(10,18,31,0.08);">
           <tr>
-            <td style="background-color:#0a121f;padding:28px 32px;text-align:center;">
+            <td style="padding:28px 32px;text-align:center;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center" style="padding-bottom:12px;">
-                    <span style="display:inline-block;width:40px;height:40px;line-height:40px;border-radius:10px;background-color:#c9a84c;color:#0a121f;font-size:18px;font-weight:700;text-align:center;">C</span>
+                    <img src="{settings.APP_PUBLIC_URL}/Logo.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
                   </td>
                 </tr>
                 <tr>
                   <td align="center">
-                    <p style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.2px;font-family:Georgia,'Times New Roman',serif;">CareerShift</p>
-                    <p style="margin:8px 0 0;color:rgba(255,255,255,0.72);font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;">{eyebrow}</p>
+                    <p style="margin:8px 0 0;color:#64748b;font-size:12px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;">{eyebrow}</p>
                   </td>
                 </tr>
               </table>
@@ -210,8 +209,8 @@ class EmailService:
                     <td align="center">
                         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-top: 4px solid #c9a84c;">
                             <tr>
-                                <td style="background-color: #141f32; padding: 40px 30px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 700; letter-spacing: 0.5px;">CareerShift</h1>
+                                <td style="padding: 40px 30px; text-align: center;">
+                                    <img src="{settings.APP_PUBLIC_URL}/Logo.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
                                 </td>
                             </tr>
                             <tr>
