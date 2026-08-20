@@ -1,4 +1,4 @@
-"""Celery application — enable with USE_CELERY=true and run: celery -A app.celery_app worker -l info"""
+"""Celery application enable with USE_CELERY=true and run: celery -A app.celery_app worker -l info"""
 
 from celery import Celery
 

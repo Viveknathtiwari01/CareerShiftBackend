@@ -1,4 +1,4 @@
-"""Deterministic AI Readiness Score (Output A) — explainable 0–100 baseline."""
+"""Deterministic AI Readiness Score (Output A) explainable 0–100 baseline."""
 
 from __future__ import annotations
 
@@ -233,23 +233,23 @@ def _adoption_summary(frequency: int, tools: int, comfort: int) -> str:
     if frequency >= 75 and tools >= 60:
         return "Strong daily AI habits with a solid tool stack."
     if comfort >= 70:
-        return "Comfortable with AI — expand into more workflows."
-    return "Early-stage adoption — consistent usage will lift your score quickly."
+        return "Comfortable with AI expand into more workflows."
+    return "Early-stage adoption consistent usage will lift your score quickly."
 
 
 def _task_usage_summary(score: int, task_count: int) -> str:
     if score >= 70:
         return f"AI is actively used across {task_count} reviewed tasks."
     if score >= 45:
-        return "Mixed AI usage — several tasks still run fully manual."
-    return "Most reviewed tasks are still manual — big upside from BLEND workflows."
+        return "Mixed AI usage several tasks still run fully manual."
+    return "Most reviewed tasks are still manual big upside from BLEND workflows."
 
 
 def _automation_summary(mix: dict[str, int], avg_auto: float) -> str:
     if not mix or sum(mix.values()) == 0:
         return "Complete 3B analysis to quantify automation potential."
     if mix["BOT"] >= 2:
-        return f"{mix['BOT']} BOT tasks identified — strong automation runway."
+        return f"{mix['BOT']} BOT tasks identified strong automation runway."
     return f"Average automation potential around {round(avg_auto)}% across tasks."
 
 
@@ -262,13 +262,13 @@ def _build_summary(mix: dict[str, int], confidence: float) -> str:
 def _blend_summary(mix: dict[str, int], tool_count: int) -> str:
     if mix.get("BLEND", 0) >= 3:
         return f"BLEND zone is active with {tool_count} recommended tools in play."
-    return "Expand co-pilot workflows — BLEND is your highest leverage zone."
+    return "Expand co-pilot workflows BLEND is your highest leverage zone."
 
 
 def _overall_summary(score: int, tier: str) -> str:
     if tier == "High":
         return (
-            "You are well positioned to leverage AI across your role — "
+            "You are well positioned to leverage AI across your role "
             "focus on scaling BLEND workflows and selective BOT automation."
         )
     if tier == "Medium":
@@ -277,7 +277,7 @@ def _overall_summary(score: int, tier: str) -> str:
             "and strengthen long-term career resilience."
         )
     return (
-        "AI readiness is still developing — prioritise comfort, daily tool use, "
+        "AI readiness is still developing prioritise comfort, daily tool use, "
         "and BLEND experiments for the fastest gains."
     )
 
@@ -376,7 +376,7 @@ def _career_risk(mix: dict[str, int], build_score: int, automation_score: int) -
     if bot / total > 0.45 and build_score < 55:
         return (
             "Elevated Risk",
-            "A large share of your tasks is automatable while BUILD strengths are still developing — invest in irreplaceable skills.",
+            "A large share of your tasks is automatable while BUILD strengths are still developing invest in irreplaceable skills.",
         )
     if bot / total > 0.3:
         return (
@@ -385,7 +385,7 @@ def _career_risk(mix: dict[str, int], build_score: int, automation_score: int) -
         )
     return (
         "Lower Risk",
-        "Your role balances human mastery with selective automation — maintain BUILD depth as AI tools evolve.",
+        "Your role balances human mastery with selective automation maintain BUILD depth as AI tools evolve.",
     )
 
 
@@ -402,7 +402,7 @@ def _career_opportunity(blend: int, build: int, overall: int) -> tuple[str, str]
         )
     return (
         "Emerging Potential",
-        "Foundational readiness is forming — targeted upskilling can accelerate your trajectory quickly.",
+        "Foundational readiness is forming targeted upskilling can accelerate your trajectory quickly.",
     )
 
 

@@ -41,7 +41,7 @@ class EmailService:
             f"This code expires in 10 minutes.\n"
             f"If you did not request this email, please ignore it.\n\n"
             f"© {year} CareerShift. All rights reserved.\n"
-            f"Automated message — please do not reply."
+            f"Automated message please do not reply."
         )
 
     @staticmethod
@@ -104,7 +104,7 @@ class EmailService:
               </table>
 
               <p style="margin:20px 0 0;color:#94a3b8;font-size:13px;line-height:1.6;">
-                Didn't request this? You can safely ignore this email — no changes will be made to your account.
+                Didn't request this? You can safely ignore this email no changes will be made to your account.
               </p>
             </td>
           </tr>
@@ -134,7 +134,7 @@ class EmailService:
         if not settings.email_configured:
             if settings.is_production:
                 raise ValueError("Email service is not configured.")
-            logger.warning("SMTP not configured — OTP logged for development only.")
+            logger.warning("SMTP not configured OTP logged for development only.")
             print(f"--- MOCK EMAIL --- To: {to_email} | OTP: {otp} | Purpose: {purpose}")
             return
 
@@ -195,7 +195,7 @@ class EmailService:
         if not settings.REPORT_READY_EMAIL_ENABLED:
             return
 
-        subject = f"Your Career Intelligence Report is ready — {score}/100"
+        subject = f"Your Career Intelligence Report is ready {score}/100"
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -248,7 +248,7 @@ class EmailService:
             if settings.is_production:
                 raise ValueError("Email service is not configured.")
             logger.warning(
-                "SMTP not configured — report ready email logged for development only."
+                "SMTP not configured report ready email logged for development only."
             )
             print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
             return

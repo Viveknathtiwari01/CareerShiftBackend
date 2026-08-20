@@ -28,7 +28,7 @@ Return ONLY valid JSON with this exact structure:
 }
 
 Rules:
-- Classify EVERY task in the input list — one analysis per task_index
+- Classify EVERY task in the input list one analysis per task_index
 - next_actions must contain exactly 3 concrete, actionable strings (not vague advice)
 - auto_potential is 0-100 (% automatable for this specific task)
 - risk_level = risk of role displacement if user ignores AI for this task
@@ -37,7 +37,7 @@ Rules:
 - BUILD tasks: auto_potential typically 0-30, green routing
 - BOT tasks: auto_potential typically 70-100, automate focus
 - BLEND tasks: auto_potential typically 40-70, co-pilot focus
-- Ground reasoning in the task traits provided — never generic platitudes
+- Ground reasoning in the task traits provided never generic platitudes
 """
 
 USER_PROMPT_TEMPLATE = """Classify each task using the CareerShift 3B Framework (BUILD / BOT / BLEND).

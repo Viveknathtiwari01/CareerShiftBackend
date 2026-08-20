@@ -666,7 +666,7 @@ def _build_cost_roi(data: ReportGeneratorInput, hours_saved: float) -> ReportCos
     payback = round((total_investment / (annual_value / 12)), 1) if annual_value > 0 else None
     roi_summary = (
         f"Investing roughly ${total_investment:,.0f} in learning and AI tools can reclaim "
-        f"{hours_saved:g} hours weekly — about ${annual_value:,.0f} in annual capacity at your current level."
+        f"{hours_saved:g} hours weekly about ${annual_value:,.0f} in annual capacity at your current level."
     )
     breakdown = [
         ReportSnapshotItem(label="L&D Investment", value=f"${ld_investment:,.0f}"),
@@ -977,7 +977,7 @@ def _priority_reason_from_entries(entries: list[dict], rank: int) -> str:
     elif rank <= 3:
         lead = "High priority for near-term impact"
     elif rank <= 6:
-        lead = "Medium priority — adopt after top tools"
+        lead = "Medium priority adopt after top tools"
     else:
         lead = "Supporting tool for specific workflows"
 
@@ -1045,7 +1045,7 @@ def ensure_toolkit_priorities(tools: list[dict], analyses_or_routing: list[dict]
                 "priority_label": "Existing",
                 "priority_reason": (
                     tool.get("priority_reason")
-                    or "Already in your profile — keep building on familiar tools as you expand AI workflows."
+                    or "Already in your profile keep building on familiar tools as you expand AI workflows."
                 ),
             }
         )
