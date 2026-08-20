@@ -291,6 +291,7 @@ def _build_task_routing(data: ReportGeneratorInput) -> TaskAnalysisRunResponse:
             risk_level=row.get("risk_level"),
             future_impact=row.get("future_impact"),
             recommended_tools=list(row.get("recommended_tools") or []),
+            components=list(row.get("components") or []),
         )
         for row in data.analyses
     ]
@@ -1097,6 +1098,7 @@ def analysis_dicts_from_rows(
             "auto_potential": row.auto_potential,
             "risk_level": row.risk_level,
             "recommended_tools": list(row.recommended_tools or []),
+            "components": list(getattr(row, "components", []) or []),
         }
         for row in rows
     ]

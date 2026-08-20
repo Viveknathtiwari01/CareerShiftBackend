@@ -14,7 +14,7 @@ from app.repositories.assessment_task_analysis import (
 )
 from app.repositories.competency_mapping import competency_mapping_repo
 from app.repositories.profile import profile_repo
-from app.schemas.assessment_task_analysis import TaskAnalysisItem, TaskAnalysisRunResponse
+from app.schemas.assessment_task_analysis import TaskAnalysisItem, TaskAnalysisRunResponse, HoursByCategory
 from app.services.profile_mapper import profile_to_pipeline_input
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
@@ -57,6 +57,7 @@ class AssessmentTaskAnalysisService:
             risk_level=row.risk_level,
             future_impact=row.future_impact,
             recommended_tools=list(row.recommended_tools or []),
+            components=list(getattr(row, "components", []) or []),
         )
 
     @staticmethod
@@ -81,10 +82,39 @@ class AssessmentTaskAnalysisService:
     ) -> TaskAnalysisRunResponse:
         await self._get_owned_assessment(db, user_id, assessment_id)
         rows = await self._repo.list_for_assessment(db, assessment_id=assessment_id)
+        
+        hours_cat, total = self._calculate_hours(rows)
+
         return TaskAnalysisRunResponse(
             analyses=[self._to_item(r) for r in rows],
             regenerated=False,
+            hours_by_category=hours_cat,
+            total_hours=total,
         )
+
+    def _calculate_hours(self, rows: list[AssessmentTaskAnalysis]) -> tuple[HoursByCategory, float]:
+        hours_by_category = HoursByCategory()
+        total_hours = 0.0
+        for row in rows:
+            if not row.task:
+                continue
+            # use time_allocation if available, fallback to hours_per_week
+            hours = getattr(row.task, "time_allocation", getattr(row.task, "hours_per_week", 0.0))
+            if hours is None:
+                hours = getattr(row.task, "hours_per_week", 0.0) or 0.0
+            
+            hours = float(hours)
+            total_hours += hours
+            
+            cat = row.category.upper() if row.category else ""
+            if "BUILD" in cat:
+                hours_by_category.BUILD += hours
+            elif "BOT" in cat:
+                hours_by_category.BOT += hours
+            else:
+                hours_by_category.BLEND += hours
+                
+        return hours_by_category, total_hours
 
     async def analyze_tasks(
         self,
@@ -128,10 +158,15 @@ class AssessmentTaskAnalysisService:
                 await self._persist_toolkit_snapshot(db, assessment, analyses_payload)
                 await db.commit()
             summary = self._average_confidence(existing)
+            
+            hours_cat, total = self._calculate_hours(existing)
+            
             return TaskAnalysisRunResponse(
                 analyses=[self._to_item(r) for r in existing],
                 summary_confidence=summary,
                 regenerated=False,
+                hours_by_category=hours_cat,
+                total_hours=total,
             )
 
         profile = await profile_repo.get_by_user_id(db, user_id)
@@ -210,10 +245,15 @@ class AssessmentTaskAnalysisService:
                     risk_level=item.get("risk_level"),
                     future_impact=item.get("future_impact"),
                     recommended_tools=item.get("recommended_tools") or [],
+                    components=item.get("components") or [],
                 )
             )
 
         created = await self._repo.bulk_create(db, rows=new_rows)
+        # We need to eager load the tasks or assign them for the hour calculation
+        for row, task in zip(created, selected_tasks):
+            row.task = task
+
         analyses_payload = [
             {
                 "task_id": str(row.task_id),
@@ -233,10 +273,14 @@ class AssessmentTaskAnalysisService:
 
         logger.info("3B analysis saved for assessment %s (%d tasks)", assessment_id, len(created))
 
+        hours_cat, total = self._calculate_hours(created)
+
         return TaskAnalysisRunResponse(
             analyses=[self._to_item(r) for r in created],
             summary_confidence=ai_result.get("summary_confidence"),
             regenerated=regenerate or bool(existing),
+            hours_by_category=hours_cat,
+            total_hours=total,
         )
 
     @staticmethod

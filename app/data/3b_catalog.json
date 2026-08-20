@@ -1,0 +1,583 @@
+{
+  "capabilities": {
+    "text_generation": {
+      "name": "Text & Content Generation",
+      "tools": [
+        {
+          "name": "ChatGPT",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Highly versatile and widely accessible.",
+          "cons": "Can sometimes produce confident but incorrect information."
+        },
+        {
+          "name": "Claude",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Excellent at analyzing large documents and coding.",
+          "cons": "Slightly more restrictive safety filters than alternatives."
+        },
+        {
+          "name": "Jasper",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Tailored specifically for enterprise marketing copy.",
+          "cons": "Expensive for individual users."
+        },
+        {
+          "name": "Copy.ai",
+          "cost_tier": "Professional",
+          "feasibility": "Self-serve",
+          "pros": "Great templates for rapid content generation.",
+          "cons": "Output can be repetitive for long-form content."
+        },
+        {
+          "name": "Grammarly",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Seamlessly integrates into existing writing workflows.",
+          "cons": "AI rewriting can sometimes change intended tone."
+        },
+        {
+          "name": "Writer",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Ensures compliance with corporate brand guidelines.",
+          "cons": "Requires organizational setup and oversight."
+        }
+      ]
+    },
+    "workflow_automation": {
+      "name": "Workflow Automation",
+      "tools": [
+        {
+          "name": "Zapier",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Massive ecosystem of over 5000 app integrations.",
+          "cons": "Gets very expensive at high task volumes."
+        },
+        {
+          "name": "Make",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Visual builder is excellent for complex logic.",
+          "cons": "Steeper learning curve than Zapier."
+        },
+        {
+          "name": "Power Automate",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Deep integration with Microsoft 365 ecosystem.",
+          "cons": "Interface can be clunky and enterprise-focused."
+        },
+        {
+          "name": "n8n",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Can be self-hosted for data privacy.",
+          "cons": "Requires technical knowledge to deploy."
+        },
+        {
+          "name": "Workato",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Powerful enterprise-grade security and scale.",
+          "cons": "Prohibitively expensive for small teams."
+        },
+        {
+          "name": "Tray.io",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Highly customizable and scalable.",
+          "cons": "Targeted primarily at enterprise IT."
+        }
+      ]
+    },
+    "data_analysis": {
+      "name": "Data Analysis & BI",
+      "tools": [
+        {
+          "name": "Excel / Microsoft Copilot",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Universal standard; Copilot adds powerful AI querying.",
+          "cons": "Can struggle with massive datasets (1M+ rows)."
+        },
+        {
+          "name": "Tableau",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Industry leader in deep visual analytics.",
+          "cons": "Steep learning curve; requires training."
+        },
+        {
+          "name": "Power BI",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Cost-effective if already using Microsoft ecosystem.",
+          "cons": "DAX language is notoriously difficult to master."
+        },
+        {
+          "name": "Julius AI",
+          "cost_tier": "Professional",
+          "feasibility": "Self-serve",
+          "pros": "Chat-based interface makes data science accessible.",
+          "cons": "Less robust for permanent enterprise dashboards."
+        },
+        {
+          "name": "Akkio",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Great for predictive modeling without coding.",
+          "cons": "Focused more on predictions than traditional BI."
+        },
+        {
+          "name": "Looker",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Excellent semantic layer for consistent metrics.",
+          "cons": "Requires SQL/LookML knowledge to set up."
+        }
+      ]
+    },
+    "project_management": {
+      "name": "Project & Task Management",
+      "tools": [
+        {
+          "name": "Asana",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Intuitive UI and great for cross-functional teams.",
+          "cons": "Can become cluttered without strict governance."
+        },
+        {
+          "name": "Jira",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Unmatched for agile software development.",
+          "cons": "Overly complex for non-technical teams."
+        },
+        {
+          "name": "Monday.com",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Highly customizable and visually appealing.",
+          "cons": "Pricing structure can be confusing."
+        },
+        {
+          "name": "ClickUp",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Incredible feature depth in a single app.",
+          "cons": "Feature bloat can overwhelm new users."
+        },
+        {
+          "name": "Trello",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Dead-simple Kanban boards.",
+          "cons": "Lacks robust reporting for large portfolios."
+        },
+        {
+          "name": "Linear",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Blazing fast and loved by developers.",
+          "cons": "Very opinionated workflow; not flexible."
+        }
+      ]
+    },
+    "communication": {
+      "name": "Communication & Meetings",
+      "tools": [
+        {
+          "name": "Slack",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Excellent async communication and app integrations.",
+          "cons": "Can be a massive distraction if not managed."
+        },
+        {
+          "name": "Microsoft Teams",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Included in enterprise MS365 setups.",
+          "cons": "Can be resource-heavy and slow."
+        },
+        {
+          "name": "Zoom",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Ubiquitous and reliable video conferencing.",
+          "cons": "AI companion features are still evolving."
+        },
+        {
+          "name": "Loom",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Perfect for asynchronous video updates.",
+          "cons": "Relies on users actually watching the videos."
+        },
+        {
+          "name": "Otter.ai",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Great transcription and meeting summaries.",
+          "cons": "Bot joining meetings can be intrusive."
+        },
+        {
+          "name": "Fireflies.ai",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Excellent CRM integration for meeting notes.",
+          "cons": "Requires calendar integration."
+        }
+      ]
+    },
+    "design_creative": {
+      "name": "Design & Creative Media",
+      "tools": [
+        {
+          "name": "Canva",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Democratizes basic design for non-designers.",
+          "cons": "Not suitable for advanced vector or layout work."
+        },
+        {
+          "name": "Midjourney",
+          "cost_tier": "Professional",
+          "feasibility": "Self-serve",
+          "pros": "Produces the highest quality AI imagery.",
+          "cons": "Requires using Discord; no native API/App yet."
+        },
+        {
+          "name": "Figma",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Industry standard for UI/UX and collaboration.",
+          "cons": "Overkill for simple graphic design."
+        },
+        {
+          "name": "Adobe Firefly",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Commercially safe AI generation integrated into Adobe.",
+          "cons": "Standalone web app is less powerful than Midjourney."
+        },
+        {
+          "name": "DALL-E 3",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Excellent prompt adherence and integrated into ChatGPT.",
+          "cons": "Image realism is slightly behind Midjourney."
+        },
+        {
+          "name": "Descript",
+          "cost_tier": "Professional",
+          "feasibility": "Self-serve",
+          "pros": "Edits video and audio as easily as a text document.",
+          "cons": "Performance can lag on large video files."
+        }
+      ]
+    },
+    "sales_crm": {
+      "name": "Sales & CRM",
+      "tools": [
+        {
+          "name": "Salesforce",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Infinitely customizable ecosystem.",
+          "cons": "Requires dedicated admins to maintain."
+        },
+        {
+          "name": "HubSpot",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Excellent all-in-one inbound marketing and CRM.",
+          "cons": "Enterprise tiers get very expensive quickly."
+        },
+        {
+          "name": "Pipedrive",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Simple, visual pipeline management.",
+          "cons": "Lacks enterprise marketing automation."
+        },
+        {
+          "name": "Apollo.io",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Massive B2B database integrated with outreach.",
+          "cons": "Data accuracy can vary by region."
+        },
+        {
+          "name": "Gong",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Incredible revenue intelligence from call analysis.",
+          "cons": "Expensive and requires cultural buy-in."
+        }
+      ]
+    },
+    "customer_support": {
+      "name": "Customer Support",
+      "tools": [
+        {
+          "name": "Zendesk",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Robust omni-channel support system.",
+          "cons": "Interface feels dated; AI features are expensive add-ons."
+        },
+        {
+          "name": "Intercom",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Exceptional chat and AI bot capabilities.",
+          "cons": "Pricing scales aggressively with volume."
+        },
+        {
+          "name": "Freshdesk",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Cost-effective Zendesk alternative.",
+          "cons": "Reporting features are somewhat rigid."
+        },
+        {
+          "name": "Kustomer",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Great unified timeline of customer events.",
+          "cons": "Complex setup process."
+        }
+      ]
+    },
+    "hr_recruiting": {
+      "name": "HR & Recruiting",
+      "tools": [
+        {
+          "name": "Workday",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Comprehensive enterprise HCM.",
+          "cons": "Notoriously clunky user experience."
+        },
+        {
+          "name": "BambooHR",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Great UI for small to medium businesses.",
+          "cons": "Lacks global enterprise features."
+        },
+        {
+          "name": "Greenhouse",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Structured interviewing reduces bias.",
+          "cons": "Reporting can be difficult to customize."
+        },
+        {
+          "name": "SeekOut",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Excellent AI sourcing for technical talent.",
+          "cons": "Primarily focused on outbound sourcing."
+        }
+      ]
+    },
+    "software_development": {
+      "name": "Software Development",
+      "tools": [
+        {
+          "name": "GitHub Copilot",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Significantly speeds up boilerplate coding.",
+          "cons": "Can sometimes suggest insecure or hallucinated code."
+        },
+        {
+          "name": "Cursor",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Incredible AI-first IDE experience.",
+          "cons": "Requires switching away from VS Code/IntelliJ."
+        },
+        {
+          "name": "GitLab",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Excellent integrated CI/CD pipelines.",
+          "cons": "UI can feel overly complex."
+        },
+        {
+          "name": "Postman",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Industry standard for API testing.",
+          "cons": "Cloud syncing raises some security concerns for enterprise."
+        },
+        {
+          "name": "Datadog",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Comprehensive observability and monitoring.",
+          "cons": "Extremely expensive at scale."
+        }
+      ]
+    },
+    "marketing": {
+      "name": "Marketing & Social Media",
+      "tools": [
+        {
+          "name": "Mailchimp",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Easy to use for basic email campaigns.",
+          "cons": "Automation capabilities are basic compared to competitors."
+        },
+        {
+          "name": "Marketo",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Extremely powerful B2B marketing automation.",
+          "cons": "Steep learning curve and requires specialists."
+        },
+        {
+          "name": "Semrush",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Comprehensive SEO and competitive data.",
+          "cons": "Interface is overwhelming for beginners."
+        },
+        {
+          "name": "Hootsuite",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Standard tool for multi-channel social posting.",
+          "cons": "Expensive relative to newer competitors."
+        }
+      ]
+    },
+    "finance_accounting": {
+      "name": "Finance & Accounting",
+      "tools": [
+        {
+          "name": "QuickBooks",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Industry standard for SMB accounting.",
+          "cons": "Limited capabilities for complex multi-entity structures."
+        },
+        {
+          "name": "Xero",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Modern UI and great API ecosystem.",
+          "cons": "Less entrenched in US CPA firms than QuickBooks."
+        },
+        {
+          "name": "Expensify",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Smart receipt scanning and reporting.",
+          "cons": "Recent UI overhauls have frustrated users."
+        },
+        {
+          "name": "Ramp",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Excellent corporate card and expense integration.",
+          "cons": "Requires switching corporate cards."
+        }
+      ]
+    },
+    "presentation": {
+      "name": "Presentations & Slides",
+      "tools": [
+        {
+          "name": "Gamma",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Generates beautiful presentations from text prompts instantly.",
+          "cons": "Less granular control than PowerPoint."
+        },
+        {
+          "name": "PowerPoint Copilot",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Integrated into existing Microsoft workflows.",
+          "cons": "Generative results are currently hit-or-miss."
+        },
+        {
+          "name": "Beautiful.ai",
+          "cost_tier": "Professional",
+          "feasibility": "Self-serve",
+          "pros": "Enforces good design rules automatically.",
+          "cons": "Hard to break rules if you have a specific custom layout in mind."
+        },
+        {
+          "name": "Pitch",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Great collaboration and modern templates.",
+          "cons": "Smaller ecosystem than Google Slides/PPT."
+        }
+      ]
+    },
+    "note_taking": {
+      "name": "Note Taking & Knowledge Base",
+      "tools": [
+        {
+          "name": "Notion",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Incredibly flexible block-based workspace.",
+          "cons": "Can become slow and messy without architecture."
+        },
+        {
+          "name": "Obsidian",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Fast, local-first, and highly extensible.",
+          "cons": "Requires technical inclination to set up syncing and plugins."
+        },
+        {
+          "name": "Evernote",
+          "cost_tier": "Freemium",
+          "feasibility": "Self-serve",
+          "pros": "Reliable web clipping and document scanning.",
+          "cons": "Aging platform with aggressive pricing changes."
+        }
+      ]
+    },
+    "operations_erp": {
+      "name": "Operations & ERP",
+      "tools": [
+        {
+          "name": "NetSuite",
+          "cost_tier": "Enterprise",
+          "feasibility": "Org must enable",
+          "pros": "Massively scalable cloud ERP.",
+          "cons": "Implementations often take months and cost +."
+        },
+        {
+          "name": "Airtable",
+          "cost_tier": "Freemium",
+          "feasibility": "Company tech",
+          "pros": "Relational databases made as easy as spreadsheets.",
+          "cons": "Record limits on lower tiers can be restrictive."
+        },
+        {
+          "name": "Smartsheet",
+          "cost_tier": "Professional",
+          "feasibility": "Company tech",
+          "pros": "Familiar spreadsheet interface with project management power.",
+          "cons": "Less visually appealing than modern tools like Monday."
+        }
+      ]
+    }
+  }
+}
