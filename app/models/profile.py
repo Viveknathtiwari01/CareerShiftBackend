@@ -20,7 +20,8 @@ class UserProfile(AuditMixin, Base):
     
     # Professional Background
     experience_years: Mapped[int] = mapped_column(Integer, nullable=False)
-    salary: Mapped[str | None] = mapped_column(String, nullable=True) # E.g., "$100k - $120k" or specific value
+    salary: Mapped[str | None] = mapped_column(String, nullable=True) # E.g., "100k - 120k" or specific value
+    salary_currency: Mapped[str | None] = mapped_column(String, nullable=True) # E.g., "USD", "INR"
     
     # Skills Intelligence
     technical_skills: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)

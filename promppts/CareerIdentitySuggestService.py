@@ -12,7 +12,7 @@ Extract five career-identity fields from a user's professional background text:
 GOAL: Identify the user's CURRENT OR MOST RECENT PROFESSIONAL IDENTITY.
 Accuracy takes priority over completeness. A field left null is a valid, successful result.
 
-This system must work equally well for ANY profession or industry — technology, healthcare,
+This system must work equally well for ANY profession or industry technology, healthcare,
 law, finance, education, manufacturing, design, sales, government, skilled trades,
 hospitality, creative fields, etc. Do not assume a technology or software-development
 context. Apply the same reasoning rules regardless of domain.
@@ -59,7 +59,7 @@ Rules:
 - Prior industry ≠ current industry when the user describes a transition.
 - Client/project industry ≠ user's own industry. Building software for hospitals,
   auditing a bank, or designing a retail store does not make the user's industry
-  Healthcare, Financial Services, or Retail — unless the text shows the user is
+  Healthcare, Financial Services, or Retail unless the text shows the user is
   actually employed within that industry.
 - Use the narrowest industry label directly supported by the text. Do not upgrade
   a broad term ("finance") into a narrower one ("Financial Services") without
@@ -85,9 +85,9 @@ Critical Care; within Corporate Law → M&A; within Marketing → Performance
 Marketing; within Software Engineering → Backend Development).
 - Must reflect professional focus, not a list of tools, technologies, or courses.
 
-JOB TITLE — STRICTEST FIELD
+JOB TITLE STRICTEST FIELD
 The user's explicitly stated current or most recent professional title.
-- Use the title exactly as the user states it (with only light normalization —
+- Use the title exactly as the user states it (with only light normalization
   see Section 12). Never upgrade, downgrade, or reinterpret it.
 - Never infer a title from responsibilities, skills, projects, mentoring,
   reputation, education, or specialization alone.
@@ -135,7 +135,7 @@ Tools, technologies, methodologies, software, equipment, and certifications
 (e.g., a programming language, a piece of clinical equipment, a legal research
 platform, a CRM, a trade certification) are evidence, not identity. They can
 support a Functional Domain or Specialization only when tied to described
-responsibilities — they never independently establish one.
+responsibilities they never independently establish one.
 
 ====================================================================
 7. PROJECT / CLIENT / EMPLOYER-SECTOR RULE
@@ -143,7 +143,7 @@ responsibilities — they never independently establish one.
 The industry or domain of a client, project, patient population, case, or product
 is not automatically the user's own industry or domain. Only classify it as the
 user's own when the text shows the user is professionally embedded in that
-industry (employer, org, primary career) — not merely serving or working with it.
+industry (employer, org, primary career) not merely serving or working with it.
 
 ====================================================================
 8. INTEREST / ASPIRATION RULE
@@ -155,10 +155,10 @@ populate any field unless supported by current/recent professional evidence.
 ====================================================================
 9. EVIDENCE TIERS
 ====================================================================
-TIER 1 — EXPLICIT: user directly states it. Confidence 0.95–1.00.
-TIER 2 — STRONG INFERENCE: not stated, but strongly and concretely supported by
+TIER 1 EXPLICIT: user directly states it. Confidence 0.95–1.00.
+TIER 2 STRONG INFERENCE: not stated, but strongly and concretely supported by
   multiple facts about actual professional responsibilities. Confidence 0.80–0.94.
-TIER 3 — WEAK/AMBIGUOUS: insufficient or conflicting evidence. Value = null,
+TIER 3 WEAK/AMBIGUOUS: insufficient or conflicting evidence. Value = null,
   Confidence 0.00–0.79. Never force a value merely because it's plausible.
 
 ====================================================================
@@ -285,7 +285,7 @@ RULES TO APPLY:
 - Do not treat studying or learning a subject as professional experience in it.
 - Do not treat a client's, patient's, or project's sector as the user's own industry.
 - Do not treat tools, technologies, or skills as job titles.
-- Job Title must be explicitly stated or unambiguously established — never inferred
+- Job Title must be explicitly stated or unambiguously established never inferred
   from responsibilities, skills, or activities alone.
 - If evidence is insufficient for a field, return null for that field.
 - HARD RULE: confidence < 0.80 → value must be null.

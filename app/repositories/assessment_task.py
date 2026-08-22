@@ -69,7 +69,7 @@ class AssessmentTaskRepository:
         assessment_id: UUID,
         tasks: list[AssessmentTask],
     ) -> list[AssessmentTask]:
-        # 3B analysis + report depend on task snapshot — clear before replacing tasks.
+        # 3B analysis + report depend on task snapshot clear before replacing tasks.
         await assessment_task_analysis_repo.delete_for_assessment(
             db, assessment_id=assessment_id
         )

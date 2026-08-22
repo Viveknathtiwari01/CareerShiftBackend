@@ -15,6 +15,7 @@ from app.core.anthropic_client import (
     model_supports_sampling_params,
 )
 from app.core.constants import CATEGORY_BLEND, CATEGORY_BOT, CATEGORY_BUILD, VALID_3B_CATEGORIES
+from app.services.catalog_resolver import get_all_capabilities, resolve_tools_for_capability
 from promppts.Task3BClassificationService import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,7 @@ async def classify_tasks_3b_from_ai(
     ]
 
     user_prompt = USER_PROMPT_TEMPLATE.format(
+        capabilities=json.dumps(get_all_capabilities()),
         profile_json=json.dumps(profile_data, indent=2),
         profession_summary=profession_summary or "Not available",
         tasks_json=json.dumps(tasks_payload, indent=2),
@@ -156,10 +158,29 @@ async def classify_tasks_3b_from_ai(
         except (TypeError, ValueError):
             auto_potential = None
 
-        tools = item.get("recommended_tools") or []
-        if not isinstance(tools, list):
-            tools = []
-        tools = [str(t).strip() for t in tools if str(t).strip()][:3]
+        # Parse and resolve components
+        raw_components = item.get("components") or []
+        components = []
+        recommended_tools = []
+        if isinstance(raw_components, list):
+            for c in raw_components:
+                if not isinstance(c, dict):
+                    continue
+                cap_id = c.get("capability_id")
+                dyn_tools = c.get("dynamic_tools", [])
+                resolved_tools = resolve_tools_for_capability(cap_id, dyn_tools)
+                
+                # Append to flat recommended_tools for backward compatibility
+                for rt in resolved_tools:
+                    if rt["name"] not in recommended_tools:
+                        recommended_tools.append(rt["name"])
+
+                components.append({
+                    "name": str(c.get("name", "")),
+                    "description": str(c.get("description", "")),
+                    "capability_id": cap_id,
+                    "tool_options": resolved_tools
+                })
 
         normalized_analyses.append(
             {
@@ -171,7 +192,8 @@ async def classify_tasks_3b_from_ai(
                 "auto_potential": auto_potential,
                 "risk_level": _normalize_level(item.get("risk_level")),
                 "future_impact": _normalize_level(item.get("future_impact")),
-                "recommended_tools": tools,
+                "recommended_tools": recommended_tools,
+                "components": components,
             }
         )
 

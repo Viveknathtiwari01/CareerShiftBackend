@@ -111,7 +111,7 @@ async def suggest_career_identity_from_ai(
     """
     Call Anthropic to extract career identity fields from professional background text.
 
-    Logs metadata only — never raw background, field values, reasons, or full AI JSON.
+    Logs metadata only never raw background, field values, reasons, or full AI JSON.
     """
     input_len = len(professional_background)
     started = time.monotonic()

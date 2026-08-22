@@ -21,6 +21,7 @@ class AssessmentTaskAnalysis(AuditMixin, Base):
     risk_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
     future_impact: Mapped[str | None] = mapped_column(String(16), nullable=True)
     recommended_tools: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    components: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
 
     task = relationship("AssessmentTask", back_populates="analysis")
 

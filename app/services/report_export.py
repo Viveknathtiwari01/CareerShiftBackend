@@ -199,7 +199,7 @@ def generate_scorecard(
     build_pct = round((mix.get("BUILD", 0) / total) * 100)
 
     headline = (
-        f"AI Readiness {readiness.overall_score}/100 — {readiness.tier_label} "
+        f"AI Readiness {readiness.overall_score}/100 {readiness.tier_label} "
         f"({role})"
     )
     hashtags = ["AIReadiness", "CareerShift", "FutureOfWork", "AICareer"]
@@ -208,7 +208,7 @@ def generate_scorecard(
         f"I just completed my CareerShift AI Career Intelligence Assessment.\n\n"
         f"Score: {readiness.overall_score}/100 ({readiness.tier_label} tier)\n"
         f"Role focus: {role}\n"
-        f"3B portfolio mix — BUILD {build_pct}% · BLEND {blend_pct}% · BOT {bot_pct}%\n"
+        f"3B portfolio mix BUILD {build_pct}% · BLEND {blend_pct}% · BOT {bot_pct}%\n"
         f"Career risk: {readiness.career_risk} · Opportunity: {readiness.career_opportunity}\n\n"
         f"{report.strategic_note}\n\n"
         f"{' '.join('#' + tag for tag in hashtags)}"
@@ -216,7 +216,7 @@ def generate_scorecard(
 
     twitter_text = (
         f"CareerShift AI Readiness: {readiness.overall_score}/100 ({readiness.tier_label}). "
-        f"{role} — {bot_pct}% tasks BOT-ready, {blend_pct}% BLEND. "
+        f"{role} {bot_pct}% tasks BOT-ready, {blend_pct}% BLEND. "
         f"Building an AI-augmented career. {' '.join('#' + tag for tag in hashtags[:3])}"
     )
     if len(twitter_text) > 280:
@@ -336,7 +336,7 @@ def _render_report_docx_document(
 
     doc.add_heading("AI Readiness Score", level=1)
     doc.add_paragraph(
-        f"{readiness['overall_score']}/100 — {readiness['tier_label']} — {readiness['tier_description']}"
+        f"{readiness['overall_score']}/100 {readiness['tier_label']} {readiness['tier_description']}"
     )
 
     doc.add_heading("Executive Overview", level=1)
@@ -394,7 +394,7 @@ def _render_report_docx_document(
         for item in group["items"]:
             line = item["name"]
             if item.get("importance"):
-                line += f" — {item['importance']}"
+                line += f" {item['importance']}"
             if item.get("expected_level"):
                 line += f" ({item['expected_level']})"
             doc.add_paragraph(line, style="List Bullet")
@@ -409,7 +409,7 @@ def _render_report_docx_document(
 
     doc.add_heading("Learning Roadmap", level=1)
     for phase in context["learning_roadmap"]:
-        doc.add_heading(f"{phase['horizon']} — {phase['title']}", level=2)
+        doc.add_heading(f"{phase['horizon']} {phase['title']}", level=2)
         _add_bullet_list(doc, phase["items"])
 
     doc.add_heading("Action Plan", level=1)

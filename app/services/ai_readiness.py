@@ -81,7 +81,7 @@ class AIReadinessService:
 
         result = compute_ai_readiness(scorer_input)
         logger.info(
-            "AI readiness computed for assessment %s — score=%s tier=%s",
+            "AI readiness computed for assessment %s score=%s tier=%s",
             assessment_id,
             result.overall_score,
             result.tier,

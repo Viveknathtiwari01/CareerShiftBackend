@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "CareerShift API"
     API_V1_STR: str = "/api/v1"
 
-    # Database — set DATABASE_URL (Render Postgres) or individual DB_* vars
+    # Database set DATABASE_URL (Render Postgres) or individual DB_* vars
     DB_CONNECTION_URL: str | None = Field(
         default=None,
         validation_alias=AliasChoices("DATABASE_URL", "DB_CONNECTION_URL"),

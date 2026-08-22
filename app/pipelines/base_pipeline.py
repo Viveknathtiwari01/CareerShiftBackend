@@ -99,7 +99,7 @@ class BasePipeline(ABC):
         assessment_id: str | None = None,
     ) -> PipelineStageResult:
         logger.info(
-            "Skipping %s — already completed",
+            "Skipping %s already completed",
             name,
             extra={
                 "pipeline_run_id": pipeline_run_id,

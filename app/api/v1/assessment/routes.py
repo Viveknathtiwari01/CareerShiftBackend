@@ -43,7 +43,7 @@ async def get_current_assessment(
     message = (
         "Existing assessment loaded"
         if data.reused_existing
-        else "No reusable assessment — sync required"
+        else "No reusable assessment sync required"
     )
     return APIResponse(success=True, message=message, data=data)
 
@@ -78,7 +78,7 @@ async def start_assessment(
     elif result.reused_existing and not result.needs_pipeline_dispatch:
         message = "Assessment already in progress"
     elif result.profile_stale:
-        message = "Profile updated — regenerating competency mapping"
+        message = "Profile updated regenerating competency mapping"
     else:
         message = "Assessment started"
 

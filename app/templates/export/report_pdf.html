@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Career Intelligence Report — {{ overview.job_title }}</title>
+  <title>Career Intelligence Report {{ overview.job_title }}</title>
   <style>
     @page { size: A4; margin: 1.5cm; }
     body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a273d; line-height: 1.45; }
@@ -39,7 +39,7 @@
   <div class="score-box">
     <div>AI Readiness Score</div>
     <div class="score">{{ ai_readiness.overall_score }}/100</div>
-    <div>{{ ai_readiness.tier_label }} — {{ ai_readiness.tier_description }}</div>
+    <div>{{ ai_readiness.tier_label }} {{ ai_readiness.tier_description }}</div>
   </div>
 
   <h2>Executive Overview</h2>
@@ -113,7 +113,7 @@
   <h3>{{ group.category }}</h3>
   <ul>
     {% for item in group['items'] %}
-    <li><strong>{{ item.name }}</strong>{% if item.importance %} — {{ item.importance }}{% endif %}{% if item.expected_level %} ({{ item.expected_level }}){% endif %}</li>
+    <li><strong>{{ item.name }}</strong>{% if item.importance %} {{ item.importance }}{% endif %}{% if item.expected_level %} ({{ item.expected_level }}){% endif %}</li>
     {% endfor %}
   </ul>
   {% endfor %}
@@ -134,7 +134,7 @@
 
   <h2>Learning Roadmap</h2>
   {% for phase in learning_roadmap %}
-  <h3>{{ phase.horizon }} — {{ phase.title }}</h3>
+  <h3>{{ phase.horizon }} {{ phase.title }}</h3>
   <ul>{% for item in phase['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
   {% endfor %}
 

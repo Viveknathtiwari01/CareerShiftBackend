@@ -1,4 +1,4 @@
-"""Profile wizard picklist values — keep in sync with Frontend/src/lib/app-enums.ts"""
+"""Profile wizard picklist values keep in sync with Frontend/src/lib/app-enums.ts"""
 
 EXPERIENCE_LEVELS = [
     "0-1 Years",

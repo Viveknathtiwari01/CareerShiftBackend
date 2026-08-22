@@ -203,7 +203,7 @@ class AssessmentService:
             if existing:
                 if existing.status == PIPELINE_STATUS_COMPLETED:
                     logger.info(
-                        "Reusing completed assessment — profile unchanged",
+                        "Reusing completed assessment profile unchanged",
                         extra={
                             "assessment_id": str(existing.assessment_id),
                             "user_id": str(user_id),
@@ -230,7 +230,7 @@ class AssessmentService:
                 return existing
             if profile_stale_for_new:
                 logger.info(
-                    "Profile updated since last assessment — creating new run",
+                    "Profile updated since last assessment creating new run",
                     extra={"user_id": str(user_id)},
                 )
 
@@ -317,7 +317,7 @@ class AssessmentService:
         )
 
     async def run_competency_pipeline(self, assessment_id: UUID) -> None:
-        """Background entry point — opens its own DB session."""
+        """Background entry point opens its own DB session."""
         async with AsyncSessionLocal() as db:
             try:
                 await self._execute_pipeline(db, assessment_id)

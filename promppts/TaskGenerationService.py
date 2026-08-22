@@ -33,10 +33,10 @@ Return ONLY valid JSON with this exact structure:
 Rules:
 - Generate 10-15 primary tasks in "tasks" that reflect realistic daily work for this specific role
 - Generate 3-5 optional tasks in "suggested_additional" the user may have overlooked
-- hours_per_week across all primary tasks should roughly total 35-50 hours
-- Tasks must be specific to the job title, industry, domain, and competencies — NOT generic software dev tasks unless the role is technical
+- hours_per_week across all primary tasks should roughly total 22-24 hours
+- Tasks must be specific to the job title, industry, domain, and competencies NOT generic software dev tasks unless the role is technical
 - confidence is 0-100 representing how likely this task applies to this role
-- Use role-appropriate categories (e.g. HRIS, Compliance, Reporting — not generic "Development" unless relevant)
+- Use role-appropriate categories (e.g. HRIS, Compliance, Reporting not generic "Development" unless relevant)
 """
 
 USER_PROMPT_TEMPLATE = """Analyze this career profile and competency map, then generate daily work tasks.
