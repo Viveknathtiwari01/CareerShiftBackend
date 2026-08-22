@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import String, ForeignKey, Index, text
+from sqlalchemy import String, ForeignKey, Index, text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
@@ -27,6 +28,10 @@ class Assessment(AuditMixin, Base):
         String, nullable=False, default=PIPELINE_STATUS_PENDING
     )
     ai_toolkit_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    task_analysis_input_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    task_analysis_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     user = relationship("User", backref="assessments")
     profile = relationship("UserProfile", backref="assessments")

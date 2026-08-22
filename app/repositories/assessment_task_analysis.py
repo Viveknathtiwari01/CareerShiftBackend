@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.assessment import Assessment
 from app.models.assessment_task import AssessmentTask
 from app.models.assessment_task_analysis import AssessmentTaskAnalysis
 
@@ -41,6 +42,11 @@ class AssessmentTaskAnalysisRepository:
         subq = select(AssessmentTask.id).where(AssessmentTask.assessment_id == assessment_id)
         await db.execute(
             delete(AssessmentTaskAnalysis).where(AssessmentTaskAnalysis.task_id.in_(subq))
+        )
+        await db.execute(
+            update(Assessment)
+            .where(Assessment.id == assessment_id)
+            .values(task_analysis_input_hash=None, task_analysis_generated_at=None)
         )
         await db.flush()
 

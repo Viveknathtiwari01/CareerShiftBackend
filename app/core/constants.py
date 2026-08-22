@@ -41,3 +41,14 @@ CATEGORY_BUILD = "BUILD"
 CATEGORY_BOT = "BOT"
 CATEGORY_BLEND = "BLEND"
 VALID_3B_CATEGORIES = {CATEGORY_BUILD, CATEGORY_BOT, CATEGORY_BLEND}
+
+# 3B tool suggestion enums
+COST_BANDS = frozenset(
+    {"free", "freemium", "paid_individual", "paid_team", "enterprise"}
+)
+FEASIBILITY_TIERS = frozenset(
+    {"self_serve", "company_tech", "org_must_enable", "stays_human_led"}
+)
+VERIFICATION_UNVERIFIED = "UNVERIFIED"
+VERIFICATION_VERIFIED = "VERIFIED"
+VERIFICATION_REJECTED = "REJECTED"

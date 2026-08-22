@@ -181,27 +181,11 @@ def _ai_usage_label(ai_assistance: str | None) -> str:
     return "Low"
 
 
-# Review UI buckets (stored on assessment_tasks.time_allocation) → weekly hours for Daily Work.
-# Minute options: upper bound minutes × 4; hour options: upper bound hours × 2; 4+ hrs → 10.
-REVIEW_TIME_TO_WEEKLY_HOURS: dict[float, float] = {
-    0.25: 1.0,  # <15 min  → 15*4 min = 1h
-    0.5: 2.0,   # 15-30 min → 30*4 min = 2h
-    1.0: 4.0,   # 30-60 min → 60*4 min = 4h
-    2.0: 4.0,   # 1-2 hrs → 2*2 = 4h
-    4.0: 8.0,   # 2-4 hrs → 4*2 = 8h
-    8.0: 10.0,  # 4+ hrs → 10h/wk
-}
-
-
-def effective_task_hours(task: dict[str, Any]) -> float:
-    """Prefer reviewed time_allocation (mapped to weekly hours); else AI hours_per_week."""
-    if task.get("time_allocation") is not None:
-        raw = float(task.get("time_allocation") or 0)
-        for bucket, weekly in REVIEW_TIME_TO_WEEKLY_HOURS.items():
-            if abs(raw - bucket) < 1e-9:
-                return weekly
-        return raw
-    return float(task.get("hours_per_week") or 0)
+# Review UI buckets — canonical mapping lives in task_hours.py
+from app.services.task_hours import (
+    REVIEW_TIME_TO_WEEKLY_HOURS,
+    effective_task_hours,
+)
 
 
 def _format_review_confidence(confidence: Any) -> str | None:
@@ -878,23 +862,33 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
     tool_entries: dict[str, list[dict]] = {}
     for row in analyses_or_routing:
         task_title = (row.get("task_title") or "").strip()
-        for tool in row.get("recommended_tools") or []:
-            if not tool:
+        entry_meta = {
+            "task_title": task_title,
+            "reason": row.get("reason"),
+            "rationale": row.get("rationale"),
+            "category": row.get("category"),
+            "future_impact": row.get("future_impact"),
+            "auto_potential": row.get("auto_potential"),
+            "risk_level": row.get("risk_level"),
+        }
+
+        tool_names: list[str] = []
+        for comp in row.get("components") or []:
+            for tool in comp.get("tools") or comp.get("tool_options") or []:
+                if isinstance(tool, dict) and tool.get("name"):
+                    tool_names.append(str(tool["name"]).strip())
+        if not tool_names:
+            for tool in row.get("recommended_tools") or []:
+                if tool:
+                    tool_names.append(str(tool).strip())
+
+        for name in tool_names:
+            if not name:
                 continue
-            entries = tool_entries.setdefault(tool, [])
+            entries = tool_entries.setdefault(name, [])
             if any(entry.get("task_title") == task_title for entry in entries):
                 continue
-            entries.append(
-                {
-                    "task_title": task_title,
-                    "reason": row.get("reason"),
-                    "rationale": row.get("rationale"),
-                    "category": row.get("category"),
-                    "future_impact": row.get("future_impact"),
-                    "auto_potential": row.get("auto_potential"),
-                    "risk_level": row.get("risk_level"),
-                }
-            )
+            entries.append(dict(entry_meta))
     return tool_entries
 
 

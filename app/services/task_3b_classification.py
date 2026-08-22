@@ -14,8 +14,10 @@ from app.core.anthropic_client import (
     get_anthropic_temperature,
     model_supports_sampling_params,
 )
-from app.core.constants import CATEGORY_BLEND, CATEGORY_BOT, CATEGORY_BUILD, VALID_3B_CATEGORIES
-from app.services.catalog_resolver import get_all_capabilities, resolve_tools_for_capability
+from app.services.task_3b_verification import (
+    sanitize_llm_analyses,
+    validate_analyses_with_pydantic,
+)
 from promppts.Task3BClassificationService import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
 logger = logging.getLogger(__name__)
@@ -27,26 +29,6 @@ def _strip_markdown_json(text: str) -> str:
         clean = re.sub(r"^```(?:json)?\s*", "", clean)
         clean = re.sub(r"\s*```$", "", clean)
     return clean.strip()
-
-
-def _normalize_category(value: str | None) -> str:
-    if not value:
-        return CATEGORY_BLEND
-    upper = str(value).upper().strip()
-    if upper in VALID_3B_CATEGORIES:
-        return upper
-    if "BUILD" in upper:
-        return CATEGORY_BUILD
-    if "BOT" in upper:
-        return CATEGORY_BOT
-    return CATEGORY_BLEND
-
-
-def _normalize_level(value: str | None, default: str = "Medium") -> str:
-    if not value:
-        return default
-    normalized = str(value).strip().capitalize()
-    return normalized if normalized in {"Low", "Medium", "High"} else default
 
 
 def _parse_3b_json(output_text: str) -> dict[str, Any]:
@@ -62,36 +44,12 @@ def _parse_3b_json(output_text: str) -> dict[str, Any]:
 
 async def classify_tasks_3b_from_ai(
     *,
-    profile_data: dict[str, Any],
-    profession_summary: str | None,
-    tasks: list[dict[str, Any]],
+    grounding_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    """Call Anthropic to classify tasks into BUILD/BOT/BLEND."""
-    tasks_payload = [
-        {
-            "task_index": idx,
-            "title": t.get("title"),
-            "description": t.get("description"),
-            "category": t.get("category"),
-            "hours_per_week": t.get("hours_per_week"),
-            "time_allocation": t.get("time_allocation"),
-            "complexity": t.get("complexity"),
-            "creativity": t.get("creativity"),
-            "human_touch": t.get("human_touch"),
-            "frequency": t.get("frequency"),
-            "business_criticality": t.get("business_criticality"),
-            "ai_assistance": t.get("ai_assistance"),
-            "confidence_score": t.get("confidence_score"),
-            "manual_notes": t.get("manual_notes"),
-        }
-        for idx, t in enumerate(tasks)
-    ]
-
+    """Call Anthropic to classify tasks into BUILD/BOT/BLEND with optional components."""
+    tasks = grounding_payload.get("reviewed_tasks") or []
     user_prompt = USER_PROMPT_TEMPLATE.format(
-        capabilities=json.dumps(get_all_capabilities()),
-        profile_json=json.dumps(profile_data, indent=2),
-        profession_summary=profession_summary or "Not available",
-        tasks_json=json.dumps(tasks_payload, indent=2),
+        grounding_json=json.dumps(grounding_payload, indent=2),
     )
 
     model = get_anthropic_model()
@@ -107,7 +65,7 @@ async def classify_tasks_3b_from_ai(
 
     request_kwargs = build_messages_create_kwargs(
         model,
-        max_tokens=8192,
+        max_tokens=16384,
         temperature=get_anthropic_temperature(),
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
@@ -142,60 +100,13 @@ async def classify_tasks_3b_from_ai(
         except (TypeError, ValueError):
             parsed["summary_confidence"] = None
 
-    normalized_analyses = []
-    for item in parsed["analyses"]:
-        if not isinstance(item, dict):
-            continue
-        actions = item.get("next_actions") or []
-        if isinstance(actions, list):
-            actions = [str(a).strip() for a in actions if str(a).strip()][:3]
-        while len(actions) < 3:
-            actions.append("Review AI tools that could support this task.")
+    raw_analyses = [item for item in parsed.get("analyses", []) if isinstance(item, dict)]
+    sanitized = sanitize_llm_analyses(raw_analyses)
+    try:
+        validated = validate_analyses_with_pydantic(sanitized)
+    except Exception as exc:
+        logger.warning("Pydantic validation fallback to sanitized output: %s", exc)
+        validated = sanitized
 
-        auto_potential = item.get("auto_potential")
-        try:
-            auto_potential = max(0, min(100, int(auto_potential))) if auto_potential is not None else None
-        except (TypeError, ValueError):
-            auto_potential = None
-
-        # Parse and resolve components
-        raw_components = item.get("components") or []
-        components = []
-        recommended_tools = []
-        if isinstance(raw_components, list):
-            for c in raw_components:
-                if not isinstance(c, dict):
-                    continue
-                cap_id = c.get("capability_id")
-                dyn_tools = c.get("dynamic_tools", [])
-                resolved_tools = resolve_tools_for_capability(cap_id, dyn_tools)
-                
-                # Append to flat recommended_tools for backward compatibility
-                for rt in resolved_tools:
-                    if rt["name"] not in recommended_tools:
-                        recommended_tools.append(rt["name"])
-
-                components.append({
-                    "name": str(c.get("name", "")),
-                    "description": str(c.get("description", "")),
-                    "capability_id": cap_id,
-                    "tool_options": resolved_tools
-                })
-
-        normalized_analyses.append(
-            {
-                "task_index": int(item.get("task_index", 0)),
-                "category": _normalize_category(item.get("category")),
-                "rationale": (item.get("rationale") or "").strip() or None,
-                "reason": (item.get("reason") or "").strip() or None,
-                "next_actions": actions,
-                "auto_potential": auto_potential,
-                "risk_level": _normalize_level(item.get("risk_level")),
-                "future_impact": _normalize_level(item.get("future_impact")),
-                "recommended_tools": recommended_tools,
-                "components": components,
-            }
-        )
-
-    parsed["analyses"] = normalized_analyses
+    parsed["analyses"] = validated
     return parsed
