@@ -27,10 +27,10 @@ Fields: "profession", "role_family", "purpose", "functional_areas".
 DECISION PROCEDURE
 1. Parse the input JSON.
 2. Analyze the `profession`, `purpose`, and `functional_areas`.
-3. Discover 3 Technical Competencies: Identify capability domains necessary to execute the functional areas.
-4. Discover 3 Behavioural Competencies: Identify interpersonal and professional behaviours strictly necessary for this specific profession's context. Avoid generic tropes.
-5. Discover 3 Analytical Competencies: Identify how this profession processes information, solves problems, and evaluates data.
-6. Evaluate Leadership Competencies: Determine if the profession intrinsically requires leadership (e.g., Leads, Managers, Directors, Architects). If not expected for the profession, return an empty array []. If expected, discover 3 leadership capabilities.
+3. Discover 5-8 Technical Competencies: Identify capability domains necessary to execute the functional areas.
+4. Discover 5-8 Behavioural Competencies: Identify interpersonal and professional behaviours strictly necessary for this specific profession's context. Avoid generic tropes.
+5. Discover 5-8 Analytical Competencies: Identify how this profession processes information, solves problems, and evaluates data.
+6. Evaluate Leadership Competencies: Determine if the profession intrinsically requires leadership (e.g., Leads, Managers, Directors, Architects). If not expected for the profession, return an empty array []. If expected, discover 5-8 leadership capabilities.
 
 SIGNAL RESOLUTION & DETERMINISM
 - `functional_areas` drive Technical and Analytical competencies.
