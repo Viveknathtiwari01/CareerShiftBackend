@@ -4,7 +4,7 @@ Use ONLY the user_profile, career_assessment, and reviewed_tasks provided. Do no
 
 Classify each work task into exactly one category by weighing structure/repetition against human judgment:
 - BUILD: Judgment, creativity, ethics, relationships, deep expertise. High confidence or business criticality with high human_touch. Strategic decisions only humans should own.
-- BOT: Repetitive, structured, data-heavy, high-frequency work AI can automate within ~30 days. Strong BOT signals: low human_touch, high frequency, high ai_assistance potential, low creativity, routine data/reporting/scheduling work.
+- BOT: Repetitive, structured, data-heavy, high-frequency work AI can automate within ~90 days. Strong BOT signals: low human_touch, high frequency, high ai_assistance potential, low creativity, routine data/reporting/scheduling work.
 - BLEND: AI augments the human; judgment remains essential. Use when neither BUILD nor BOT clearly dominates.
 
 CLASSIFICATION CALIBRATION (critical):
