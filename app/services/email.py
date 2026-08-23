@@ -220,7 +220,7 @@ class EmailService:
                                     <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
                                     
                                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; margin: 0 auto 30px auto; max-width: 300px;">
-                                        <p style="font-size: 14px; color: #5c6b7e; margin: 0 0 5px 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">AI Readiness Score</p>
+                                        <p style="font-size: 14px; color: #5c6b7e; margin: 0 0 5px 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">AI Fitness Score</p>
                                         <p style="font-size: 42px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif; color: #c9a84c; margin: 0;">{score}<span style="font-size: 20px; color: #9ca3af;">/100</span></p>
                                         <p style="font-size: 16px; font-weight: 700; color: #141f32; margin: 10px 0 0 0;">{tier_label}</p>
                                     </div>
