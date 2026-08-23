@@ -4,66 +4,266 @@
   <meta charset="utf-8" />
   <title>CareerShift 3B — {{ category }}</title>
   <style>
-    body { font-family: Helvetica, Arial, sans-serif; color: #1a1a1a; margin: 32px; font-size: 12px; line-height: 1.5; }
-    h1 { font-size: 22px; margin-bottom: 4px; }
-    h2 { font-size: 14px; color: #555; margin-top: 24px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-    h3 { font-size: 13px; margin-top: 16px; }
-    .meta { color: #666; font-size: 11px; margin-bottom: 20px; }
-    .hours { background: #f4f4f5; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
-    .task { border: 1px solid #e5e5e5; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
-    .component { margin-top: 10px; padding-left: 12px; border-left: 3px solid #ccc; }
-    .tool { background: #fafafa; border: 1px solid #eee; padding: 8px; margin: 6px 0; border-radius: 6px; }
-    .badge { font-size: 10px; color: #666; }
-    .disclaimer { margin-top: 24px; font-size: 10px; color: #888; }
-    ul { margin: 4px 0; padding-left: 18px; }
+    @page {
+      size: A4 portrait;
+      margin: 2.7cm 1.5cm 2cm 1.5cm;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #0f172a;
+      margin: 0 0 4pt;
+    }
+    h2 {
+      font-size: 10pt;
+      font-weight: bold;
+      color: {{ category_meta.accent }};
+      margin: 0 0 10pt;
+    }
+    p {
+      margin: 0 0 8pt;
+    }
+    .meta {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-bottom: 12pt;
+    }
+    .intro {
+      font-size: 9pt;
+      color: #475569;
+      margin-bottom: 14pt;
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 18pt;
+      border-top: 0.5pt solid #e2e8f0;
+      border-bottom: 0.5pt solid #e2e8f0;
+    }
+    .stats-table td {
+      text-align: center;
+      padding: 8pt 4pt;
+      width: 33%;
+      border-right: 0.5pt solid #e2e8f0;
+    }
+    .stats-table td.last {
+      border-right: none;
+    }
+    .stat-value {
+      font-size: 15pt;
+      font-weight: bold;
+      color: {{ category_meta.accent }};
+    }
+    .stat-label {
+      font-size: 7.5pt;
+      color: #64748b;
+      text-transform: uppercase;
+      padding-top: 3pt;
+    }
+
+    .task-separator {
+      border: none;
+      border-top: 0.5pt solid #e2e8f0;
+      margin: 14pt 0;
+    }
+    .task-label {
+      font-size: 7.5pt;
+      font-weight: bold;
+      color: {{ category_meta.accent }};
+      text-transform: uppercase;
+      margin: 0 0 2pt;
+    }
+    .task-title {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #0f172a;
+      margin: 0 0 4pt;
+    }
+    .task-rationale {
+      font-size: 8.5pt;
+      color: #64748b;
+      font-style: italic;
+      margin: 0 0 6pt;
+    }
+    .task-body {
+      font-size: 9.5pt;
+      color: #334155;
+      margin: 0 0 6pt;
+    }
+    .task-hours {
+      font-size: 8pt;
+      color: #64748b;
+      margin: 0 0 8pt;
+    }
+
+    .component-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 8pt;
+    }
+    .component-table td {
+      vertical-align: top;
+      padding: 0;
+    }
+    .component-border {
+      width: 3pt;
+      border-left: 2pt solid {{ category_meta.accent }};
+    }
+    .component-body {
+      padding-left: 8pt;
+    }
+    .component-name {
+      font-size: 9.5pt;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 0 0 2pt;
+    }
+    .component-desc {
+      font-size: 9pt;
+      color: #475569;
+      margin: 0 0 3pt;
+    }
+    .component-meta {
+      font-size: 7.5pt;
+      color: #94a3b8;
+      margin: 0 0 4pt;
+    }
+
+    .tool-line {
+      font-size: 8.5pt;
+      color: #334155;
+      margin: 0 0 4pt;
+      padding-left: 8pt;
+    }
+    .tool-name {
+      font-weight: bold;
+      color: #1e293b;
+    }
+    .tool-meta {
+      color: #64748b;
+      font-size: 7.5pt;
+    }
+    .tool-detail {
+      font-size: 8pt;
+      color: #475569;
+      margin: 0 0 3pt;
+      padding-left: 8pt;
+    }
+    .unverified {
+      font-size: 6.5pt;
+      font-weight: bold;
+      color: #92400e;
+      background-color: #fef3c7;
+      padding: 1pt 3pt;
+    }
+
+    .actions-title {
+      font-size: 9pt;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 8pt 0 4pt;
+    }
+    ul {
+      margin: 0 0 10pt;
+      padding-left: 14pt;
+    }
+    li {
+      font-size: 9pt;
+      color: #334155;
+      margin-bottom: 3pt;
+    }
+
+    .disclaimer {
+      margin-top: 16pt;
+      padding-top: 8pt;
+      border-top: 0.5pt solid #e2e8f0;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
-  <h1>3B Analysis — {{ category }}</h1>
+
+  <h1>3B Analysis — {{ category_meta.title }}</h1>
+  <h2>{{ category_meta.tagline }}</h2>
+
   <p class="meta">
-    {{ profile.job_title }} · {{ profile.industry }} · Generated {{ generated_at }}
+    <strong>{{ profile.job_title }}</strong> · {{ profile.industry }}<br/>
+    Generated {{ generated_at }}
   </p>
 
-  <div class="hours">
-    <strong>{{ category }} time:</strong>
-    {{ hours.weekly }}h/week · {{ hours.annual }}h/year across {{ hours.task_count }} tasks
-  </div>
+  <p class="intro">{{ category_meta.description }}</p>
+
+  <table class="stats-table">
+    <tr>
+      <td><span class="stat-value">{{ hours.weekly }}h</span></td>
+      <td><span class="stat-value">{{ hours.annual }}h</span></td>
+      <td class="last"><span class="stat-value">{{ hours.task_count }}</span></td>
+    </tr>
+    <tr>
+      <td><span class="stat-label">Weekly hours</span></td>
+      <td><span class="stat-label">Annual hours</span></td>
+      <td class="last"><span class="stat-label">{{ category_meta.title }} tasks</span></td>
+    </tr>
+  </table>
 
   {% for task in analyses %}
-  <div class="task">
-    <h3>{{ task.task_title }}</h3>
-  {% if task.rationale %}<p class="badge">{{ task.rationale }}</p>{% endif %}
-    <p>{{ task.reason }}</p>
-    <p class="badge">Weekly: {{ task.weekly_hours }}h · Annual: {{ task.annual_hours }}h</p>
+  {% if not loop.first %}
+  <hr class="task-separator" />
+  {% endif %}
 
-    {% for comp in task.components %}
-    <div class="component">
-      <strong>{{ comp.name }}</strong>
-      <p>{{ comp.description }}</p>
-      <p class="badge">Capability: {{ comp.capability }} · Pattern: {{ comp.solution_pattern }}</p>
-      {% for tool in comp.tools %}
-      <div class="tool">
-        <strong>{{ tool.name }}</strong>
-        <span class="badge"> · {{ tool.cost_band }} · {{ tool.feasibility }} · UNVERIFIED</span>
-        {% if tool.credibility_note %}<p>{{ tool.credibility_note }}</p>{% endif %}
-        {% if tool.pros %}<p>+ {{ tool.pros | join('; ') }}</p>{% endif %}
-        {% if tool.cons %}<p>- {{ tool.cons | join('; ') }}</p>{% endif %}
-      </div>
-      {% endfor %}
-    </div>
+  <p class="task-label">Task {{ loop.index }} of {{ analyses | length }}</p>
+  <p class="task-title">{{ task.task_title }}</p>
+  {% if task.rationale %}<p class="task-rationale">{{ task.rationale }}</p>{% endif %}
+  {% if task.reason %}<p class="task-body">{{ task.reason }}</p>{% endif %}
+  <p class="task-hours">{{ task.weekly_hours }}h/week · {{ task.annual_hours }}h/year</p>
+
+  {% for comp in task.components %}
+  <table class="component-table">
+    <tr>
+      <td class="component-border">&nbsp;</td>
+      <td class="component-body">
+        <p class="component-name">{{ comp.name }}</p>
+        {% if comp.description %}<p class="component-desc">{{ comp.description }}</p>{% endif %}
+        <p class="component-meta">Capability: {{ comp.capability }} · Pattern: {{ comp.solution_pattern }}</p>
+
+        {% for tool in comp.tools %}
+        <p class="tool-line">
+          <span class="tool-name">{{ tool.name }}</span>
+          <span class="tool-meta"> · {{ tool.cost_band_label }} · {{ tool.feasibility_label }}</span>
+          <span class="unverified"> UNVERIFIED</span>
+        </p>
+        {% if tool.credibility_note %}<p class="tool-detail">{{ tool.credibility_note }}</p>{% endif %}
+        {% if tool.pros %}<p class="tool-detail">+ {{ tool.pros | join(' · ') }}</p>{% endif %}
+        {% if tool.cons %}<p class="tool-detail">− {{ tool.cons | join(' · ') }}</p>{% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+  </table>
+  {% endfor %}
+
+  {% if task.next_actions %}
+  <p class="actions-title">Recommended next actions</p>
+  <ul>
+    {% for action in task.next_actions %}
+    <li>{{ action }}</li>
     {% endfor %}
-
-    {% if task.next_actions %}
-    <p><strong>Next actions</strong></p>
-    <ul>
-      {% for action in task.next_actions %}
-      <li>{{ action }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-  </div>
+  </ul>
+  {% endif %}
   {% endfor %}
 
   <p class="disclaimer">{{ disclaimer }}</p>
+
 </body>
 </html>
