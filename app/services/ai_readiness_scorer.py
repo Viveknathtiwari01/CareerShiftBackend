@@ -1,4 +1,4 @@
-"""Deterministic AI Readiness Score (Output A) explainable 0–100 baseline."""
+"""Deterministic AI Fitness Score (Output A) explainable 0–100 baseline."""
 
 from __future__ import annotations
 

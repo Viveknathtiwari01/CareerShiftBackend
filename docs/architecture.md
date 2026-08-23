@@ -348,7 +348,7 @@ Measures
 
 Output
 
-AI Readiness Score (0-100)
+AI Fitness Score (0-100)
 
 ---
 
