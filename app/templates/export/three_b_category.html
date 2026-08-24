@@ -6,7 +6,20 @@
   <style>
     @page {
       size: A4 portrait;
-      margin: 2.7cm 1.5cm 2cm 1.5cm;
+      margin: 2.6cm 1.5cm 2cm 1.5cm;
+      @frame header_frame {
+        -pdf-frame-content: page_header;
+        left: 1.5cm;
+        width: 17cm;
+        top: 0.55cm;
+      }
+      @frame footer_frame {
+        -pdf-frame-content: page_footer;
+        left: 1.5cm;
+        width: 17cm;
+        bottom: 0.45cm;
+        height: 0.9cm;
+      }
     }
 
     body {
@@ -194,6 +207,45 @@
   </style>
 </head>
 <body>
+
+  <!-- Repeating header on every page -->
+  <div id="page_header">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="55%" valign="bottom">
+          <span style="font-size:16pt;font-weight:bold;color:{{ brand.navy }};">Career</span><span style="font-size:16pt;font-weight:bold;color:{{ brand.gold }};">Shift</span><br/>
+          <span style="font-size:7pt;color:#64748b;letter-spacing:0.05em;">AI CAREER INTELLIGENCE</span>
+        </td>
+        <td width="45%" align="right" valign="bottom">
+          <span style="font-size:9pt;font-weight:bold;color:{{ category_meta.accent }};">3B Analysis · {{ category_meta.title }}</span><br/>
+          <span style="font-size:7pt;color:#94a3b8;text-transform:uppercase;">{{ category_meta.tagline }}</span>
+        </td>
+      </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:5pt;">
+      <tr>
+        <td style="border-top:2pt solid {{ brand.gold }};font-size:1pt;line-height:1pt;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="border-top:0.75pt solid {{ category_meta.accent }};font-size:1pt;line-height:1pt;padding-top:1pt;">&nbsp;</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Repeating footer on every page -->
+  <div id="page_footer">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:0.5pt solid #e2e8f0;padding-top:4pt;">
+      <tr>
+        <td style="font-size:7.5pt;color:#94a3b8;">
+          © <span style="font-weight:bold;color:{{ brand.navy }};">Career</span><span style="font-weight:bold;color:{{ brand.gold }};">Shift</span>
+          · Confidential · {{ generated_at }}
+        </td>
+        <td align="right" style="font-size:7.5pt;color:#94a3b8;">
+          3B {{ category }} Report
+        </td>
+      </tr>
+    </table>
+  </div>
 
   <h1>3B Analysis — {{ category_meta.title }}</h1>
   <h2>{{ category_meta.tagline }}</h2>
