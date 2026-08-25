@@ -334,7 +334,7 @@ def _render_report_docx_document(
         f"Assessment {context['assessment_id'][:8]}…"
     )
 
-    doc.add_heading("AI Fitness Score", level=1)
+    doc.add_heading("Readiness Score", level=1)
     doc.add_paragraph(
         f"{readiness['overall_score']}/100 {readiness['tier_label']} {readiness['tier_description']}"
     )

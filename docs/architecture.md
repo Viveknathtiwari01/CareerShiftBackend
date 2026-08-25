@@ -1,4 +1,4 @@
-# CareerShift - System Architecture
+﻿# CareerShift - System Architecture
 
 **Version:** 1.0  
 **Project:** CareerShift – AI Powered Career Intelligence Platform  
@@ -348,7 +348,7 @@ Measures
 
 Output
 
-AI Fitness Score (0-100)
+Readiness Score (0-100)
 
 ---
 
