@@ -80,7 +80,7 @@ def test_generate_scorecard_linkedin_and_twitter():
     report = _sample_report()
     scorecard = generate_scorecard(report, job_title="HR Manager")
 
-    assert "72/100" in scorecard.linkedin_text
+    assert "Strong" in scorecard.linkedin_text
     assert "HR Manager" in scorecard.linkedin_text
     assert len(scorecard.twitter_text) <= 280
     assert scorecard.hashtags

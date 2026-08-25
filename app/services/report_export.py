@@ -199,14 +199,14 @@ def generate_scorecard(
     build_pct = round((mix.get("BUILD", 0) / total) * 100)
 
     headline = (
-        f"AI Readiness {readiness.overall_score}/100 {readiness.tier_label} "
+        f"Readiness: {readiness.tier_label} "
         f"({role})"
     )
     hashtags = ["AIReadiness", "CareerShift", "FutureOfWork", "AICareer"]
 
     linkedin_text = (
         f"I just completed my CareerShift AI Career Intelligence Assessment.\n\n"
-        f"Score: {readiness.overall_score}/100 ({readiness.tier_label} tier)\n"
+        f"Readiness: {readiness.tier_label} tier\n"
         f"Role focus: {role}\n"
         f"3B portfolio mix BUILD {build_pct}% · BLEND {blend_pct}% · BOT {bot_pct}%\n"
         f"Career risk: {readiness.career_risk} · Opportunity: {readiness.career_opportunity}\n\n"
@@ -215,13 +215,13 @@ def generate_scorecard(
     )
 
     twitter_text = (
-        f"CareerShift AI Readiness: {readiness.overall_score}/100 ({readiness.tier_label}). "
+        f"CareerShift Readiness: {readiness.tier_label}. "
         f"{role} {bot_pct}% tasks BOT-ready, {blend_pct}% BLEND. "
         f"Building an AI-augmented career. {' '.join('#' + tag for tag in hashtags[:3])}"
     )
     if len(twitter_text) > 280:
         twitter_text = (
-            f"AI Readiness {readiness.overall_score}/100 ({readiness.tier_label}). "
+            f"Readiness: {readiness.tier_label}. "
             f"{bot_pct}% BOT · {blend_pct}% BLEND · {build_pct}% BUILD. "
             f"#CareerShift #AIReadiness"
         )
