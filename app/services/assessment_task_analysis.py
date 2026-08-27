@@ -16,14 +16,24 @@ from app.repositories.assessment_task_analysis import (
 from app.repositories.competency_mapping import competency_mapping_repo
 from app.repositories.profile import profile_repo
 from app.schemas.assessment_task_analysis import (
+    CostOfStayingAsIs,
     HoursBucket,
     HoursByCategory,
     HoursSummary,
+    MarketReality,
+    PivotRole,
     TaskAnalysisItem,
     TaskAnalysisRunResponse,
 )
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
+from app.services.task_3b_derivations import (
+    derive_feasibility,
+    derive_importance,
+    enrich_cost_of_staying_as_is,
+    merge_market_reality,
+    recommended_build_task_id,
+)
 from app.services.task_3b_grounding import build_3b_grounding_payload
 from app.services.task_analysis_input_hash import compute_task_analysis_input_hash
 from app.services.task_hours import annual_hours_from_weekly, compute_hours_summary, effective_task_hours
@@ -70,6 +80,15 @@ class AssessmentTaskAnalysisService:
         )
         return hours_by_category, hours_summary, hours_summary.total.weekly_hours
 
+    def _cost_from_row(self, row: AssessmentTaskAnalysis, weekly: float) -> CostOfStayingAsIs | None:
+        raw = row.cost_of_staying_as_is_json
+        if not raw or not isinstance(raw, dict):
+            return None
+        enriched = enrich_cost_of_staying_as_is(raw, weekly_hours=weekly)
+        if not enriched:
+            return None
+        return CostOfStayingAsIs(**enriched)
+
     def _to_item(self, row: AssessmentTaskAnalysis) -> TaskAnalysisItem:
         task = row.task
         weekly = effective_task_hours(task) if task else 0.0
@@ -101,6 +120,62 @@ class AssessmentTaskAnalysisService:
             learn_dont=row.learn_dont,
             where_to_learn=row.where_to_learn,
             status=row.status,
+            cost_of_staying_as_is=self._cost_from_row(row, weekly),
+            action_updated_at=row.action_updated_at,
+        )
+
+    def _market_reality_from_assessment(self, assessment) -> MarketReality | None:
+        raw = assessment.market_reality_json or {}
+        if not isinstance(raw, dict):
+            return None
+        trend = str(raw.get("trend_text") or "").strip()
+        roles_raw = raw.get("pivot_roles") or []
+        roles = [PivotRole(**r) for r in roles_raw if isinstance(r, dict) and r.get("name")]
+        if not trend and not roles:
+            return None
+        return MarketReality(trend_text=trend, pivot_roles=roles)
+
+    def _build_response(
+        self,
+        rows: list[AssessmentTaskAnalysis],
+        *,
+        summary_confidence: int | None,
+        regenerated: bool,
+        market_reality: dict | MarketReality | None = None,
+        generated_at: datetime | None = None,
+        assessment=None,
+    ) -> TaskAnalysisRunResponse:
+        hours_cat, hours_summary, total = self._hours_response_parts(rows)
+        market: MarketReality | None
+        if isinstance(market_reality, MarketReality):
+            market = market_reality
+        elif isinstance(market_reality, dict) and market_reality:
+            market = MarketReality(
+                trend_text=str(market_reality.get("trend_text") or ""),
+                pivot_roles=[
+                    PivotRole(**r)
+                    for r in (market_reality.get("pivot_roles") or [])
+                    if isinstance(r, dict) and r.get("name")
+                ],
+            )
+        elif assessment is not None:
+            market = self._market_reality_from_assessment(assessment)
+        else:
+            market = None
+
+        rec_build = recommended_build_task_id(rows, task_for_row=lambda r: r.task)
+        rec_uuid = UUID(rec_build) if rec_build else None
+
+        return TaskAnalysisRunResponse(
+            analyses=[self._to_item(r) for r in rows],
+            summary_confidence=summary_confidence,
+            regenerated=regenerated,
+            hours_by_category=hours_cat,
+            hours_summary=hours_summary,
+            total_hours=total,
+            generated_at=generated_at,
+            market_reality=market,
+            recommended_build_task_id=rec_uuid,
         )
 
     @staticmethod
@@ -116,27 +191,6 @@ class AssessmentTaskAnalysisService:
         assessment.ai_toolkit_json = {"tools": build_toolkit_from_analyses(analyses)}
         db.add(assessment)
         await db.flush()
-
-    def _build_response(
-        self,
-        rows: list[AssessmentTaskAnalysis],
-        *,
-        summary_confidence: int | None,
-        regenerated: bool,
-        market_reality: dict | None = None,
-        generated_at: datetime | None = None,
-    ) -> TaskAnalysisRunResponse:
-        hours_cat, hours_summary, total = self._hours_response_parts(rows)
-        return TaskAnalysisRunResponse(
-            analyses=[self._to_item(r) for r in rows],
-            summary_confidence=summary_confidence,
-            regenerated=regenerated,
-            hours_by_category=hours_cat,
-            hours_summary=hours_summary,
-            total_hours=total,
-            generated_at=generated_at,
-            market_reality=market_reality,
-        )
 
     async def get_analysis(
         self,
@@ -154,8 +208,8 @@ class AssessmentTaskAnalysisService:
             rows,
             summary_confidence=summary,
             regenerated=False,
-            market_reality=assessment.market_reality_json,
             generated_at=generated_at,
+            assessment=assessment,
         )
 
     async def analyze_tasks(
@@ -192,7 +246,12 @@ class AssessmentTaskAnalysisService:
         current_input_hash = compute_task_analysis_input_hash(final_output, selected_tasks)
         stored_hash = assessment.task_analysis_input_hash
 
-        if existing and stored_hash and stored_hash == current_input_hash:
+        if (
+            existing
+            and stored_hash
+            and stored_hash == current_input_hash
+            and not regenerate
+        ):
             if not (assessment.ai_toolkit_json or {}).get("tools"):
                 analyses_payload = analysis_dicts_from_rows(
                     existing,
@@ -210,10 +269,15 @@ class AssessmentTaskAnalysisService:
                 existing,
                 summary_confidence=summary,
                 regenerated=False,
-                market_reality=assessment.market_reality_json,
                 generated_at=assessment.task_analysis_generated_at
                 or max((r.created_at for r in existing), default=None),
+                assessment=assessment,
             )
+
+        if regenerate and existing:
+            logger.info("Forced 3B regeneration for assessment %s", assessment_id)
+            await self._repo.delete_for_assessment(db, assessment_id=assessment_id)
+            existing = []
 
         if existing and stored_hash and stored_hash != current_input_hash:
             logger.info("3B inputs changed for assessment %s — regenerating", assessment_id)
@@ -239,8 +303,8 @@ class AssessmentTaskAnalysisService:
                 existing,
                 summary_confidence=summary,
                 regenerated=False,
-                market_reality=assessment.market_reality_json,
                 generated_at=assessment.task_analysis_generated_at,
+                assessment=assessment,
             )
 
         grounding_payload = build_3b_grounding_payload(
@@ -267,6 +331,12 @@ class AssessmentTaskAnalysisService:
                     ),
                 )
 
+            components = item.get("components") or []
+            tier, tier_note = derive_feasibility(item["category"], components)
+            weekly = effective_task_hours(task)
+            cost_raw = item.get("cost_of_staying_as_is_json")
+            cost_json = enrich_cost_of_staying_as_is(cost_raw, weekly_hours=weekly)
+
             new_rows.append(
                 AssessmentTaskAnalysis(
                     task_id=task.id,
@@ -278,10 +348,10 @@ class AssessmentTaskAnalysisService:
                     risk_level=item.get("risk_level"),
                     future_impact=item.get("future_impact"),
                     recommended_tools=item.get("recommended_tools") or [],
-                    components=item.get("components") or [],
-                    importance=item.get("importance"),
-                    feasibility_tier=item.get("feasibility_tier"),
-                    feasibility_note=item.get("feasibility_note"),
+                    components=components,
+                    importance=derive_importance(task),
+                    feasibility_tier=tier,
+                    feasibility_note=tier_note,
                     human_capability=item.get("human_capability"),
                     velocity=item.get("velocity"),
                     velocity_note=item.get("velocity_note"),
@@ -290,6 +360,7 @@ class AssessmentTaskAnalysisService:
                     learn_do=item.get("learn_do"),
                     learn_dont=item.get("learn_dont"),
                     where_to_learn=item.get("where_to_learn"),
+                    cost_of_staying_as_is_json=cost_json,
                 )
             )
 
@@ -316,7 +387,7 @@ class AssessmentTaskAnalysisService:
         generated_at = datetime.now(timezone.utc)
         assessment.task_analysis_input_hash = current_input_hash
         assessment.task_analysis_generated_at = generated_at
-        assessment.market_reality_json = ai_result.get("market_reality") or {}
+        assessment.market_reality_json = merge_market_reality(ai_result)
         db.add(assessment)
         await db.commit()
 
@@ -326,8 +397,8 @@ class AssessmentTaskAnalysisService:
             created,
             summary_confidence=ai_result.get("summary_confidence"),
             regenerated=bool(existing),
-            market_reality=ai_result.get("market_reality"),
             generated_at=generated_at,
+            assessment=assessment,
         )
 
     async def update_task_status(
@@ -343,6 +414,8 @@ class AssessmentTaskAnalysisService:
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found for task.")
         row.status = status_val
+        if status_val:
+            row.action_updated_at = datetime.now(timezone.utc)
         db.add(row)
         await db.commit()
         await db.refresh(row)

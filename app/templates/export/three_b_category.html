@@ -305,7 +305,20 @@
   </table>
   {% endfor %}
 
-  {% if task.next_actions %}
+  {% if task.human_capability %}
+  <h2>Human capability to strengthen</h2>
+  <p>{{ task.human_capability }}</p>
+  {% endif %}
+
+  {% if task.cost_of_staying_as_is %}
+  <h2>Cost of staying as-is</h2>
+  <p><strong>{{ task.cost_of_staying_as_is.annual_hours }} hrs/year.</strong> {{ task.cost_of_staying_as_is.narrative }}</p>
+  {% endif %}
+
+  {% if task.next_action %}
+  <p class="actions-title">Next best action</p>
+  <p class="task-body">{{ task.next_action }}</p>
+  {% elif task.next_actions %}
   <p class="actions-title">Recommended next actions</p>
   <ul>
     {% for action in task.next_actions %}
@@ -313,6 +326,17 @@
     {% endfor %}
   </ul>
   {% endif %}
+
+  {% if task.learn_gap or task.learn_do or task.learn_dont or task.where_to_learn %}
+  <div style="background:#1a202c;color:#fff;padding:10pt;border-radius:6pt;margin-top:10pt;">
+    <p style="color:#63b3ed;font-size:8pt;font-weight:bold;margin:0 0 6pt;">LEARNING IMPLICATION</p>
+    {% if task.learn_gap %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Gap:</strong> {{ task.learn_gap }}</p>{% endif %}
+    {% if task.learn_do %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Learn:</strong> {{ task.learn_do }}</p>{% endif %}
+    {% if task.learn_dont %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Don't learn:</strong> {{ task.learn_dont }}</p>{% endif %}
+    {% if task.where_to_learn %}<p style="font-size:9pt;margin:0;"><strong>Where:</strong> {{ task.where_to_learn }}</p>{% endif %}
+  </div>
+  {% endif %}
+
   {% endfor %}
 
   <p class="disclaimer">{{ disclaimer }}</p>

@@ -18,9 +18,11 @@ from app.services.assessment_task_analysis import (
 from app.services.task_3b_grounding import build_profile_grounding
 from app.services.three_b_export import (
     build_category_export_context,
+    build_task_export_context,
     render_category_html,
     render_category_json,
     render_category_pdf,
+    render_task_pdf,
 )
 
 router = APIRouter()
@@ -128,4 +130,36 @@ async def export_category_analysis(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename_base}.pdf"'},
+    )
+
+
+@router.get("/{assessment_id}/analysis/{task_id}/export")
+async def export_task_analysis(
+    assessment_id: UUID,
+    task_id: UUID,
+    format: str = Query(default="pdf", alias="format"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    analysis_service: AssessmentTaskAnalysisService = Depends(get_analysis_service),
+):
+    fmt = format.lower().strip()
+    if fmt != "pdf":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only PDF format is supported.")
+
+    analysis = await analysis_service.get_analysis(db, current_user.id, assessment_id)
+    profile = await profile_repo.get_by_user_id(db, current_user.id)
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found.")
+
+    context = build_task_export_context(analysis, str(task_id), build_profile_grounding(profile))
+    if not context:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task analysis not found.")
+
+    task_title = context["task"].get("task_title", "task")
+    safe_name = "".join(c if c.isalnum() or c in "-_" else "-" for c in task_title)[:40]
+    pdf_bytes = render_task_pdf(context)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="CareerShift-3B-{safe_name}.pdf"'},
     )

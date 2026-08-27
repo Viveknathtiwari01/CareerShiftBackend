@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CareerShift 3B — {{ task.task_title }}</title>
+  <style>
+    @page { size: A4 portrait; margin: 2cm 1.5cm; }
+    body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.45; }
+    h1 { font-size: 16pt; color: #0f172a; margin: 0 0 6pt; }
+    h2 { font-size: 10pt; color: {{ category_meta.accent }}; margin: 14pt 0 6pt; text-transform: uppercase; }
+    .meta { font-size: 8.5pt; color: #64748b; margin-bottom: 12pt; }
+    .badge { display: inline-block; background: {{ category_meta.accent_light }}; color: {{ category_meta.accent }}; padding: 2pt 8pt; border-radius: 10pt; font-size: 8pt; font-weight: bold; }
+    .section { margin-bottom: 12pt; }
+    .learning { background: #1a202c; color: #fff; padding: 10pt; border-radius: 6pt; margin-top: 14pt; }
+    .learning h3 { color: #63b3ed; font-size: 8pt; margin: 0 0 6pt; text-transform: uppercase; }
+    .disclaimer { margin-top: 16pt; font-size: 7.5pt; color: #94a3b8; border-top: 0.5pt solid #e2e8f0; padding-top: 8pt; }
+    ul { margin: 4pt 0; padding-left: 14pt; }
+    .tool { margin: 6pt 0 6pt 8pt; padding-left: 8pt; border-left: 2pt solid {{ category_meta.accent }}; }
+  </style>
+</head>
+<body>
+  <p class="meta"><strong>{{ profile.job_title }}</strong> · {{ profile.industry }} · Generated {{ generated_at }}</p>
+  <span class="badge">{{ category }} · {{ category_meta.tagline }}</span>
+  <h1>{{ task.task_title }}</h1>
+  <p class="meta">{{ task.weekly_hours }}h/week · {{ task.annual_hours }}h/year · {{ task.importance }}</p>
+
+  {% if task.reason %}
+  <div class="section"><strong>Why {{ category }}:</strong> {{ task.reason }}</div>
+  {% endif %}
+
+  {% if task.human_capability %}
+  <h2>Human capability to strengthen</h2>
+  <p>{{ task.human_capability }}</p>
+  {% endif %}
+
+  {% for comp in task.components %}
+  <h2>{{ comp.name }}</h2>
+  <p class="meta">Capability: {{ comp.capability }} · Solution: {{ comp.solution_pattern }}</p>
+  {% if comp.description %}<p>{{ comp.description }}</p>{% endif %}
+  {% if comp.tools %}
+  {% for tool in comp.tools %}
+  <div class="tool">
+    <strong>{{ tool.name }}</strong> · {{ tool.cost_band_label }} · {{ tool.feasibility_label }}<br/>
+    {% if tool.credibility_note %}{{ tool.credibility_note }}<br/>{% endif %}
+    {% if tool.pros %}+ {{ tool.pros | join(' · ') }}<br/>{% endif %}
+    {% if tool.cons %}− {{ tool.cons | join(' · ') }}{% endif %}
+  </div>
+  {% endfor %}
+  {% elif not comp.is_automatable %}
+  <p><em>Stays human-led — strengthen judgment and context rather than automating this part.</em></p>
+  {% endif %}
+  {% endfor %}
+
+  {% if task.cost_of_staying_as_is %}
+  <h2>Cost of staying as-is</h2>
+  <p><strong>{{ task.cost_of_staying_as_is.annual_hours }} hrs/year.</strong> {{ task.cost_of_staying_as_is.narrative }}</p>
+  {% endif %}
+
+  {% if task.next_action %}
+  <h2>Next best action</h2>
+  <p>{{ task.next_action }}</p>
+  {% endif %}
+
+  {% if task.learn_gap or task.learn_do or task.learn_dont or task.where_to_learn %}
+  <div class="learning">
+    <h3>Learning implication</h3>
+    {% if task.learn_gap %}<p><strong>Gap:</strong> {{ task.learn_gap }}</p>{% endif %}
+    {% if task.learn_do %}<p><strong>Learn:</strong> {{ task.learn_do }}</p>{% endif %}
+    {% if task.learn_dont %}<p><strong>Don't learn:</strong> {{ task.learn_dont }}</p>{% endif %}
+    {% if task.where_to_learn %}<p><strong>Where:</strong> {{ task.where_to_learn }}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <p class="disclaimer">{{ disclaimer }}</p>
+</body>
+</html>

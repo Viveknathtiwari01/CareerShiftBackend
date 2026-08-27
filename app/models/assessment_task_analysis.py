@@ -1,6 +1,8 @@
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, String, Text, Index
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
@@ -35,6 +37,8 @@ class AssessmentTaskAnalysis(AuditMixin, Base):
     learn_dont: Mapped[str | None] = mapped_column(Text, nullable=True)
     where_to_learn: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    cost_of_staying_as_is_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    action_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     task = relationship("AssessmentTask", back_populates="analysis")
 

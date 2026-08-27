@@ -44,6 +44,12 @@ class WorkComponentSchema(BaseModel):
     tools: list[ToolOptionSchema] = Field(default_factory=list, max_length=4)
 
 
+class CostOfStayingAsIs(BaseModel):
+    type: str = "reclaimable_time"
+    narrative: str = ""
+    annual_hours: float = 0.0
+
+
 class Task3BAnalysisItem(BaseModel):
     task_index: int
     category: str
@@ -66,6 +72,7 @@ class Task3BAnalysisItem(BaseModel):
     learn_dont: str | None = None
     where_to_learn: str | None = None
     status: str | None = None
+    cost_of_staying_as_is: CostOfStayingAsIs | None = None
 
 
 class Task3BAnalysisBatch(BaseModel):
@@ -122,6 +129,8 @@ class TaskAnalysisItem(BaseModel):
     learn_dont: str | None = None
     where_to_learn: str | None = None
     status: str | None = None
+    cost_of_staying_as_is: CostOfStayingAsIs | None = None
+    action_updated_at: datetime | None = None
 
 
 class TaskAnalysisResponse(BaseModel):
@@ -140,6 +149,7 @@ class PivotRole(BaseModel):
     reuses: str
     note: str
 
+
 class MarketReality(BaseModel):
     trend_text: str = ""
     pivot_roles: list[PivotRole] = Field(default_factory=list)
@@ -156,3 +166,4 @@ class TaskAnalysisRunResponse(BaseModel):
     total_hours: float = 0.0
     generated_at: datetime | None = None
     market_reality: MarketReality | None = None
+    recommended_build_task_id: UUID | None = None

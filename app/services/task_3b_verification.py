@@ -131,6 +131,83 @@ def _enforce_tool_mix(tools: list[dict[str, Any]], *, is_automatable: bool) -> l
     return tools[:4]
 
 
+def _join_list_field(value: Any, *, max_items: int = 2, max_len: int = 2000) -> str | None:
+    if isinstance(value, list):
+        parts = [_sanitize_text(str(v), max_len) for v in value if _sanitize_text(str(v), max_len)]
+        if parts:
+            return "; ".join(parts[:max_items])
+        return None
+    text = _sanitize_text(str(value) if value is not None else None, max_len)
+    return text or None
+
+
+def _normalize_pace(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw = str(value).strip().lower().replace("_", "-")
+    aliases = {
+        "fast-moving": "fast-moving",
+        "fast moving": "fast-moving",
+        "slow-moving": "slow-moving",
+        "slow moving": "slow-moving",
+        "stable": "stable",
+    }
+    return aliases.get(raw, raw if raw in {"fast-moving", "slow-moving", "stable"} else None)
+
+
+def _sanitize_cost_of_staying(raw: Any) -> dict[str, Any] | None:
+    if not isinstance(raw, dict):
+        return None
+    narrative = _sanitize_text(raw.get("narrative"), 2000)
+    if not narrative:
+        return None
+    cost_type = _sanitize_text(raw.get("type"), 64) or "reclaimable_time"
+    allowed = {"reclaimable_time", "augmentation_opportunity", "capability_investment"}
+    if cost_type not in allowed:
+        cost_type = "reclaimable_time"
+    return {"type": cost_type, "narrative": narrative}
+
+
+def _map_learning_fields(item: dict[str, Any]) -> dict[str, str | None]:
+    learning = item.get("learning_implication")
+    if not isinstance(learning, dict):
+        learning = {}
+    return {
+        "learn_gap": _join_list_field(learning.get("capability_gap") or item.get("learn_gap")),
+        "learn_do": _join_list_field(learning.get("practice") or item.get("learn_do")),
+        "learn_dont": _join_list_field(learning.get("deprioritize") or item.get("learn_dont")),
+        "where_to_learn": _join_list_field(learning.get("where_to_learn") or item.get("where_to_learn")),
+    }
+
+
+def _map_task_ui_fields(item: dict[str, Any]) -> dict[str, Any]:
+    learning = _map_learning_fields(item)
+    next_action = _sanitize_text(item.get("next_action"), 2000) or None
+    actions = item.get("next_actions") or []
+    if isinstance(actions, list):
+        actions = [str(a).strip() for a in actions if str(a).strip()]
+    else:
+        actions = []
+    if next_action and (not actions or actions[0] != next_action):
+        actions = [next_action, *actions]
+    while len(actions) < 3:
+        actions.append("Review how this task fits your weekly priorities.")
+    actions = actions[:3]
+
+    return {
+        "human_capability": _sanitize_text(item.get("human_capability"), 2000) or None,
+        "next_action": next_action,
+        "next_actions": actions,
+        "velocity": _normalize_pace(item.get("pace_of_change") or item.get("velocity")),
+        "velocity_note": _sanitize_text(
+            item.get("pace_of_change_note") or item.get("velocity_note"), 2000
+        )
+        or None,
+        "cost_of_staying_as_is_json": _sanitize_cost_of_staying(item.get("cost_of_staying_as_is")),
+        **learning,
+    }
+
+
 def _sanitize_component(raw: dict[str, Any]) -> dict[str, Any] | None:
     name = _sanitize_text(raw.get("name"), 200)
     if not name:
@@ -164,11 +241,8 @@ def sanitize_llm_analyses(raw_analyses: list[dict[str, Any]]) -> list[dict[str, 
         if not isinstance(item, dict):
             continue
 
-        actions = item.get("next_actions") or []
-        if isinstance(actions, list):
-            actions = [str(a).strip() for a in actions if str(a).strip()][:3]
-        while len(actions) < 3:
-            actions.append("Review how this task fits your weekly priorities.")
+        ui_fields = _map_task_ui_fields(item)
+        actions = ui_fields.pop("next_actions")
 
         auto_potential = item.get("auto_potential")
         try:
@@ -204,6 +278,7 @@ def sanitize_llm_analyses(raw_analyses: list[dict[str, Any]]) -> list[dict[str, 
                 "future_impact": _normalize_level(item.get("future_impact")),
                 "recommended_tools": recommended_tools,
                 "components": components,
+                **ui_fields,
             }
         )
     return normalized

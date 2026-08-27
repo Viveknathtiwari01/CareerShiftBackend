@@ -32,6 +32,44 @@ def build_profile_grounding(profile: UserProfile) -> dict[str, Any]:
     }
 
 
+def _level_score(value: str | None, *, high_values: set[str]) -> float:
+    if not value:
+        return 0.5
+    normalized = str(value).strip().lower()
+    if normalized in high_values:
+        return 1.0
+    if normalized in {"medium", "moderate", "sometimes", "occasionally"}:
+        return 0.5
+    return 0.0
+
+
+def _classification_signals(task: AssessmentTask) -> dict[str, Any]:
+    """Server-computed hints to nudge LLM classification — not decisions."""
+    repetition = (
+        _level_score(task.frequency, high_values={"daily", "weekly", "very_high", "high"})
+        + _level_score(task.creativity, high_values={"low", "minimal"})
+        + _level_score(str(task.ai_assistance or ""), high_values={"high", "very_high", "extensive"})
+    ) / 3.0
+    if task.time_allocation and task.time_allocation >= 0.3:
+        repetition = min(1.0, repetition + 0.2)
+
+    judgment = (
+        _level_score(task.human_touch, high_values={"high", "very_high", "critical"})
+        + _level_score(task.business_criticality, high_values={"critical", "high"})
+        + (1.0 - _level_score(str(task.ai_assistance or ""), high_values={"high", "very_high", "extensive"}))
+    ) / 3.0
+    if task.confidence_score is not None and task.confidence_score >= 70:
+        judgment = min(1.0, judgment + 0.15)
+
+    return {
+        "repetition_signal": round(repetition, 2),
+        "judgment_signal": round(judgment, 2),
+        "hours_per_week": task.hours_per_week,
+        "confidence_score": task.confidence_score,
+        "business_criticality": task.business_criticality,
+    }
+
+
 def build_task_grounding(task: AssessmentTask) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "title": task.title,
@@ -47,6 +85,7 @@ def build_task_grounding(task: AssessmentTask) -> dict[str, Any]:
         "time_allocation": task.time_allocation,
         "ai_assistance": task.ai_assistance,
         "confidence_score": task.confidence_score,
+        "classification_signals": _classification_signals(task),
     }
     if task.manual_notes and str(task.manual_notes).strip():
         payload["manual_notes"] = str(task.manual_notes).strip()

@@ -266,13 +266,13 @@ false
 Do not mark an entire BUILD task as automatable merely because a tool can
 assist around the edges.
 
-For BUILD components:
+For BUILD tasks:
 
-- Core human judgment should normally be is_automatable = false.
-- Tools may be empty.
-- Edge-support tools may be suggested only when they genuinely help.
+- components must be [] OR contain only non-automatable human-judgment components.
+- Every BUILD component must have is_automatable = false and tools = [].
+- Do NOT recommend a tool marketplace for BUILD tasks.
 
-For BOT components:
+For BOT and BLEND tasks:
 
 - Mechanical components will normally be is_automatable = true.
 
@@ -360,7 +360,12 @@ Do not generate tools simply to fill the array.
 
 For BOT and BLEND components where tools are appropriate:
 
-- recommend 2-4 realistic options
+- EVERY automatable component you list MUST include 2-4 realistic tool options.
+- Do NOT list multiple components and then provide tools for only one of them.
+- If a component cannot support meaningful tool recommendations, mark it is_automatable = false
+  and explain it in description instead.
+- recommend 2-4 realistic options per automatable component
+- span at least 2 different feasibility tiers when realistically possible
 - prioritize relevance over quantity
 - include a mixture of practical options where justified
 - include Microsoft ecosystem tools when they genuinely fit the component
@@ -415,7 +420,7 @@ unless they actually implement the required solution pattern.
 
 For every tool explain WHY it fits this user's task.
 
-The credibility note must be based on the available profile/task context.
+The credibility note must reference the user's industry, business_function, or task description when explaining fit.
 
 Do not say:
 
@@ -637,36 +642,44 @@ Also provide a concise explanation.
 Do not claim precise market growth rates.
 
 ============================================================
-18. MARKET REALITY
+18. MARKET REALITY (PROFILE-GROUNDED)
 ============================================================
 
-DO NOT generate labor-market statistics.
+You do NOT have external labor-market statistics.
 
-DO NOT invent:
+Generate qualitative market context from the user's profile, competencies,
+and the overall shape of their reviewed tasks (BOT/BLEND/BUILD mix implied
+by task signals).
 
-- hiring growth
-- posting decline
-- percentage changes
-- AI adoption rates
-- salary trends
-- market statistics
+Return market_reality as an object:
 
-This prompt has no external market-data source.
+{
+  "trend_text": "Qualitative 2-4 sentence read on how this role's work is
+                 shifting given the task mix — no percentages, no hiring stats,
+                 no salary claims, no invented growth rates.",
+  "pivot_roles": []
+}
 
-Therefore:
+Good trend_text example:
+"Much of your weekly time sits in repeatable reporting and coordination
+workflows — the kind employers increasingly expect to be AI-assisted rather
+than manually rebuilt each cycle. Your BUILD-heavy tasks (judgment, stakeholder
+work) remain the differentiator worth deepening."
 
-market_reality must be null.
+Bad trend_text example:
+"Hiring for this role declined 12% year over year."
 
-Market intelligence will be supplied by a separate verified data pipeline.
+If insufficient profile/competency information exists for a meaningful read,
+return trend_text as an empty string and pivot_roles as [].
 
 ============================================================
-19. PIVOT ROLES
+19. PIVOT ROLES (INSIDE market_reality)
 ============================================================
 
-Do NOT invent pivot roles from generic career knowledge.
+Include pivot_roles INSIDE market_reality (not as a separate top-level field).
 
 If the grounding payload contains sufficient career/competency information,
-you may suggest 2-3 adjacent roles that reuse the person's demonstrated BUILD
+suggest 2-3 adjacent roles that reuse the person's demonstrated BUILD
 capabilities.
 
 Each role must explicitly connect to capabilities present in the input.
@@ -711,8 +724,10 @@ Schema:
 
 {
   "summary_confidence": 0,
-  "market_reality": null,
-  "pivot_roles": [],
+  "market_reality": {
+    "trend_text": "",
+    "pivot_roles": []
+  },
   "analyses": [
     {
       "task_index": 0,
@@ -722,7 +737,7 @@ Schema:
 
       "rationale": "One concise sentence grounded in the supplied task signals.",
 
-      "reason": "Two to three sentences explaining why the classification fits the actual task.",
+      "reason": "Two to three sentences explaining why the classification fits the actual task. MUST reference at least two of: frequency, hours_per_week, confidence_score, ai_assistance, business_criticality from the reviewed task.",
 
       "human_capability": "The specific human capability that remains valuable.",
 
@@ -795,21 +810,23 @@ Before returning JSON, internally verify:
 7. manual_notes were considered where present.
 8. Components are meaningful, not padded.
 9. Maximum 4 components per task.
-10. Capability contains exactly one stable capability.
-11. Solution pattern is not a tool name.
-12. Tools are specific to the component.
-13. No tool verification claims exist.
-14. No employer assumptions exist.
-15. No invented market statistics exist.
-16. No invented prices exist.
-17. BUILD core work remains human-led.
-18. Learning advice is specific to the actual task.
-19. "deprioritize" contains a meaningful recommendation when appropriate.
-20. Cost of staying as-is is task-specific.
-21. next_action is executable by the user.
-22. No readiness score exists.
-23. No annual or weekly hour calculations are generated.
-24. No markdown exists outside JSON.
+10. Every listed component has capability and solution_pattern filled in.
+11. Every automatable component has at least one tool recommendation.
+12. Capability contains exactly one stable capability.
+13. Solution pattern is not a tool name.
+14. Tools are specific to the component.
+15. No tool verification claims exist.
+16. No employer assumptions exist.
+17. No invented market statistics exist.
+18. market_reality contains qualitative profile-grounded text only.
+19. BUILD tasks have empty tools arrays.
+20. Learning advice is specific to the actual task.
+21. "deprioritize" contains a meaningful recommendation when appropriate.
+22. Cost of staying as-is is task-specific.
+23. next_action is executable by the user.
+24. No readiness score exists.
+25. No annual or weekly hour calculations are generated.
+26. No markdown exists outside JSON.
 
 If any requirement cannot be satisfied from the grounding payload,
 return null/[] rather than inventing information.
@@ -829,17 +846,20 @@ For each reviewed task:
 3. Identify meaningful work components only where decomposition adds value.
 4. Map each component to exactly one capability.
 5. Map the capability to a solution pattern.
-6. Recommend relevant tools only when they genuinely fit.
-7. Explain the human capability that remains valuable.
-8. Explain the cost of continuing the current approach.
-9. Identify the future capability requirement and learning gap.
-10. Give one practical next action.
+6. For every component where is_automatable is true, recommend 2-4 relevant tools.
+7. For every component where is_automatable is false, explain why it stays human-led in description.
+8. Recommend relevant tools only when they genuinely fit.
+9. Explain the human capability that remains valuable.
+10. Explain the cost of continuing the current approach.
+11. Identify the future capability requirement and learning gap.
+12. Give one practical next action.
 
 Do not calculate hours.
-Do not provide market statistics.
+Do not provide numeric market statistics or hiring percentages.
 Do not claim tool verification.
 Do not assume employer licenses or permissions.
 Do not invent information missing from the payload.
+Generate market_reality from profile and task mix only.
 
 Grounding payload:
 

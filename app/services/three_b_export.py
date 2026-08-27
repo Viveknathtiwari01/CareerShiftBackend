@@ -147,3 +147,36 @@ def html_to_pdf(html: str) -> bytes:
 
 def render_category_pdf(context: dict[str, Any]) -> bytes:
     return html_to_pdf(render_category_html(context))
+
+
+def build_task_export_context(
+    analysis: TaskAnalysisRunResponse,
+    task_id: str,
+    profile: dict[str, Any],
+) -> dict[str, Any] | None:
+    task = next((a for a in analysis.analyses if str(a.task_id) == task_id), None)
+    if not task:
+        return None
+    cat = task.category.upper()
+    meta = CATEGORY_META.get(cat, CATEGORY_META["BLEND"])
+    return {
+        "category": cat,
+        "category_meta": meta,
+        "profile": profile,
+        "generated_at": _format_generated_at(analysis.generated_at),
+        "task": _enrich_analysis(task.model_dump(mode="json")),
+        "disclaimer": (
+            "Tool suggestions are AI-generated for your profile at analysis time. "
+            "All tools are unverified — confirm fit, cost, and employer policy before adopting."
+        ),
+    }
+
+
+def render_task_html(context: dict[str, Any]) -> str:
+    template = _jinja.get_template("three_b_task.html")
+    return template.render(**context)
+
+
+def render_task_pdf(context: dict[str, Any]) -> bytes:
+    return html_to_pdf(render_task_html(context))
+
