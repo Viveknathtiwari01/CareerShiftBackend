@@ -54,6 +54,18 @@ class Task3BAnalysisItem(BaseModel):
     risk_level: str | None = None
     future_impact: str | None = None
     components: list[WorkComponentSchema] = Field(default_factory=list, max_length=4)
+    importance: str | None = None
+    feasibility_tier: str | None = None
+    feasibility_note: str | None = None
+    human_capability: str | None = None
+    velocity: str | None = None
+    velocity_note: str | None = None
+    next_action: str | None = None
+    learn_gap: str | None = None
+    learn_do: str | None = None
+    learn_dont: str | None = None
+    where_to_learn: str | None = None
+    status: str | None = None
 
 
 class Task3BAnalysisBatch(BaseModel):
@@ -98,6 +110,18 @@ class TaskAnalysisItem(BaseModel):
     components: list[dict[str, Any]] = Field(default_factory=list)
     weekly_hours: float = 0.0
     annual_hours: float = 0.0
+    importance: str | None = None
+    feasibility_tier: str | None = None
+    feasibility_note: str | None = None
+    human_capability: str | None = None
+    velocity: str | None = None
+    velocity_note: str | None = None
+    next_action: str | None = None
+    learn_gap: str | None = None
+    learn_do: str | None = None
+    learn_dont: str | None = None
+    where_to_learn: str | None = None
+    status: str | None = None
 
 
 class TaskAnalysisResponse(BaseModel):
@@ -110,6 +134,19 @@ class TaskAnalysisResponse(BaseModel):
     generated_at: datetime | None = None
 
 
+class PivotRole(BaseModel):
+    name: str
+    transfer_strength: str
+    reuses: str
+    note: str
+
+class MarketReality(BaseModel):
+    trend_text: str = ""
+    pivot_roles: list[PivotRole] = Field(default_factory=list)
+
+class TaskAnalysisStatusUpdate(BaseModel):
+    status: str | None = None
+
 class TaskAnalysisRunResponse(BaseModel):
     analyses: list[TaskAnalysisItem]
     summary_confidence: int | None = None
@@ -118,3 +155,4 @@ class TaskAnalysisRunResponse(BaseModel):
     hours_summary: HoursSummary = Field(default_factory=HoursSummary)
     total_hours: float = 0.0
     generated_at: datetime | None = None
+    market_reality: MarketReality | None = None

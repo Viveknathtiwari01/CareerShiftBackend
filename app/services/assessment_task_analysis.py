@@ -89,6 +89,18 @@ class AssessmentTaskAnalysisService:
             components=list(row.components or []),
             weekly_hours=round(weekly, 1),
             annual_hours=annual_hours_from_weekly(weekly),
+            importance=row.importance,
+            feasibility_tier=row.feasibility_tier,
+            feasibility_note=row.feasibility_note,
+            human_capability=row.human_capability,
+            velocity=row.velocity,
+            velocity_note=row.velocity_note,
+            next_action=row.next_action,
+            learn_gap=row.learn_gap,
+            learn_do=row.learn_do,
+            learn_dont=row.learn_dont,
+            where_to_learn=row.where_to_learn,
+            status=row.status,
         )
 
     @staticmethod
@@ -111,6 +123,7 @@ class AssessmentTaskAnalysisService:
         *,
         summary_confidence: int | None,
         regenerated: bool,
+        market_reality: dict | None = None,
         generated_at: datetime | None = None,
     ) -> TaskAnalysisRunResponse:
         hours_cat, hours_summary, total = self._hours_response_parts(rows)
@@ -122,6 +135,7 @@ class AssessmentTaskAnalysisService:
             hours_summary=hours_summary,
             total_hours=total,
             generated_at=generated_at,
+            market_reality=market_reality,
         )
 
     async def get_analysis(
@@ -140,6 +154,7 @@ class AssessmentTaskAnalysisService:
             rows,
             summary_confidence=summary,
             regenerated=False,
+            market_reality=assessment.market_reality_json,
             generated_at=generated_at,
         )
 
@@ -195,6 +210,7 @@ class AssessmentTaskAnalysisService:
                 existing,
                 summary_confidence=summary,
                 regenerated=False,
+                market_reality=assessment.market_reality_json,
                 generated_at=assessment.task_analysis_generated_at
                 or max((r.created_at for r in existing), default=None),
             )
@@ -223,6 +239,7 @@ class AssessmentTaskAnalysisService:
                 existing,
                 summary_confidence=summary,
                 regenerated=False,
+                market_reality=assessment.market_reality_json,
                 generated_at=assessment.task_analysis_generated_at,
             )
 
@@ -262,6 +279,17 @@ class AssessmentTaskAnalysisService:
                     future_impact=item.get("future_impact"),
                     recommended_tools=item.get("recommended_tools") or [],
                     components=item.get("components") or [],
+                    importance=item.get("importance"),
+                    feasibility_tier=item.get("feasibility_tier"),
+                    feasibility_note=item.get("feasibility_note"),
+                    human_capability=item.get("human_capability"),
+                    velocity=item.get("velocity"),
+                    velocity_note=item.get("velocity_note"),
+                    next_action=item.get("next_action"),
+                    learn_gap=item.get("learn_gap"),
+                    learn_do=item.get("learn_do"),
+                    learn_dont=item.get("learn_dont"),
+                    where_to_learn=item.get("where_to_learn"),
                 )
             )
 
@@ -288,6 +316,7 @@ class AssessmentTaskAnalysisService:
         generated_at = datetime.now(timezone.utc)
         assessment.task_analysis_input_hash = current_input_hash
         assessment.task_analysis_generated_at = generated_at
+        assessment.market_reality_json = ai_result.get("market_reality") or {}
         db.add(assessment)
         await db.commit()
 
@@ -297,8 +326,27 @@ class AssessmentTaskAnalysisService:
             created,
             summary_confidence=ai_result.get("summary_confidence"),
             regenerated=bool(existing),
+            market_reality=ai_result.get("market_reality"),
             generated_at=generated_at,
         )
+
+    async def update_task_status(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+        task_id: UUID,
+        status_val: str | None,
+    ) -> TaskAnalysisItem:
+        await self._get_owned_assessment(db, user_id, assessment_id)
+        row = await self._repo.get_by_task_id(db, task_id=task_id)
+        if not row:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found for task.")
+        row.status = status_val
+        db.add(row)
+        await db.commit()
+        await db.refresh(row)
+        return self._to_item(row)
 
     @staticmethod
     def _average_confidence(rows: list[AssessmentTaskAnalysis]) -> int | None:

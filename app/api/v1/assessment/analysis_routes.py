@@ -59,6 +59,26 @@ async def run_task_analysis(
     return APIResponse(success=True, message=message, data=data)
 
 
+from app.schemas.assessment_task_analysis import TaskAnalysisItem, TaskAnalysisStatusUpdate
+
+@router.patch(
+    "/{assessment_id}/analysis/{task_id}/status",
+    response_model=APIResponse[TaskAnalysisItem],
+)
+async def update_task_analysis_status(
+    assessment_id: UUID,
+    task_id: UUID,
+    payload: TaskAnalysisStatusUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    analysis_service: AssessmentTaskAnalysisService = Depends(get_analysis_service),
+):
+    data = await analysis_service.update_task_status(
+        db, current_user.id, assessment_id, task_id, payload.status
+    )
+    return APIResponse(success=True, message="Task status updated", data=data)
+
+
 @router.get("/{assessment_id}/analysis/export")
 async def export_category_analysis(
     assessment_id: UUID,

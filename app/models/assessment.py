@@ -28,6 +28,7 @@ class Assessment(AuditMixin, Base):
         String, nullable=False, default=PIPELINE_STATUS_PENDING
     )
     ai_toolkit_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    market_reality_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     task_analysis_input_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     task_analysis_generated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

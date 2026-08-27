@@ -63,5 +63,22 @@ class AssessmentTaskAnalysisRepository:
             await db.refresh(row)
         return rows
 
+    async def get_by_task_id(
+        self,
+        db: AsyncSession,
+        *,
+        task_id: UUID,
+    ) -> AssessmentTaskAnalysis | None:
+        query = (
+            select(AssessmentTaskAnalysis)
+            .where(
+                AssessmentTaskAnalysis.task_id == task_id,
+                AssessmentTaskAnalysis.is_deleted == False,
+            )
+            .options(selectinload(AssessmentTaskAnalysis.task))
+        )
+        result = await db.execute(query)
+        return result.scalars().first()
+
 
 assessment_task_analysis_repo = AssessmentTaskAnalysisRepository()
