@@ -240,7 +240,8 @@ Allowed:
 
 - 0 components when the task is genuinely atomic.
 - 1 component when the task has one meaningful work unit.
-- Maximum 4 components.
+- 2 to 4 components when the task has multiple meaningful work units.
+- Maximum 6 components.
 
 Never create components merely to satisfy a count.
 
@@ -737,7 +738,7 @@ Schema:
 
       "rationale": "One concise sentence grounded in the supplied task signals.",
 
-      "reason": "Two to three sentences explaining why the classification fits the actual task. MUST reference at least two of: frequency, hours_per_week, confidence_score, ai_assistance, business_criticality from the reviewed task.",
+      "reason": "Two to three sentences explaining why the classification fits the actual task in natural, user-centric language. Do NOT use technical variable names like repetition_signal, judgment_signal, or ai_assistance. Instead, describe the concepts naturally (e.g., 'highly repetitive', 'requires human judgment', 'currently partially automated').",
 
       "human_capability": "The specific human capability that remains valuable.",
 
