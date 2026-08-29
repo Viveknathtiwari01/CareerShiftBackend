@@ -28,11 +28,11 @@ from app.schemas.assessment_task_analysis import (
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
 from app.services.task_3b_derivations import (
-    derive_feasibility,
     derive_importance,
     enrich_cost_of_staying_as_is,
     merge_market_reality,
     recommended_build_task_id,
+    resolve_feasibility_note,
 )
 from app.services.task_3b_grounding import build_3b_grounding_payload
 from app.services.task_analysis_input_hash import compute_task_analysis_input_hash
@@ -115,6 +115,8 @@ class AssessmentTaskAnalysisService:
             velocity=row.velocity,
             velocity_note=row.velocity_note,
             next_action=row.next_action,
+            learn_future=row.learn_future,
+            learn_current=row.learn_current,
             learn_gap=row.learn_gap,
             learn_do=row.learn_do,
             learn_dont=row.learn_dont,
@@ -332,7 +334,11 @@ class AssessmentTaskAnalysisService:
                 )
 
             components = item.get("components") or []
-            tier, tier_note = derive_feasibility(item["category"], components)
+            tier, tier_note = resolve_feasibility_note(
+                item["category"],
+                components,
+                item.get("feasibility_note"),
+            )
             weekly = effective_task_hours(task)
             cost_raw = item.get("cost_of_staying_as_is_json")
             cost_json = enrich_cost_of_staying_as_is(cost_raw, weekly_hours=weekly)
@@ -356,6 +362,8 @@ class AssessmentTaskAnalysisService:
                     velocity=item.get("velocity"),
                     velocity_note=item.get("velocity_note"),
                     next_action=item.get("next_action"),
+                    learn_future=item.get("learn_future"),
+                    learn_current=item.get("learn_current"),
                     learn_gap=item.get("learn_gap"),
                     learn_do=item.get("learn_do"),
                     learn_dont=item.get("learn_dont"),

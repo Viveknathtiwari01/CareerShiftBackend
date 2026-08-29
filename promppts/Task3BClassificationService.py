@@ -186,6 +186,37 @@ If the evidence indicates 5 BUILD and 5 BOT, return that.
 The classification must follow the evidence, not an expected distribution.
 
 ============================================================
+3B. USER-FACING CLASSIFICATION EXPLANATION
+============================================================
+
+The fields rationale and reason are shown directly to the user.
+Write for a busy professional, not an analyst or classifier.
+
+rationale:
+- One plain-language headline (about 12–20 words).
+- Second person ("you").
+- Focus on what it means for their time, role, or approach.
+- Do NOT use BUILD, BOT, BLEND, or other framework jargon.
+
+reason:
+- Two to three short sentences in second person.
+- Explain what this means for how they should approach the task this week.
+- Reference concrete details from their task when available (hours, frequency,
+  how they work today, current AI usage).
+- Describe technology's role vs theirs in everyday language.
+- Do NOT explain the classification algorithm or cite internal signals by name.
+- Do NOT use BUILD, BOT, or BLEND in the text.
+
+Good reason (for a BLEND task):
+"You spend about 6 hours a week rebuilding this report from scratch. Tools can
+pull the data and draft the narrative — but you'll still need to interpret the
+numbers and present them to leadership."
+
+Bad reason:
+"High frequency and moderate AI usage suggest BLEND classification per framework
+signals including business_criticality and confidence_score."
+
+============================================================
 4. MANUAL NOTES ARE HIGH-VALUE CONTEXT
 ============================================================
 
@@ -240,7 +271,13 @@ Allowed:
 
 - 0 components when the task is genuinely atomic.
 - 1 component when the task has one meaningful work unit.
-- Maximum 4 components.
+- 2 components when the task has two meaningful work units.
+- 3 components when the task has three meaningful work units.
+- 4 components when the task has four meaningful work units.
+- 5 components when the task has five meaningful work units.
+- 6 components when the task has six meaningful work units.
+- 7 components when the task has seven meaningful work units.
+- Maximum 7 components.
 
 Never create components merely to satisfy a count.
 
@@ -418,20 +455,21 @@ unless they actually implement the required solution pattern.
 10. TOOL CONTEXTUAL FIT
 ============================================================
 
-For every tool explain WHY it fits this user's task.
+For every tool provide TWO distinct text fields:
 
-The credibility note must reference the user's industry, business_function, or task description when explaining fit.
+fit_description — WHY this option fits this user's specific task, industry,
+or workflow. Reference the task description when possible.
+
+market_note — A brief contextual proof point (italic-style summary) such as
+deployment patterns or common adoption — without inventing statistics.
+
+Do not combine fit_description and market_note into one string.
 
 Do not say:
 
 "widely used by professionals"
 
 unless that fact is actually necessary and safe.
-
-Prefer:
-
-"Fits this component because it can automate scheduled extraction from the
-data sources described in the task."
 
 Do not claim:
 
@@ -444,10 +482,10 @@ Do not claim:
 unless explicitly provided.
 
 ============================================================
-11. TOOL COST
+11. TOOL COST AND PRICING NOTE
 ============================================================
 
-Use only normalized cost bands:
+Use normalized cost_band:
 
 free
 freemium
@@ -455,11 +493,13 @@ paid_individual
 paid_team
 enterprise
 
-Do NOT invent exact prices.
+Also provide pricing_note — a short human-readable access line such as:
+"Included in Microsoft 365 plans" or "Free tier available; paid plans from ~$20–30/month".
 
-Do NOT output dollar amounts.
-
+pricing_note may include approximate price ranges as indicative guidance only.
 Do NOT claim current pricing is verified.
+
+Do NOT invent exact verified prices.
 
 ============================================================
 12. FEASIBILITY
@@ -492,6 +532,11 @@ Never say:
 "your company already has Power BI"
 
 unless the input explicitly says so.
+
+Also return feasibility_assessment — a task-specific "Can this person do it?"
+paragraph grounded in the user's profile, competencies, and recommended tools.
+Reference what they can likely act on themselves vs what needs IT or org approval.
+Do NOT invent employer licenses.
 
 ============================================================
 13. TOOL VERIFICATION
@@ -735,11 +780,13 @@ Schema:
 
       "importance": "Low|Medium|High",
 
-      "rationale": "One concise sentence grounded in the supplied task signals.",
+      "rationale": "Plain-language headline for the user in second person. No BUILD/BOT/BLEND jargon.",
 
-      "reason": "Two to three sentences explaining why the classification fits the actual task. MUST reference at least two of: frequency, hours_per_week, confidence_score, ai_assistance, business_criticality from the reviewed task.",
+      "reason": "Two to three sentences telling the user what this means for their work, in everyday language. Reference task-specific details (hours, frequency, how they work today) when available.",
 
       "human_capability": "The specific human capability that remains valuable.",
+
+      "feasibility_assessment": "Task-specific paragraph: can this person act on the recommendations given their context?",
 
       "next_action": "One concrete action the user can take.",
 
@@ -779,14 +826,16 @@ Schema:
             {
               "name": "Relevant tool",
               "cost_band": "free|freemium|paid_individual|paid_team|enterprise",
+              "pricing_note": "Human-readable access or indicative pricing line.",
               "feasibility": "self_serve|company_tech|org_must_enable|stays_human_led",
+              "fit_description": "Why this tool fits this component and user context.",
+              "market_note": "Brief contextual proof point without invented statistics.",
               "pros": [
                 "Specific advantage"
               ],
               "cons": [
                 "Specific limitation"
-              ],
-              "credibility_note": "Why this tool fits this component and user context."
+              ]
             }
           ]
         }
@@ -806,27 +855,28 @@ Before returning JSON, internally verify:
 3. No task was skipped.
 4. Every category is exactly BUILD, BOT or BLEND.
 5. Classification is grounded in supplied signals.
-6. No generic task reasoning.
-7. manual_notes were considered where present.
-8. Components are meaningful, not padded.
-9. Maximum 4 components per task.
-10. Every listed component has capability and solution_pattern filled in.
-11. Every automatable component has at least one tool recommendation.
-12. Capability contains exactly one stable capability.
-13. Solution pattern is not a tool name.
-14. Tools are specific to the component.
-15. No tool verification claims exist.
-16. No employer assumptions exist.
-17. No invented market statistics exist.
-18. market_reality contains qualitative profile-grounded text only.
-19. BUILD tasks have empty tools arrays.
-20. Learning advice is specific to the actual task.
-21. "deprioritize" contains a meaningful recommendation when appropriate.
-22. Cost of staying as-is is task-specific.
-23. next_action is executable by the user.
-24. No readiness score exists.
-25. No annual or weekly hour calculations are generated.
-26. No markdown exists outside JSON.
+6. rationale and reason are plain, second-person, and free of BUILD/BOT/BLEND jargon.
+7. No generic task reasoning.
+8. manual_notes were considered where present.
+9. Components are meaningful, not padded.
+10. Maximum 7 components per task.
+11. Every listed component has capability and solution_pattern filled in.
+12. Every automatable component has 2-4 tool recommendations.
+13. Capability contains exactly one stable capability.
+14. Solution pattern is not a tool name.
+15. Tools are specific to the component.
+16. No tool verification claims exist.
+17. No employer assumptions exist.
+18. No invented market statistics exist.
+19. market_reality contains qualitative profile-grounded text only.
+20. BUILD tasks have empty tools arrays.
+21. Learning advice is specific to the actual task.
+22. "deprioritize" contains a meaningful recommendation when appropriate.
+23. Cost of staying as-is is task-specific.
+24. next_action is executable by the user.
+25. No readiness score exists.
+26. No annual or weekly hour calculations are generated.
+27. No markdown exists outside JSON.
 
 If any requirement cannot be satisfied from the grounding payload,
 return null/[] rather than inventing information.
@@ -842,7 +892,7 @@ competencies, and reviewed work tasks.
 For each reviewed task:
 
 1. Classify it as BUILD, BOT, or BLEND.
-2. Explain the classification using the supplied task signals.
+2. Write rationale and reason in plain, user-facing language (see section 3B).
 3. Identify meaningful work components only where decomposition adds value.
 4. Map each component to exactly one capability.
 5. Map the capability to a solution pattern.
@@ -853,6 +903,7 @@ For each reviewed task:
 10. Explain the cost of continuing the current approach.
 11. Identify the future capability requirement and learning gap.
 12. Give one practical next action.
+13. Write feasibility_assessment — can this person act on the recommendations?
 
 Do not calculate hours.
 Do not provide numeric market statistics or hiring percentages.

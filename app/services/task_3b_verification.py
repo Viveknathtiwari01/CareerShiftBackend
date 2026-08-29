@@ -115,9 +115,16 @@ def _sanitize_tool_option(raw: dict[str, Any]) -> dict[str, Any] | None:
     return {
         "name": name,
         "cost_band": _normalize_cost_band(raw.get("cost_band") or raw.get("cost_tier")),
+        "pricing_note": _sanitize_text(raw.get("pricing_note"), 300),
+        "fit_description": _sanitize_text(
+            raw.get("fit_description") or raw.get("credibility_note"), 500
+        ),
+        "market_note": _sanitize_text(raw.get("market_note"), 500),
         "pros": pros,
         "cons": cons,
-        "credibility_note": _sanitize_text(raw.get("credibility_note"), 500),
+        "credibility_note": _sanitize_text(
+            raw.get("fit_description") or raw.get("credibility_note"), 500
+        ),
         "feasibility": _normalize_feasibility(raw.get("feasibility")),
         "verification_status": VERIFICATION_UNVERIFIED,
         "verified_at": None,
@@ -173,10 +180,20 @@ def _map_learning_fields(item: dict[str, Any]) -> dict[str, str | None]:
     if not isinstance(learning, dict):
         learning = {}
     return {
+        "learn_future": _join_list_field(
+            learning.get("future_requirement") or item.get("learn_future")
+        ),
+        "learn_current": _join_list_field(
+            learning.get("current_capability") or item.get("learn_current")
+        ),
         "learn_gap": _join_list_field(learning.get("capability_gap") or item.get("learn_gap")),
         "learn_do": _join_list_field(learning.get("practice") or item.get("learn_do")),
         "learn_dont": _join_list_field(learning.get("deprioritize") or item.get("learn_dont")),
         "where_to_learn": _join_list_field(learning.get("where_to_learn") or item.get("where_to_learn")),
+        "feasibility_note": _sanitize_text(
+            item.get("feasibility_assessment") or item.get("feasibility_note"), 2000
+        )
+        or None,
     }
 
 
@@ -253,7 +270,7 @@ def sanitize_llm_analyses(raw_analyses: list[dict[str, Any]]) -> list[dict[str, 
         components: list[dict[str, Any]] = []
         raw_components = item.get("components") or []
         if isinstance(raw_components, list):
-            for comp in raw_components[:4]:
+            for comp in raw_components[:7]:
                 if isinstance(comp, dict):
                     sanitized = _sanitize_component(comp)
                     if sanitized:

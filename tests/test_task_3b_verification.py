@@ -18,11 +18,14 @@ def _full_llm_item(**overrides):
             "narrative": "Manual rebuild each week costs recurring time.",
         },
         "learning_implication": {
+            "future_requirement": "Executive data storytelling",
+            "current_capability": "Strong spreadsheet mechanics",
             "capability_gap": "Executive storytelling gap",
             "practice": ["Draft exec summaries with AI", "Review with manager"],
             "deprioritize": ["Spreadsheet formatting"],
             "where_to_learn": ["Internal comms workshop"],
         },
+        "feasibility_assessment": "You can likely test self-serve options this week.",
         "components": [
             {
                 "name": "Data extraction",
@@ -34,9 +37,11 @@ def _full_llm_item(**overrides):
                     {
                         "name": "Power Automate",
                         "cost_band": "freemium",
+                        "pricing_note": "Included in many Microsoft 365 plans",
                         "pros": ["Microsoft integration"],
                         "cons": ["Learning curve"],
-                        "credibility_note": "Fits finance reporting in Microsoft shops",
+                        "fit_description": "Fits finance reporting in Microsoft shops",
+                        "market_note": "Common workflow tool in enterprise Microsoft environments",
                         "feasibility": "company_tech",
                     }
                 ],
@@ -80,9 +85,16 @@ def test_maps_ui_fields_from_prompt_contract():
     assert item["velocity"] == "fast-moving"
     assert item["velocity_note"] == "LLM drafting tools evolve quickly."
     assert item["learn_gap"] == "Executive storytelling gap"
+    assert item["learn_future"] == "Executive data storytelling"
+    assert item["learn_current"] == "Strong spreadsheet mechanics"
     assert "Draft exec summaries" in item["learn_do"]
     assert item["learn_dont"] == "Spreadsheet formatting"
     assert item["where_to_learn"] == "Internal comms workshop"
+    assert item["feasibility_note"] == "You can likely test self-serve options this week."
+    tool = item["components"][0]["tools"][0]
+    assert tool["fit_description"] == "Fits finance reporting in Microsoft shops"
+    assert tool["market_note"] == "Common workflow tool in enterprise Microsoft environments"
+    assert tool["pricing_note"] == "Included in many Microsoft 365 plans"
     assert item["cost_of_staying_as_is_json"]["type"] == "augmentation_opportunity"
     assert "Manual rebuild" in item["cost_of_staying_as_is_json"]["narrative"]
     assert item["next_actions"][0] == item["next_action"]

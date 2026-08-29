@@ -94,6 +94,17 @@ def derive_feasibility(
     return best, notes.get(best, notes["self_serve"])
 
 
+def resolve_feasibility_note(
+    category: str,
+    components: list[dict[str, Any]],
+    llm_note: str | None,
+) -> tuple[str, str]:
+    """Pick feasibility tier server-side; prefer LLM-authored note when present."""
+    tier, fallback_note = derive_feasibility(category, components)
+    note = (llm_note or "").strip() or fallback_note
+    return tier, note
+
+
 def enrich_cost_of_staying_as_is(
     cost_raw: dict[str, Any] | None,
     *,

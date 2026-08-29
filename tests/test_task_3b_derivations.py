@@ -8,6 +8,7 @@ from app.services.task_3b_derivations import (
     enrich_cost_of_staying_as_is,
     merge_market_reality,
     recommended_build_task_id,
+    resolve_feasibility_note,
 )
 
 
@@ -53,6 +54,22 @@ def test_merge_market_reality_from_nested_and_legacy_pivot():
     )
     assert "AI-assisted" in merged["trend_text"]
     assert len(merged["pivot_roles"]) == 1
+
+
+def test_resolve_feasibility_note_prefers_llm_text():
+    tier, note = resolve_feasibility_note(
+        "BLEND",
+        [{"is_automatable": True, "tools": [{"feasibility": "self_serve"}]}],
+        "Power BI is likely already licensed — start with a dashboard template.",
+    )
+    assert tier == "self_serve"
+    assert "Power BI" in note
+
+
+def test_resolve_feasibility_note_falls_back_when_llm_empty():
+    tier, note = resolve_feasibility_note("BUILD", [], None)
+    assert tier == "stays_human_led"
+    assert note
 
 
 def test_recommended_build_task_id_by_hours_and_importance():

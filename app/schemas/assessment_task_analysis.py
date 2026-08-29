@@ -16,6 +16,9 @@ VerificationStatus = Literal["UNVERIFIED", "VERIFIED", "REJECTED"]
 class ToolOptionSchema(BaseModel):
     name: str = Field(max_length=120)
     cost_band: CostBand = "paid_individual"
+    pricing_note: str = Field(default="", max_length=300)
+    fit_description: str = Field(default="", max_length=500)
+    market_note: str = Field(default="", max_length=500)
     pros: list[str] = Field(default_factory=list, max_length=4)
     cons: list[str] = Field(default_factory=list, max_length=4)
     credibility_note: str = Field(default="", max_length=500)
@@ -59,7 +62,7 @@ class Task3BAnalysisItem(BaseModel):
     auto_potential: int | None = None
     risk_level: str | None = None
     future_impact: str | None = None
-    components: list[WorkComponentSchema] = Field(default_factory=list, max_length=4)
+    components: list[WorkComponentSchema] = Field(default_factory=list, max_length=7)
     importance: str | None = None
     feasibility_tier: str | None = None
     feasibility_note: str | None = None
@@ -67,6 +70,8 @@ class Task3BAnalysisItem(BaseModel):
     velocity: str | None = None
     velocity_note: str | None = None
     next_action: str | None = None
+    learn_future: str | None = None
+    learn_current: str | None = None
     learn_gap: str | None = None
     learn_do: str | None = None
     learn_dont: str | None = None
@@ -124,6 +129,8 @@ class TaskAnalysisItem(BaseModel):
     velocity: str | None = None
     velocity_note: str | None = None
     next_action: str | None = None
+    learn_future: str | None = None
+    learn_current: str | None = None
     learn_gap: str | None = None
     learn_do: str | None = None
     learn_dont: str | None = None

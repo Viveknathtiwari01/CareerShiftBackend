@@ -32,6 +32,8 @@ class AssessmentTaskAnalysis(AuditMixin, Base):
     velocity: Mapped[str | None] = mapped_column(String(64), nullable=True)
     velocity_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     next_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    learn_future: Mapped[str | None] = mapped_column(Text, nullable=True)
+    learn_current: Mapped[str | None] = mapped_column(Text, nullable=True)
     learn_gap: Mapped[str | None] = mapped_column(Text, nullable=True)
     learn_do: Mapped[str | None] = mapped_column(Text, nullable=True)
     learn_dont: Mapped[str | None] = mapped_column(Text, nullable=True)
