@@ -23,6 +23,8 @@ from promppts.Task3BClassificationService import SYSTEM_PROMPT, USER_PROMPT_TEMP
 logger = logging.getLogger(__name__)
 
 
+from fastapi import HTTPException, status
+
 def _strip_markdown_json(text: str) -> str:
     clean = text.strip()
     if clean.startswith("```"):
@@ -65,33 +67,54 @@ async def classify_tasks_3b_from_ai(
 
     request_kwargs = build_messages_create_kwargs(
         model,
-        max_tokens=16384,
+        max_tokens=8192,
         temperature=get_anthropic_temperature(),
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
     )
 
     client: AsyncAnthropic = create_async_client()
-    try:
-        response = await client.messages.create(**request_kwargs)
-    except AuthenticationError as exc:
-        raise ValueError(
-            "AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env."
-        ) from exc
-    except APIStatusError as exc:
-        message = exc.message or str(exc)
-        raise ValueError(f"AI service error: {message}") from exc
+    max_attempts = 2
+    
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = await client.messages.create(**request_kwargs)
+        except AuthenticationError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env."
+            ) from exc
+        except APIStatusError as exc:
+            message = exc.message or str(exc)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"AI service error: {message}"
+            ) from exc
 
-    output_text = extract_response_text(response)
-    if not output_text:
-        raise ValueError("AI returned no text content. Please try again.")
-    logger.info("3B classification raw output (first 200 chars): %s", output_text[:200])
+        output_text = extract_response_text(response)
+        if not output_text:
+            if attempt < max_attempts:
+                logger.warning("AI returned no text content, retrying...")
+                continue
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI returned no text content. Please try again."
+            )
+        
+        logger.info("3B classification raw output (first 200 chars): %s", output_text[:200])
 
-    try:
-        parsed = _parse_3b_json(output_text)
-    except json.JSONDecodeError as exc:
-        logger.error("Failed to parse 3B JSON: %s", output_text[:500])
-        raise ValueError("AI returned an invalid 3B analysis response. Please try again.") from exc
+        try:
+            parsed = _parse_3b_json(output_text)
+            break
+        except (json.JSONDecodeError, ValueError) as exc:
+            logger.error("Failed to parse 3B JSON (attempt %d): %s...", attempt, output_text[:500])
+            if attempt < max_attempts:
+                logger.warning("Retrying 3B classification due to parsing error...")
+                continue
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI returned an invalid 3B analysis response. Please try again."
+            ) from exc
 
     summary_confidence = parsed.get("summary_confidence")
     if summary_confidence is not None:

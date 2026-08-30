@@ -223,11 +223,15 @@ class AssessmentTaskService:
                 detail="At least one task must be selected.",
             )
 
+        existing_tasks = await self._repo.list_for_assessment(db, assessment_id=assessment_id)
+        existing_ids = {t.id for t in existing_tasks}
+
         rows: list[AssessmentTask] = []
         for index, item in enumerate(payload.tasks):
+            task_id = item.id if item.id in existing_ids else uuid4()
             rows.append(
                 AssessmentTask(
-                    id=item.id or uuid4(),
+                    id=task_id,
                     assessment_id=assessment_id,
                     title=item.title.strip(),
                     description=item.description,
