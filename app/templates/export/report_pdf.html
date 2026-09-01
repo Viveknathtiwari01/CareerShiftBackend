@@ -2,87 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Career Intelligence Report {{ overview.job_title }}</title>
+  <title>Career Intelligence Report</title>
   <style>
-    @page { size: A4; margin: 1.5cm; }
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1a273d; line-height: 1.45; }
-    h1 { font-size: 22pt; margin: 0 0 6pt; color: #1a273d; }
-    h2 { font-size: 14pt; margin: 18pt 0 8pt; color: #1a273d; border-bottom: 1px solid #cbd5e1; padding-bottom: 4pt; }
-    h3 { font-size: 11pt; margin: 12pt 0 6pt; color: #334155; }
-    .meta { color: #64748b; font-size: 9pt; margin-bottom: 16pt; }
-    .kpi-table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
-    .kpi-table td { border: 1px solid #e2e8f0; padding: 8pt; text-align: center; width: 16%; }
-    .kpi-value { font-size: 16pt; font-weight: bold; color: #0f766e; }
-    .kpi-label { font-size: 8pt; color: #64748b; text-transform: uppercase; }
-    .score-box { background: #0f766e; color: #fff; padding: 14pt; text-align: center; margin: 12pt 0; }
-    .score-box .score { font-size: 28pt; font-weight: bold; }
-    .summary { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10pt; margin: 10pt 0; }
-    .task { border: 1px solid #e2e8f0; padding: 8pt; margin-bottom: 8pt; page-break-inside: avoid; }
-    .badge-build { background: #dcfce7; color: #166534; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
-    .badge-blend { background: #dbeafe; color: #1e40af; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
-    .badge-bot { background: #ccfbf1; color: #0f766e; padding: 2pt 6pt; font-size: 8pt; font-weight: bold; }
-    ul { margin: 4pt 0; padding-left: 16pt; }
+    @page { 
+      size: A4; 
+      margin: 3.5cm 1.5cm 2.5cm 1.5cm; 
+      @frame header {
+        -pdf-frame-content: header_content;
+        top: 1cm;
+        margin-left: 1.5cm;
+        margin-right: 1.5cm;
+        height: 2cm;
+      }
+      @frame footer {
+        -pdf-frame-content: footer_content;
+        bottom: 0.8cm;
+        margin-left: 1.5cm;
+        margin-right: 1.5cm;
+        height: 1.5cm;
+      }
+    }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1A2533; line-height: 1.4; }
+    h1 { font-size: 24pt; margin: 0 0 6pt; color: #0A121F; font-weight: bold; }
+    h2 { font-size: 16pt; margin: 18pt 0 8pt; color: #0A121F; border-bottom: 1.5px solid #0A121F; padding-bottom: 4pt; }
+    h3 { font-size: 12pt; margin: 12pt 0 6pt; color: #0A121F; font-weight: bold; }
+    
+    p { margin: 0 0 8pt 0; }
+    ul { margin: 0 0 8pt 0; padding-left: 16pt; }
     li { margin-bottom: 3pt; }
-    .footer { margin-top: 24pt; font-size: 8pt; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8pt; }
-    table.data { width: 100%; border-collapse: collapse; margin: 8pt 0; }
-    table.data th, table.data td { border: 1px solid #e2e8f0; padding: 6pt; text-align: left; font-size: 9pt; }
-    table.data th { background: #f1f5f9; }
+    
+    .meta { color: #64748B; font-size: 9.5pt; margin-bottom: 16pt; line-height: 1.4; }
+    .highlight { color: #D9A928; font-weight: bold; }
+    
+    .kpi-table { width: 100%; border-collapse: collapse; margin: 12pt 0; }
+    .kpi-table th { background: #F6F8FC; border: 1px solid #E4E7EC; padding: 10pt 6pt; text-align: center; font-size: 8pt; color: #667085; text-transform: uppercase; }
+    .kpi-table td { border: 1px solid #E4E7EC; padding: 12pt 6pt; text-align: center; font-size: 16pt; font-weight: bold; color: #101828; }
+    
+    .data-table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+    .data-table th { border-bottom: 2px solid #E4E7EC; padding: 8pt 6pt; text-align: left; color: #667085; text-transform: uppercase; font-size: 8pt; font-weight: bold; vertical-align: top; }
+    .data-table td { padding: 8pt 6pt; text-align: left; font-size: 9.5pt; color: #101828; vertical-align: top; border: none; }
+    
+    .badge { padding: 2pt 6pt; font-size: 8pt; font-weight: bold; text-transform: uppercase; display: inline-block; }
+    .badge-build { color: #1455B8; border: 1px solid #1455B8; background: #F6F8FC; }
+    .badge-blend { color: #D9A928; border: 1px solid #D9A928; background: #FDFBF2; }
+    .badge-bot { color: #F79009; border: 1px solid #F79009; background: #FFF4E5; }
+    
+    .task-item { margin-bottom: 16pt; padding-bottom: 16pt; border-bottom: 1px solid #E4E7EC; page-break-inside: avoid; }
+    
+    #header_content { text-align: left; }
+    .logo-text { font-size: 18pt; font-weight: bold; color: #0A1F44; letter-spacing: 0.5px; }
+    .logo-accent { font-size: 18pt; font-weight: bold; color: #D9A928; letter-spacing: 0.5px; }
+    .header-subtitle { font-size: 9pt; text-transform: uppercase; margin-top: 4pt; padding-bottom: 6pt; border-bottom: 3px solid #D9A928; }
+    
+    #footer_content { text-align: left; color: #667085; font-size: 8.5pt; }
   </style>
 </head>
 <body>
-  <h1>Career Intelligence Report</h1>
-  <p class="meta">
-    Prepared for <strong>{{ recipient_name }}</strong> · {{ overview.job_title }} · {{ overview.industry }}<br/>
-    Generated {{ generated_date }} · Version {{ report_version }} · Assessment {{ assessment_id[:8] }}…
-  </p>
+  <div id="header_content">
+    <div><span class="logo-text">Career</span><span class="logo-accent">Shift3B</span></div>
+    <div class="header-subtitle">AI Career Intelligence</div>
+  </div>
+  
+  <div id="footer_content">
+    <table style="width: 100%; border-top: 1.5px solid #D9A928; border-bottom: none; border-left: none; border-right: none; padding: 0; padding-top: 8pt;">
+      <tr>
+        <td style="width: 40%; text-align: left; font-weight: bold; color: #667085; white-space: nowrap;">&copy; CareerShift &middot; Confidential &middot; {{ generated_date }}</td>
+        <td style="width: 30%; text-align: center; color: #D9A928; font-weight: bold;">www.careershift3b.com</td>
+        <td style="width: 30%; text-align: right; font-weight: bold; color: #667085;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+      </tr>
+    </table>
+  </div>
 
-  <div class="score-box">
-    <div>Readiness Score</div>
-    <div class="score">{{ ai_readiness.overall_score }}/100</div>
-    <div>{{ ai_readiness.tier_label }} {{ ai_readiness.tier_description }}</div>
+  <h1 style="margin-top: 12pt;">Career Intelligence Report</h1>
+  <div class="meta" style="border-bottom: 1px solid #E4E7EC; padding-bottom: 12pt; margin-bottom: 16pt;">
+    <strong>Prepared for:</strong> <span style="color: #0A1F44; font-weight: bold;">{{ recipient_name }}</span><br/>
+    {{ overview.job_title }}, {{ overview.industry }}<br/>
+    <strong>Generated:</strong> {{ generated_date }}, Version {{ report_version }}
   </div>
 
   <h2>Executive Overview</h2>
   {% if strategic_note %}
-  <div class="summary"><strong>Strategic Note:</strong> {{ strategic_note }}</div>
+  <p><strong>Strategic Note:</strong> {{ strategic_note }}</p>
   {% endif %}
   {% if career_identity.executive_summary %}
-  <div class="summary">{{ career_identity.executive_summary }}</div>
+  <p>{{ career_identity.executive_summary }}</p>
   {% endif %}
 
   <table class="kpi-table">
     <tr>
-      <td><div class="kpi-value">{{ overview.overall_score }}</div><div class="kpi-label">Overall Score</div></td>
-      <td><div class="kpi-value">{{ overview.tasks_analyzed }}</div><div class="kpi-label">Tasks Analyzed</div></td>
-      <td><div class="kpi-value">{{ overview.competency_count }}</div><div class="kpi-label">Competencies</div></td>
-      <td><div class="kpi-value">{{ overview.automation_pct }}%</div><div class="kpi-label">Automation</div></td>
-      <td><div class="kpi-value">{{ overview.career_risk }}</div><div class="kpi-label">Career Risk</div></td>
-      <td><div class="kpi-value">{{ overview.ai_tools_count }}</div><div class="kpi-label">AI Tools</div></td>
+      <th>Overall Score</th>
+      <th>Tasks Analyzed</th>
+      <th>Competencies</th>
+      <th>Automation</th>
+      <th>Career Risk</th>
+      <th>AI Tools</th>
+    </tr>
+    <tr>
+      <td>{{ overview.overall_score }}</td>
+      <td>{{ overview.tasks_analyzed }}</td>
+      <td>{{ overview.competency_count }}</td>
+      <td>{{ overview.automation_pct }}%</td>
+      <td>{{ overview.career_risk }}</td>
+      <td>{{ overview.ai_tools_count }}</td>
     </tr>
   </table>
 
-  <p><strong>Experience:</strong> {{ overview.experience_years }} years ·
-     <strong>3B mix:</strong> {{ build_count }} BUILD · {{ blend_count }} BLEND · {{ bot_count }} BOT</p>
+  <p>
+    <strong>Experience:</strong> {{ overview.experience_years }} years &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+    <strong>3B Mix:</strong> <span class="highlight">{{ build_count }} BUILD</span> &middot; <span class="highlight">{{ blend_count }} BLEND</span> &middot; <span class="highlight">{{ bot_count }} BOT</span>
+  </p>
   {% if overview.profession_summary %}
   <p><strong>Profession Summary:</strong> {{ overview.profession_summary }}</p>
   {% endif %}
 
   <h2>AI Readiness Dimensions</h2>
-  <table class="data">
+  <table class="data-table">
     <tr><th>Dimension</th><th>Score</th></tr>
     {% for dim in ai_readiness.dimensions %}
-    <tr><td>{{ dim.name }}</td><td>{{ dim.score }}/100</td></tr>
+    <tr><td><strong>{{ dim.name }}</strong></td><td>{{ dim.score }}/100</td></tr>
     {% endfor %}
   </table>
 
-  {% if ai_readiness.strengths %}
-  <h3>Strengths</h3>
-  <ul>{% for s in ai_readiness.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
-  {% endif %}
-  {% if ai_readiness.improvement_areas %}
-  <h3>Improvement Areas</h3>
-  <ul>{% for s in ai_readiness.improvement_areas %}<li>{{ s }}</li>{% endfor %}</ul>
-  {% endif %}
+  <table style="width: 100%; border: none; margin: 12pt 0;">
+    <tr>
+      <td style="width: 50%; vertical-align: top; border: none; padding-right: 12pt;">
+        {% if ai_readiness.strengths %}
+        <h3 style="margin-top: 0;">Strengths</h3>
+        <ul>{% for s in ai_readiness.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
+        {% endif %}
+      </td>
+      <td style="width: 50%; vertical-align: top; border: none; padding-left: 12pt;">
+        {% if ai_readiness.improvement_areas %}
+        <h3 style="margin-top: 0;">Improvement Areas</h3>
+        <ul>{% for s in ai_readiness.improvement_areas %}<li>{{ s }}</li>{% endfor %}</ul>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
 
   <h2>Career Identity</h2>
   <p><strong>{{ career_identity.identity_title }}</strong> ({{ career_identity.confidence_pct }}% alignment)</p>
@@ -92,14 +148,17 @@
 
   <h2>3B Task Analysis</h2>
   {% for task in task_routing %}
-  <div class="task">
-    <strong>{{ task.task_title }}</strong>
-    {% if task.category == 'BUILD' %}<span class="badge-build">BUILD</span>
-    {% elif task.category == 'BOT' %}<span class="badge-bot">BOT</span>
-    {% else %}<span class="badge-blend">BLEND</span>{% endif %}
-    {% if task.rationale %}<p>{{ task.rationale }}</p>{% endif %}
+  <div class="task-item">
+    <div style="font-size: 11pt; font-weight: bold; color: #0A121F; margin-bottom: 4pt;">
+      {{ task.task_title }}
+      {% if task.category == 'BUILD' %}<span class="badge badge-build">BUILD</span>
+      {% elif task.category == 'BOT' %}<span class="badge badge-bot">BOT</span>
+      {% else %}<span class="badge badge-blend">BLEND</span>{% endif %}
+    </div>
+    {% if task.rationale %}<p><strong>Rationale:</strong> {{ task.rationale }}</p>{% endif %}
     {% if task.reason %}<p><em>{{ task.reason }}</em></p>{% endif %}
     {% if task.next_actions %}
+    <p style="margin-bottom: 2pt;"><strong>Actions:</strong></p>
     <ul>{% for action in task.next_actions %}<li>{{ action }}</li>{% endfor %}</ul>
     {% endif %}
     {% if task.recommended_tools %}
@@ -113,18 +172,18 @@
   <h3>{{ group.category }}</h3>
   <ul>
     {% for item in group['items'] %}
-    <li><strong>{{ item.name }}</strong>{% if item.importance %} {{ item.importance }}{% endif %}{% if item.expected_level %} ({{ item.expected_level }}){% endif %}</li>
+    <li><strong>{{ item.name }}</strong>{% if item.importance %} &mdash; <span class="highlight">Importance:</span> {{ item.importance }}{% endif %}{% if item.expected_level %} &mdash; <span class="highlight">Expected:</span> {{ item.expected_level }}{% endif %}</li>
     {% endfor %}
   </ul>
   {% endfor %}
 
   <h2>Daily Work Profile</h2>
-  <p>Total hours/week analyzed: {{ daily_work.total_hours_per_week }}</p>
-  <table class="data">
+  <p>Total hours/week analyzed: <strong>{{ daily_work.total_hours_per_week }}</strong></p>
+  <table class="data-table">
     <tr><th>Task</th><th>Hours/week</th><th>Complexity</th><th>AI Usage</th></tr>
     {% for t in daily_work.tasks %}
     <tr>
-      <td>{{ t.title }}</td>
+      <td><strong>{{ t.title }}</strong></td>
       <td>{{ t.hours_per_week }}</td>
       <td>{{ t.complexity }}</td>
       <td>{{ t.ai_assistance or '—' }}</td>
@@ -150,26 +209,17 @@
   {% endif %}
 
   <h2>Recommended AI Toolkit</h2>
-  <table class="data">
+  <table class="data-table">
     <tr><th>Priority</th><th>Recommended AI Toolkit</th><th>Tool Category</th><th>Why</th></tr>
     {% for tool in ai_toolkit %}
     <tr>
-      <td>{% if tool.priority_rank %}#{{ tool.priority_rank }} {{ tool.priority_label or '' }}{% else %}—{% endif %}</td>
-      <td>{{ tool.name }}</td>
-      <td>{{ tool.category }}</td>
-      <td>{% if tool.priority_reason %}<strong>Priority:</strong> {{ tool.priority_reason }}<br/>{% endif %}<strong>Why:</strong> {{ tool.use_case }}</td>
+      <td style="width: 15%;">{% if tool.priority_rank %}<strong>#{{ tool.priority_rank }}</strong><br/>{{ tool.priority_label or '' }}{% else %}—{% endif %}</td>
+      <td style="width: 25%;"><strong>{{ tool.name }}</strong></td>
+      <td style="width: 20%;">{{ tool.category }}</td>
+      <td style="width: 40%;">{% if tool.priority_reason %}<strong>Priority:</strong> {{ tool.priority_reason }}<br/>{% endif %}<strong>Why:</strong> {{ tool.use_case }}</td>
     </tr>
     {% endfor %}
   </table>
 
-  {% if cost_roi.hours_automatable_per_week is defined %}
-  <h2>Automation Opportunity</h2>
-  <p>Estimated automatable hours/week (BOT tasks): {{ cost_roi.hours_automatable_per_week }}</p>
-  {% endif %}
-
-  <div class="footer">
-    CareerShift Career Intelligence Report · Confidential · Generated from your assessment data only.<br/>
-    © CareerShift · {{ generated_date }}
-  </div>
 </body>
 </html>
