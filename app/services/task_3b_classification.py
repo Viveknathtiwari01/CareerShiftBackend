@@ -27,9 +27,14 @@ from fastapi import HTTPException, status
 
 def _strip_markdown_json(text: str) -> str:
     clean = text.strip()
-    if clean.startswith("```"):
-        clean = re.sub(r"^```(?:json)?\s*", "", clean)
-        clean = re.sub(r"\s*```$", "", clean)
+    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean)
+    if match:
+        clean = match.group(1).strip()
+    else:
+        start = clean.find('{')
+        end = clean.rfind('}')
+        if start != -1 and end != -1 and end > start:
+            clean = clean[start:end+1]
     return clean.strip()
 
 
