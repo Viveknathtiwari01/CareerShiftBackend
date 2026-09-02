@@ -1,0 +1,163 @@
+```json
+{
+  "summary_confidence": 68,
+  "market_reality": {
+    "trend_text": "Your task mix leans toward work that depends on judgment, relationships, and adaptive problem-solving rather than repetitive processing — stakeholder alignment, incident diagnosis, and skill-building are all areas where AI can support but not replace your role. As a backend-focused developer early in your career, the differentiator over time will be how well you combine technical depth (system architecture, security, data modeling) with the judgment-heavy work reflected here. There isn't enough task volume in this review to identify a strong automation-heavy pattern.",
+    "pivot_roles": [
+      "Platform/DevOps Engineer (builds on system troubleshooting and server-side engineering)",
+      "Solutions Engineer (builds on stakeholder management and requirements analysis)",
+      "Security-focused Backend Engineer (builds on identity/access management and threat modeling competencies)"
+    ]
+  },
+  "analyses": [
+    {
+      "task_index": 0,
+      "category": "BUILD",
+      "importance": "High",
+      "rationale": "Your ability to translate business needs into technical scope is what makes this conversation valuable, not automatable.",
+      "reason": "You spend about an hour a week aligning with product managers on feature specs, and this depends on reading intent, negotiating trade-offs, and building trust. AI tools can help you prep notes or summarize prior discussions, but the actual alignment work needs to stay with you. This is a skill worth deliberately strengthening rather than delegating.",
+      "human_capability": "Translating ambiguous business requirements into clear technical scope through direct stakeholder dialogue.",
+      "feasibility_assessment": "This is fully within your control — no tools or organizational approval are needed to get better at this. It's about how you prepare for and run these conversations, which you can practice on your own.",
+      "next_action": "Before your next requirements discussion, write down the business goal in your own words and check it with the product manager before scoping the technical solution.",
+      "pace_of_change": "stable",
+      "pace_of_change_note": "The core skill of stakeholder alignment doesn't shift with new AI tooling — it remains a human relationship and communication skill.",
+      "cost_of_staying_as_is": {
+        "type": "capability_investment",
+        "narrative": "If you don't intentionally build this skill now, as a 1-year-experience developer you risk relying too heavily on senior colleagues to interpret product intent for you, limiting your growth toward more independent technical ownership."
+      },
+      "learning_implication": {
+        "future_requirement": "As you take on more independent work, you'll need to interpret ambiguous product requirements without heavy oversight and push back constructively when scope is unclear.",
+        "current_capability": "Your profile shows Intermediate-level Requirements Analysis and Medium-importance Stakeholder Management, indicating this is an area still developing.",
+        "capability_gap": "Moving from reactive scope-taking to proactively shaping requirements based on technical feasibility.",
+        "practice": [
+          "Ask clarifying 'why' questions in every requirements discussion, not just 'what'",
+          "Draft a one-paragraph technical scope summary after each conversation and get feedback from a senior engineer"
+        ],
+        "deprioritize": [],
+        "where_to_learn": [
+          "Shadow a senior engineer during a requirements session",
+          "Review past project specs to identify where scope ambiguity caused rework"
+        ]
+      },
+      "components": []
+    },
+    {
+      "task_index": 1,
+      "category": "BUILD",
+      "importance": "Medium",
+      "rationale": "The time you invest in learning is itself the valuable outcome — no tool can absorb this for you.",
+      "reason": "You spend about an hour studying new backend technologies and security practices, and although AI tools can help you summarize documentation or explain concepts faster, the actual learning and internalization has to happen in your head. This is time well spent given your early-career stage. Use AI as a study accelerator, not a replacement for practice.",
+      "human_capability": "Self-directed technical learning and applying new concepts to real backend problems.",
+      "feasibility_assessment": "You can act on this immediately without any organizational involvement — it's a personal study habit you fully control.",
+      "next_action": "Pick one specific gap (e.g., a security practice mentioned in your competencies like threat modeling) and use an AI assistant to generate a study plan, then apply it in a small side project.",
+      "pace_of_change": "fast-moving",
+      "pace_of_change_note": "Backend frameworks, security practices, and tooling change frequently, so continuous learning needs to stay a habit rather than a one-time effort.",
+      "cost_of_staying_as_is": {
+        "type": "capability_investment",
+        "narrative": "With only half-yearly dedicated learning time noted, there's a risk your technical skills (especially in security and architecture, both marked Critical/Expert in your competencies) fall behind the pace at which backend practices evolve."
+      },
+      "learning_implication": {
+        "future_requirement": "You'll need to continuously absorb new frameworks, security patterns, and architectural approaches to keep pace with Critical/Expert-level competencies like System Architecture and Security Engineering.",
+        "current_capability": "Your profile shows Advanced-level Continuous Learning importance but only occasional (half-yearly) dedicated time, suggesting inconsistent practice.",
+        "capability_gap": "Increasing the frequency and structure of learning rather than the intent to learn.",
+        "practice": [
+          "Set a recurring weekly 30-minute block for reading or experimenting with one new backend concept",
+          "Apply each new concept in a small test project rather than passive reading only"
+        ],
+        "deprioritize": [
+          "Manually searching for basic documentation answers you could get faster from an AI assistant"
+        ],
+        "where_to_learn": [
+          "AI coding assistants for quick concept explanations",
+          "Official framework documentation and changelogs",
+          "Security-focused engineering blogs or OWASP resources"
+        ]
+      },
+      "components": []
+    },
+    {
+      "task_index": 2,
+      "category": "BLEND",
+      "importance": "High",
+      "rationale": "Speeding up how you spot the problem frees you to focus on fixing it and preventing it from happening again.",
+      "reason": "You spend about an hour a week responding to alerts and diagnosing server issues, work that's fairly repetitive in pattern but still requires real judgment to resolve safely. Tools can help you sift logs and surface likely causes faster, but you still need to verify the fix and decide how to restore service without causing new problems. This week, try letting a tool do the first pass on log analysis before you dive in manually.
+
+",
+      "human_capability": "Diagnosing root causes under pressure and deciding the safest path to restore service.",
+      "feasibility_assessment": "You can likely adopt log-analysis or monitoring tools yourself if your team already has logging infrastructure in place, but deeper integrations (like automated alert triage) would need approval from your team or IT since they touch production systems.",
+      "next_action": "Identify one recurring type of incident from recent weeks and check whether your team's existing monitoring tool can auto-surface likely causes; use that as your first triage step next time an alert fires.",
+      "pace_of_change": "fast-moving",
+      "pace_of_change_note": "AI-assisted log analysis and anomaly detection tools are improving quickly, so the tooling available to speed up triage will keep evolving.",
+      "cost_of_staying_as_is": {
+        "type": "augmentation_opportunity",
+        "narrative": "Continuing to manually sift through logs for every incident means slower response times and more mental fatigue during high-pressure outages, when your judgment is most needed for the actual fix rather than the search for symptoms."
+      },
+      "learning_implication": {
+        "future_requirement": "You'll increasingly need to interpret AI-surfaced anomaly signals and logs quickly, then apply root-cause reasoning to decide on the right fix.",
+        "current_capability": "Your profile shows Advanced-level System Troubleshooting and Root Cause Analysis, suggesting solid diagnostic instincts already.",
+        "capability_gap": "Getting comfortable trusting and verifying AI-surfaced signals rather than manually tracing every log line first.",
+        "practice": [
+          "After each incident, compare what a log-analysis tool flagged versus what you found manually to build trust calibration",
+          "Document root causes in a shared log to build a pattern library your team (and future tools) can learn from"
+        ],
+        "deprioritize": [
+          "Manually grep-ing through raw logs line by line when structured tooling can surface likely causes faster"
+        ],
+        "where_to_learn": [
+          "Post-incident reviews with senior engineers",
+          "Practicing with your team's existing monitoring/alerting dashboards"
+        ]
+      },
+      "components": [
+        {
+          "name": "Alert triage and log analysis",
+          "description": "Sifting through logs and metrics to identify likely sources of a service disruption.",
+          "is_automatable": true,
+          "capability": "anomaly detection",
+          "solution_pattern": "AI-assisted log analysis",
+          "tools": [
+            {
+              "name": "Datadog",
+              "cost_band": "paid_team",
+              "pricing_note": "Typically priced per host/service; team plans usually start in the tens of dollars per host per month.",
+              "feasibility": "org_must_enable",
+              "fit_description": "Fits backend incident troubleshooting by correlating logs, metrics, and traces to surface likely failure points faster than manual log review.",
+              "market_note": "Commonly adopted by engineering teams for production monitoring and incident response.",
+              "pros": ["Correlates multiple signal types", "Reduces manual log searching"],
+              "cons": ["Requires organizational setup and integration", "Cost scales with infrastructure size"]
+            },
+            {
+              "name": "Grafana Loki",
+              "cost_band": "freemium",
+              "pricing_note": "Open-source and free to self-host; managed cloud tiers available at additional cost.",
+              "feasibility": "org_must_enable",
+              "fit_description": "Useful for querying and visualizing logs during incident diagnosis if your team already runs infrastructure that could host it.",
+              "market_note": "Widely used in engineering teams that already use the Grafana ecosystem for observability.",
+              "pros": ["Open-source option available", "Integrates with existing Grafana dashboards"],
+              "cons": ["Needs setup and maintenance", "Learning curve for query language"]
+            },
+            {
+              "name": "Sentry",
+              "cost_band": "freemium",
+              "pricing_note": "Free tier for small usage; paid plans scale with event volume.",
+              "feasibility": "self_serve",
+              "fit_description": "Helps surface application-level errors and stack traces quickly during backend troubleshooting without heavy setup.",
+              "market_note": "Commonly used by individual developers and small teams for error tracking.",
+              "pros": ["Easy to set up individually", "Good for application-level error context"],
+              "cons": ["Less suited for infrastructure-level outages", "May duplicate existing monitoring tools"]
+            }
+          ]
+        },
+        {
+          "name": "Root cause determination and fix decision",
+          "description": "Interpreting surfaced signals, verifying the actual cause, and deciding the safest remediation step to restore service.",
+          "is_automatable": false,
+          "capability": "root cause analysis",
+          "solution_pattern": "human-in-the-loop review",
+          "tools": []
+        }
+      ]
+    }
+  ]
+}
+```
