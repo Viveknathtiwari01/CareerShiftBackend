@@ -67,7 +67,7 @@ class EmailService:
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center" style="padding-bottom:12px;">
-                    <img src="{settings.APP_PUBLIC_URL}/Logo.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
+                    <img src="{settings.APP_PUBLIC_URL}/new_logo11.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
                   </td>
                 </tr>
                 <tr>
@@ -205,12 +205,10 @@ class EmailService:
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px 0;">
                 <tr>
                     <td align="center">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-top: 4px solid #c9a84c;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-top: 4px solid #c9a84c;">
                             <tr>
                                 <td style="padding: 40px 30px 10px; text-align: center;">
-                                    <div style="font-size: 32px; font-weight: 800; font-family: 'DM Sans', Arial, sans-serif; letter-spacing: -0.5px; margin: 0;">
-                                        <span style="color: #141f32;">Career</span><span style="color: #c9a84c;">Shift3B</span>
-                                    </div>
+                                    <img src="{settings.APP_PUBLIC_URL}/new_logo11.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
                                 </td>
                             </tr>
                             <tr>
