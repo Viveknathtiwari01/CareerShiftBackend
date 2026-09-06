@@ -283,8 +283,6 @@ class CareerIntelligenceReportService:
                 to_email=user.email,
                 recipient_name=recipient,
                 job_title=profile.job_title,
-                score=report.ai_readiness.overall_score,
-                tier_label=report.ai_readiness.tier_label,
                 report_url=report_url,
             )
         except Exception:

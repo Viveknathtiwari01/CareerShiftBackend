@@ -188,14 +188,12 @@ class EmailService:
         to_email: str,
         recipient_name: str,
         job_title: str,
-        score: int,
-        tier_label: str,
         report_url: str,
     ) -> None:
         if not settings.REPORT_READY_EMAIL_ENABLED:
             return
 
-        subject = f"Your Career Intelligence Report is ready {score}/100"
+        subject = "Your Career Intelligence Report is ready"
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -203,30 +201,31 @@ class EmailService:
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: 'DM Sans', Arial, Helvetica, sans-serif; background-color: #f6f5ec; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f5ec; padding: 40px 0;">
+        <body style="font-family: 'DM Sans', Arial, Helvetica, sans-serif; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; background-color: #ffffff;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px 0;">
                 <tr>
                     <td align="center">
                         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; max-width: 600px; box-shadow: 0 10px 25px rgba(10, 18, 31, 0.05); overflow: hidden; border-top: 4px solid #c9a84c;">
                             <tr>
-                                <td style="padding: 40px 30px; text-align: center;">
-                                    <img src="{settings.APP_PUBLIC_URL}/Logo.png" alt="CareerShift Logo" style="height:40px;display:block;margin:0 auto;" />
+                                <td style="padding: 40px 30px 10px; text-align: center;">
+                                    <div style="font-size: 32px; font-weight: 800; font-family: 'DM Sans', Arial, sans-serif; letter-spacing: -0.5px; margin: 0;">
+                                        <span style="color: #141f32;">Career</span><span style="color: #c9a84c;">Shift3B</span>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
-                                <td style="padding: 40px 30px; text-align: center;">
-                                    <h2 style="color: #141f32; margin-top: 0; margin-bottom: 15px; font-size: 24px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif;">Your report is ready!</h2>
-                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">Hi {recipient_name},</p>
-                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">Your CareerShift Career Intelligence Report for <strong>{job_title}</strong> has been generated.</p>
+                                <td style="padding: 10px 30px 40px; text-align: center;">
+                                    <h2 style="color: #141f32; margin-top: 0; margin-bottom: 20px; font-size: 28px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif;">Your Career Intelligence Report is Ready!</h2>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">Hi <strong>{recipient_name}</strong>,</p>
+                                    <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">Your personalized CareerShift Intelligence Report for the <strong>{job_title}</strong> role has been successfully generated. Inside, you'll find your custom AI Toolkit, comprehensive Task Routing Analysis, and an actionable Upskill Roadmap.</p>
                                     
-                                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; margin: 0 auto 30px auto; max-width: 300px;">
-                                        <p style="font-size: 14px; color: #5c6b7e; margin: 0 0 5px 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Readiness Score</p>
-                                        <p style="font-size: 42px; font-weight: 700; font-family: 'Cormorant Garamond', Georgia, serif; color: #c9a84c; margin: 0;">{score}<span style="font-size: 20px; color: #9ca3af;">/100</span></p>
-                                        <p style="font-size: 16px; font-weight: 700; color: #141f32; margin: 10px 0 0 0;">{tier_label}</p>
+                                    <a href="{report_url}" style="background-color: #141f32; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; margin-bottom: 30px; border: 1px solid #141f32; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">View Your Report</a>
+                                    
+                                    <div style="text-align: left; background-color: #f8fafc; border-left: 4px solid #c9a84c; padding: 15px 20px; margin: 0 auto 30px auto; max-width: 450px; border-radius: 4px;">
+                                        <p style="margin: 0; font-size: 14px; color: #141f32; font-weight: 600; margin-bottom: 5px;">What's next?</p>
+                                        <p style="margin: 0; font-size: 14px; color: #5c6b7e; line-height: 1.5;">Review your report and start exploring the recommended tools and upskilling pathways to future-proof your career.</p>
                                     </div>
-                                    
-                                    <a href="{report_url}" style="background-color: #141f32; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; margin-bottom: 25px; border: 1px solid #141f32;">View Your Report</a>
-                                    
+
                                     <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0; word-break: break-all;">If the button does not work, copy this link:<br><a href="{report_url}" style="color: #c9a84c; text-decoration: underline;">{report_url}</a></p>
                                 </td>
                             </tr>
@@ -250,14 +249,14 @@ class EmailService:
             logger.warning(
                 "SMTP not configured report ready email logged for development only."
             )
-            print(f"--- MOCK REPORT EMAIL --- To: {to_email} | Score: {score} | URL: {report_url}")
+            print(f"--- MOCK REPORT EMAIL --- To: {to_email} | URL: {report_url}")
             return
 
         message = EmailMessage()
         message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
         message["To"] = to_email
         message["Subject"] = subject
-        message.set_content(f"Your CareerShift report is ready. Score: {score}/100. View: {report_url}")
+        message.set_content(f"Your CareerShift report is ready. View it here: {report_url}")
         message.add_alternative(html_content, subtype="html")
 
         try:

@@ -843,7 +843,7 @@ def _build_strategic_note(
 ) -> str:
     job_title = data.profile.get("job_title") or "professional"
     return (
-        f"As a {job_title}, your AI readiness score of {readiness.overall_score}/100 ({readiness.tier_label}) "
+        f"As a {job_title}, your AI readiness analysis "
         f"signals a clear path forward: automate BOT work, blend AI into daily delivery, and deepen BUILD strengths. "
         f"Executing the recommended actions could free {before_after.hours_freed_per_week:g} hours weekly within 12 months."
     )

@@ -364,7 +364,7 @@ def _derive_insight(
             "while protecting BUILD tasks that define your professional edge."
         )
     return (
-        f"Your readiness score of {overall} reflects steady progress. "
+        "Your AI readiness analysis reflects steady progress. "
         "Double down on BLEND co-pilot habits before pushing deeper into full automation."
     )
 
