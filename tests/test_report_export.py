@@ -92,6 +92,26 @@ def test_render_report_html_contains_key_sections():
     assert "Alex" in html
     assert "3B Task Analysis" in html
     assert "Strategic Note" in html
+    assert "Executive Overview" in html
+    assert "Recommended AI Toolkit" in html
+    assert "CareerShift3B" in html or "CareerShift" in html
+
+
+def test_render_report_pdf_starts_with_cover_page():
+    from pypdf import PdfReader
+    from io import BytesIO
+
+    from app.services.report_export import render_report_pdf
+
+    payload = render_report_pdf(_sample_report(), recipient_name="Alex", job_title="HR Manager")
+    reader = PdfReader(BytesIO(payload))
+    assert len(reader.pages) >= 2
+    cover_text = reader.pages[0].extract_text() or ""
+    assert "Your AI" in cover_text
+    assert "Readiness" in cover_text
+    assert "Alex" in cover_text
+    assert "OVERALL" in cover_text
+    assert "72" in cover_text
 
 
 def test_render_report_docx_produces_valid_docx():

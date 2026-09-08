@@ -57,6 +57,57 @@ def _hours_automatable_per_week(report: CareerIntelligenceReportResponse) -> flo
     return round(freed, 1)
 
 
+def _importance_tone(importance: str | None) -> str:
+    label = (importance or "").strip().lower()
+    if "critical" in label:
+        return "#0B1D3A"
+    if "high" in label:
+        return "#3B82F6"
+    return "#14B8A6"
+
+
+def _category_meta(category: str | None) -> dict[str, str]:
+    """3B badge/stripe colors aligned with the CareerShift report reference."""
+    key = (category or "BLEND").upper()
+    if key == "BUILD":
+        return {
+            "key": "BUILD",
+            "label": "BUILD IT",
+            "color": "#4F46E5",
+            "badge_bg": "#4F46E5",
+            "badge_fg": "#FFFFFF",
+            "badge_width": "46",
+        }
+    if key == "BOT":
+        return {
+            "key": "BOT",
+            "label": "BOT IT",
+            "color": "#0D9488",
+            "badge_bg": "#0D9488",
+            "badge_fg": "#FFFFFF",
+            "badge_width": "46",
+        }
+    return {
+        "key": "BLEND",
+        "label": "BLEND IT",
+        "color": "#E8B923",
+        "badge_bg": "#E8B923",
+        "badge_fg": "#0B1D3A",
+        "badge_width": "46",
+    }
+
+
+def _phase_label(index: int, period: str) -> dict[str, str]:
+    defaults = [
+        ("PHASE 1", "Next 30 Days"),
+        ("PHASE 2", "Next 90 Days"),
+        ("PHASE 3", "Next 12 Months"),
+    ]
+    phase_no, fallback_title = defaults[min(index, 2)]
+    title = period.strip() if period else fallback_title
+    return {"phase_no": phase_no, "title": title}
+
+
 def build_pdf_export_context(
     report: CareerIntelligenceReportResponse,
     *,
@@ -73,26 +124,60 @@ def build_pdf_export_context(
     automation_raw = kpis.get("Automation %", "—")
     automation_pct = automation_raw.replace("%", "") if automation_raw != "—" else "—"
     experience_raw = snapshot.get("Experience", "—")
-    experience_years = experience_raw.replace(" years", "") if experience_raw != "—" else "—"
+    experience_years = experience_raw.replace(" years", "").replace("Years", "").strip()
+    if experience_years == "—":
+        experience_years = "—"
+
+    build_count = int(mix.get("BUILD", 0) or 0)
+    blend_count = int(mix.get("BLEND", 0) or 0)
+    bot_count = int(mix.get("BOT", 0) or 0)
+    mix_total = max(build_count + blend_count + bot_count, 1)
+    build_pct = round((build_count / mix_total) * 100)
+    blend_pct = round((blend_count / mix_total) * 100)
+    bot_pct = max(0, 100 - build_pct - blend_pct)
 
     overview = {
         "job_title": role,
         "industry": snapshot.get("Industry", "—"),
         "overall_score": readiness.overall_score,
         "tasks_analyzed": kpis.get("Tasks Analyzed", str(len(report.task_routing.analyses))),
-        "competency_count": kpis.get("Competencies", str(len(report.competencies))),
+        "competency_count": kpis.get(
+            "Competencies",
+            str(sum(len(group.items) for group in report.competencies)),
+        ),
         "automation_pct": automation_pct,
         "career_risk": readiness.career_risk,
         "ai_tools_count": str(len(report.ai_toolkit)),
         "experience_years": experience_years,
         "profession_summary": report.overview.insight,
+        "role_line": " · ".join(
+            part for part in [role, snapshot.get("Industry")] if part and part != "—"
+        ),
     }
+
+    dimensions = []
+    for dim in readiness.dimensions:
+        score = int(dim.score or 0)
+        width = max(min(score, 100), 0)
+        if 0 < width < 4:
+            width = 4
+        if 96 < width < 100:
+            width = 96
+        dimensions.append(
+            {
+                "name": dim.subject,
+                "score": score,
+                "width": width,
+                "is_low": score < 40,
+                "bar_color": "#E8B923" if score < 40 else "#0B1D3A",
+            }
+        )
 
     ai_readiness = {
         "overall_score": readiness.overall_score,
         "tier_label": readiness.tier_label,
         "tier_description": readiness.summary,
-        "dimensions": [{"name": dim.subject, "score": dim.score} for dim in readiness.dimensions],
+        "dimensions": dimensions,
         "strengths": [item.title for item in readiness.strengths],
         "improvement_areas": [item.title for item in readiness.improvements],
     }
@@ -102,56 +187,105 @@ def build_pdf_export_context(
         "confidence_pct": readiness.overall_score,
         "executive_summary": report.career_identity.narrative,
         "growth_strategy": report.career_identity.closing_note,
+        "subtitle": report.career_identity.subtitle,
     }
 
-    task_routing = [
-        {
-            "task_title": analysis.task_title,
-            "category": analysis.category,
-            "rationale": analysis.rationale,
-            "reason": analysis.reason,
-            "next_actions": list(analysis.next_actions or []),
-            "recommended_tools": list(analysis.recommended_tools or []),
-        }
-        for analysis in report.task_routing.analyses
-    ]
+    daily_by_name = {task.name.strip().lower(): task for task in report.daily_work.tasks}
+    task_routing = []
+    for analysis in report.task_routing.analyses:
+        daily = daily_by_name.get((analysis.task_title or "").strip().lower())
+        cat = _category_meta(analysis.category)
+        hours = analysis.weekly_hours or (daily.hours_per_week if daily else 0)
+        hours_label = f"{hours:g} hrs/week" if hours else None
+        complexity = (daily.criticality if daily else None) or "—"
+        ai_usage = (daily.ai_usage if daily else None) or "—"
+        meta_parts = []
+        if hours_label:
+            meta_parts.append(hours_label)
+        if complexity and complexity != "—":
+            meta_parts.append(f"Complexity: {complexity}")
+        if ai_usage and ai_usage != "—":
+            meta_parts.append(f"AI usage today: {ai_usage}")
+        task_routing.append(
+            {
+                "task_title": analysis.task_title,
+                "category": cat["key"],
+                "category_label": cat["label"],
+                "category_color": cat["color"],
+                "badge_bg": cat["badge_bg"],
+                "badge_fg": cat["badge_fg"],
+                "badge_width": cat["badge_width"],
+                "rationale": analysis.rationale,
+                "reason": analysis.reason,
+                "next_actions": list(analysis.next_actions or []),
+                "recommended_tools": list(analysis.recommended_tools or []),
+                "hours_per_week": hours,
+                "complexity": complexity,
+                "ai_usage": ai_usage,
+                "meta_line": " · ".join(meta_parts),
+            }
+        )
 
-    competencies = [
-        {
-            "category": group.title,
-            "items": [
-                {
-                    "name": item.name,
-                    "importance": item.importance,
-                    "expected_level": item.growth,
-                }
-                for item in group.items
-            ],
-        }
-        for group in report.competencies
-    ]
+    competencies = []
+    for group in report.competencies:
+        competencies.append(
+            {
+                "category": group.title,
+                "items": [
+                    {
+                        "name": item.name,
+                        "importance": item.importance or "—",
+                        "importance_color": _importance_tone(item.importance),
+                        "expected_level": item.growth,
+                    }
+                    for item in group.items
+                ],
+            }
+        )
 
-    daily_work = {
-        "total_hours_per_week": report.daily_work.total_hours,
-        "tasks": [
+    max_hours = max((task.hours_per_week for task in report.daily_work.tasks), default=1) or 1
+    daily_tasks = []
+    for task in report.daily_work.tasks:
+        cat = _category_meta(task.category_3b)
+        width = round(min(max((task.hours_per_week / max_hours) * 100, 0), 100))
+        if 0 < width < 4:
+            width = 4
+        if 96 < width < 100:
+            width = 96
+        daily_tasks.append(
             {
                 "title": task.name,
                 "hours_per_week": task.hours_per_week,
                 "complexity": task.criticality or "—",
-                "ai_assistance": task.ai_usage,
+                "ai_assistance": task.ai_usage or "—",
+                "category": cat["key"],
+                "category_label": cat["label"].replace(" IT", ""),
+                "category_color": cat["color"],
+                "badge_bg": cat["badge_bg"],
+                "badge_fg": cat["badge_fg"],
+                "badge_width": cat["badge_width"],
+                "bar_width": width,
             }
-            for task in report.daily_work.tasks
-        ],
+        )
+
+    daily_work = {
+        "total_hours_per_week": report.daily_work.total_hours,
+        "task_count": len(daily_tasks),
+        "tasks": daily_tasks,
+        "summary": report.daily_work.summary,
     }
 
-    learning_roadmap = [
-        {
-            "horizon": phase.period,
-            "title": phase.period,
-            "items": [item.title for item in phase.items],
-        }
-        for phase in report.upskill_roadmap
-    ]
+    learning_roadmap = []
+    for idx, phase in enumerate(report.upskill_roadmap):
+        labels = _phase_label(idx, phase.period)
+        learning_roadmap.append(
+            {
+                "horizon": phase.period,
+                "phase_no": labels["phase_no"],
+                "title": labels["title"],
+                "items": [item.title for item in phase.items],
+            }
+        )
 
     action_plan = {
         "start": [item.text for item in report.action_plan.start_doing],
@@ -159,7 +293,14 @@ def build_pdf_export_context(
         "learn": [item.text for item in report.action_plan.learn_next],
     }
 
-    ai_toolkit = [tool.model_dump(mode="json") for tool in report.ai_toolkit]
+    ai_toolkit = []
+    for tool in report.ai_toolkit:
+        dumped = tool.model_dump(mode="json")
+        dumped["linked_task_titles"] = [
+            link.task_title for link in (tool.task_links or []) if link.task_title
+        ]
+        ai_toolkit.append(dumped)
+
     cost_roi = report.cost_roi.model_dump(mode="json")
     cost_roi["hours_automatable_per_week"] = _hours_automatable_per_week(report)
 
@@ -179,9 +320,13 @@ def build_pdf_export_context(
         "action_plan": action_plan,
         "ai_toolkit": ai_toolkit,
         "cost_roi": cost_roi,
-        "build_count": mix.get("BUILD", 0),
-        "blend_count": mix.get("BLEND", 0),
-        "bot_count": mix.get("BOT", 0),
+        "build_count": build_count,
+        "blend_count": blend_count,
+        "bot_count": bot_count,
+        "build_pct": build_pct,
+        "blend_pct": blend_pct,
+        "bot_pct": bot_pct,
+        "site_url": "www.careershift3b.com",
     }
 
 
@@ -271,18 +416,49 @@ def html_to_pdf(html: str) -> bytes:
     return buffer.getvalue()
 
 
+def _merge_cover_and_body(cover_pdf: bytes, body_pdf: bytes) -> bytes:
+    from pypdf import PdfReader, PdfWriter
+
+    writer = PdfWriter()
+    for page in PdfReader(BytesIO(cover_pdf)).pages:
+        writer.add_page(page)
+    for page in PdfReader(BytesIO(body_pdf)).pages:
+        writer.add_page(page)
+    out = BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
 def render_report_pdf(
     report: CareerIntelligenceReportResponse,
     *,
     recipient_name: str | None = None,
     job_title: str | None = None,
 ) -> bytes:
+    from app.services.report_cover import render_cover_pdf
+
+    context = build_pdf_export_context(
+        report,
+        recipient_name=recipient_name or "Professional",
+        job_title=job_title,
+    )
+    overview = context["overview"]
+    cover_pdf = render_cover_pdf(
+        recipient_name=context["recipient_name"],
+        role_line=overview.get("role_line") or "",
+        generated_date=context["generated_date"],
+        report_version=str(context["report_version"]),
+        experience_years=str(overview.get("experience_years") or "—"),
+        overall_score=int(overview.get("overall_score") or 0),
+        site_url=context.get("site_url") or "www.careershift3b.com",
+    )
     html = render_report_html(
         report,
         recipient_name=recipient_name,
         job_title=job_title,
     )
-    return html_to_pdf(html)
+    body_pdf = html_to_pdf(html)
+    return _merge_cover_and_body(cover_pdf, body_pdf)
 
 
 def _add_bullet_list(doc, items: list[str]) -> None:

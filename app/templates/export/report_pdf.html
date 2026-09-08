@@ -4,222 +4,801 @@
   <meta charset="UTF-8" />
   <title>Career Intelligence Report</title>
   <style>
-    @page { 
-      size: A4; 
-      margin: 3.5cm 1.5cm 2.5cm 1.5cm; 
-      @frame header {
+    @page {
+      size: A4;
+      margin: 2.4cm 1.4cm 1.9cm 1.4cm;
+      @frame header_frame {
         -pdf-frame-content: header_content;
-        top: 1cm;
-        margin-left: 1.5cm;
-        margin-right: 1.5cm;
-        height: 2cm;
+        top: 0.7cm;
+        margin-left: 1.4cm;
+        margin-right: 1.4cm;
+        height: 1.4cm;
       }
-      @frame footer {
+      @frame footer_frame {
         -pdf-frame-content: footer_content;
-        bottom: 0.8cm;
-        margin-left: 1.5cm;
-        margin-right: 1.5cm;
-        height: 1.5cm;
+        bottom: 0.55cm;
+        margin-left: 1.4cm;
+        margin-right: 1.4cm;
+        height: 1.1cm;
       }
     }
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1A2533; line-height: 1.4; }
-    h1 { font-size: 24pt; margin: 0 0 6pt; color: #0A121F; font-weight: bold; }
-    h2 { font-size: 16pt; margin: 18pt 0 8pt; color: #0A121F; border-bottom: 1.5px solid #0A121F; padding-bottom: 4pt; }
-    h3 { font-size: 12pt; margin: 12pt 0 6pt; color: #0A121F; font-weight: bold; }
-    
-    p { margin: 0 0 8pt 0; }
-    ul { margin: 0 0 8pt 0; padding-left: 16pt; }
-    li { margin-bottom: 3pt; }
-    
-    .meta { color: #64748B; font-size: 9.5pt; margin-bottom: 16pt; line-height: 1.4; }
-    .highlight { color: #D9A928; font-weight: bold; }
-    
-    .kpi-table { width: 100%; border-collapse: collapse; margin: 12pt 0; }
-    .kpi-table th { background: #F6F8FC; border: 1px solid #E4E7EC; padding: 10pt 6pt; text-align: center; font-size: 8pt; color: #667085; text-transform: uppercase; }
-    .kpi-table td { border: 1px solid #E4E7EC; padding: 12pt 6pt; text-align: center; font-size: 16pt; font-weight: bold; color: #101828; }
-    
-    .data-table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
-    .data-table th { border-bottom: 2px solid #E4E7EC; padding: 8pt 6pt; text-align: left; color: #667085; text-transform: uppercase; font-size: 8pt; font-weight: bold; vertical-align: top; }
-    .data-table td { padding: 8pt 6pt; text-align: left; font-size: 9.5pt; color: #101828; vertical-align: top; border: none; }
-    
-    .badge { padding: 2pt 6pt; font-size: 8pt; font-weight: bold; text-transform: uppercase; display: inline-block; }
-    .badge-build { color: #1455B8; border: 1px solid #1455B8; background: #F6F8FC; }
-    .badge-blend { color: #D9A928; border: 1px solid #D9A928; background: #FDFBF2; }
-    .badge-bot { color: #F79009; border: 1px solid #F79009; background: #FFF4E5; }
-    
-    .task-item { margin-bottom: 16pt; padding-bottom: 16pt; border-bottom: 1px solid #E4E7EC; page-break-inside: avoid; }
-    
-    #header_content { text-align: left; }
-    .logo-text { font-size: 18pt; font-weight: bold; color: #0A1F44; letter-spacing: 0.5px; }
-    .logo-accent { font-size: 18pt; font-weight: bold; color: #D9A928; letter-spacing: 0.5px; }
-    .header-subtitle { font-size: 9pt; text-transform: uppercase; margin-top: 4pt; padding-bottom: 6pt; border-bottom: 3px solid #D9A928; }
-    
-    #footer_content { text-align: left; color: #667085; font-size: 8.5pt; }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 9.5pt;
+      color: #0B1D3A;
+      line-height: 1.45;
+    }
+
+    p { margin: 0 0 7pt 0; }
+    ul { margin: 4pt 0 8pt 14pt; padding: 0; }
+    li { margin: 0 0 3pt 0; }
+
+    .cover-wrap {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      padding: 48pt 42pt 36pt 42pt;
+      min-height: 780pt;
+    }
+    .cover-brand { font-size: 18pt; font-weight: bold; letter-spacing: 0.3pt; }
+    .cover-brand-accent { color: #E8B923; }
+    .cover-tag {
+      margin-top: 5pt;
+      font-size: 8pt;
+      letter-spacing: 2.4pt;
+      text-transform: uppercase;
+      color: #D7DEE8;
+    }
+    .cover-kicker {
+      margin-top: 52pt;
+      font-size: 9pt;
+      font-weight: bold;
+      letter-spacing: 1.6pt;
+      text-transform: uppercase;
+      color: #E8B923;
+    }
+    .cover-title {
+      margin-top: 10pt;
+      font-size: 34pt;
+      font-weight: bold;
+      line-height: 1.12;
+      color: #FFFFFF;
+    }
+    .cover-rule {
+      margin-top: 12pt;
+      width: 54pt;
+      border-top: 3.5pt solid #E8B923;
+    }
+    .cover-prepared {
+      margin-top: 34pt;
+      font-size: 8pt;
+      letter-spacing: 1.5pt;
+      text-transform: uppercase;
+      color: #9AA8BC;
+    }
+    .cover-name {
+      margin-top: 6pt;
+      font-size: 16pt;
+      font-weight: bold;
+      color: #FFFFFF;
+    }
+    .cover-role {
+      margin-top: 4pt;
+      font-size: 9.5pt;
+      color: #B7C2D1;
+    }
+    .cover-meta-label {
+      font-size: 7.5pt;
+      letter-spacing: 1.2pt;
+      text-transform: uppercase;
+      color: #8A9BB0;
+    }
+    .cover-meta-value {
+      margin-top: 3pt;
+      font-size: 10pt;
+      font-weight: bold;
+      color: #FFFFFF;
+    }
+    .score-ring {
+      width: 128pt;
+      height: 128pt;
+      border: 9pt solid #E8B923;
+      background-color: #112844;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .score-number {
+      font-size: 42pt;
+      font-weight: bold;
+      color: #FFFFFF;
+      line-height: 1;
+    }
+    .score-caption {
+      margin-top: 4pt;
+      font-size: 7pt;
+      letter-spacing: 1pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      font-weight: bold;
+    }
+    .cover-footer {
+      margin-top: 48pt;
+      font-size: 7.5pt;
+      color: #8A9BB0;
+    }
+    .cover-footer-link { color: #E8B923; font-weight: bold; }
+
+    .hdr-logo { font-size: 11pt; font-weight: bold; color: #0B1D3A; }
+    .hdr-logo-accent { color: #E8B923; }
+    .hdr-sub { font-size: 8pt; color: #8A9BB0; text-align: right; }
+
+    .section-no {
+      font-size: 9pt;
+      font-weight: bold;
+      color: #E8B923;
+      letter-spacing: 0.5pt;
+    }
+    .section-title {
+      margin: 2pt 0 0 0;
+      font-size: 18pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      line-height: 1.15;
+    }
+    .section-rule {
+      margin-top: 5pt;
+      width: 48pt;
+      border-top: 2.5pt solid #E8B923;
+    }
+    .section-desc {
+      margin-top: 8pt;
+      font-size: 9pt;
+      color: #5B6B82;
+      line-height: 1.45;
+    }
+
+    .navy-box {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      padding: 12pt 14pt;
+      margin: 12pt 0 10pt 0;
+    }
+    .navy-label {
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 1.3pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin-bottom: 6pt;
+    }
+    .navy-text {
+      font-size: 9.5pt;
+      color: #FFFFFF;
+      line-height: 1.5;
+    }
+    .navy-title {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #FFFFFF;
+      margin-bottom: 5pt;
+    }
+    .navy-title-accent { color: #E8B923; }
+
+    .kpi-wrap {
+      margin: 4pt 0 12pt 0;
+      border-top: 2.5pt solid #E8B923;
+      padding-top: 10pt;
+    }
+    .kpi-value {
+      font-size: 15pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      line-height: 1.1;
+    }
+    .kpi-label {
+      margin-top: 2pt;
+      font-size: 6.5pt;
+      letter-spacing: 0.8pt;
+      text-transform: uppercase;
+      color: #7A8AA0;
+    }
+
+    .subhead {
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 1.2pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin: 0 0 7pt 0;
+    }
+    .muted { color: #5B6B82; font-size: 8.5pt; line-height: 1.45; }
+    .body-navy { color: #0B1D3A; font-size: 9pt; line-height: 1.5; }
+
+    .mix-seg { height: 10pt; }
+    .mix-legend { font-size: 8pt; color: #0B1D3A; margin-top: 6pt; }
+    .mix-dot { font-size: 9pt; }
+
+    .dim-name { font-size: 9pt; color: #0B1D3A; font-weight: bold; }
+    .dim-score { font-size: 8.5pt; color: #5B6B82; text-align: right; }
+    .bar-track { background-color: #E8EDF4; height: 8pt; }
+    .bar-fill { height: 8pt; }
+
+    .soft-box {
+      background-color: #F3F6FA;
+      padding: 10pt 12pt;
+      margin-top: 10pt;
+    }
+    .soft-label {
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 1.1pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin-bottom: 5pt;
+    }
+
+    .task-card {
+      margin: 0 0 10pt 0;
+    }
+    .task-title { font-size: 10.5pt; font-weight: bold; color: #0B1D3A; }
+    .task-meta { font-size: 8pt; color: #7A8AA0; margin: 2pt 0 5pt 0; }
+    .task-insight { font-size: 9.5pt; font-weight: bold; color: #0B1D3A; margin: 0 0 4pt 0; }
+    .task-body { font-size: 8.8pt; color: #5B6B82; line-height: 1.45; margin: 0 0 5pt 0; }
+    .task-actions-label {
+      font-size: 7pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin: 2pt 0 3pt 0;
+    }
+    .task-tools { font-size: 8pt; color: #5B6B82; margin-top: 3pt; }
+    .badge-text {
+      font-size: 7pt;
+      font-weight: bold;
+      letter-spacing: 0.3pt;
+      line-height: 7pt;
+      white-space: nowrap;
+    }
+
+    .comp-head {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 0.8pt;
+      text-transform: uppercase;
+      padding: 6pt 8pt;
+    }
+    .comp-row-a { background-color: #FFFFFF; }
+    .comp-row-b { background-color: #FFF9EC; }
+    .comp-name { font-size: 8.5pt; color: #1F2A3D; padding: 5pt 8pt; }
+    .comp-level {
+      font-size: 8.5pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      text-align: right;
+      padding: 5pt 8pt;
+    }
+    .comp-imp { font-size: 8pt; color: #3B4A72; padding: 5pt 8pt; }
+    .legend { font-size: 8pt; color: #5B6B82; margin: 6pt 0 10pt 0; }
+
+    .dw-head {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      font-size: 7pt;
+      font-weight: bold;
+      letter-spacing: 0.7pt;
+      text-transform: uppercase;
+      padding: 6pt 7pt;
+    }
+    .dw-cell { font-size: 8pt; color: #1F2A3D; padding: 5pt 7pt; vertical-align: middle; }
+    .dw-row-a { background-color: #FFFFFF; }
+    .dw-row-b { background-color: #F7F9FC; }
+    .hour-track { background-color: #E8EDF4; height: 6pt; }
+    .hour-fill { height: 6pt; background-color: #E8B923; }
+
+    .phase-card {
+      background-color: #F7F9FC;
+      border-top: 3pt solid #E8B923;
+      padding: 9pt 10pt;
+      vertical-align: top;
+    }
+    .phase-no {
+      font-size: 7pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+      color: #E8B923;
+    }
+    .phase-title {
+      margin-top: 2pt;
+      font-size: 11pt;
+      font-weight: bold;
+      color: #0B1D3A;
+    }
+    .phase-item { font-size: 8pt; color: #3B4A72; margin: 0 0 5pt 0; line-height: 1.4; }
+
+    .action-box {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      padding: 12pt 14pt;
+      margin-top: 12pt;
+    }
+    .action-label {
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 1.2pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin-bottom: 6pt;
+    }
+    .action-row-label {
+      font-size: 8pt;
+      font-weight: bold;
+      color: #E8B923;
+      width: 18%;
+      vertical-align: top;
+      padding-top: 2pt;
+    }
+    .action-row-text {
+      font-size: 8.5pt;
+      color: #FFFFFF;
+      line-height: 1.4;
+      vertical-align: top;
+    }
+
+    .tool-head {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      font-size: 7pt;
+      font-weight: bold;
+      letter-spacing: 0.8pt;
+      text-transform: uppercase;
+      padding: 6pt 7pt;
+    }
+    .tool-row-a { background-color: #FFFFFF; }
+    .tool-row-b { background-color: #F7F9FC; }
+    .tool-num { font-size: 10pt; font-weight: bold; color: #E8B923; }
+    .tool-name { font-size: 9pt; font-weight: bold; color: #0B1D3A; }
+    .tool-cat { font-size: 7.5pt; color: #7A8AA0; }
+    .tool-priority {
+      font-size: 7.5pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      text-transform: uppercase;
+    }
+    .tool-why { font-size: 8pt; color: #3B4A72; line-height: 1.4; }
+    .tool-links { font-size: 7.5pt; color: #7A8AA0; margin-top: 3pt; }
+
+    .next-box {
+      background-color: #FFF8E7;
+      border-left: 3.5pt solid #E8B923;
+      padding: 10pt 12pt;
+      margin-top: 12pt;
+    }
+    .next-title {
+      font-size: 8pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+      text-transform: uppercase;
+      color: #0B1D3A;
+      margin-bottom: 4pt;
+    }
+    .page-break { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
   </style>
 </head>
 <body>
+
   <div id="header_content">
-    <div><span class="logo-text">Career</span><span class="logo-accent">Shift3B</span></div>
-    <div class="header-subtitle">AI Career Intelligence</div>
-  </div>
-  
-  <div id="footer_content">
-    <table style="width: 100%; border-top: 1.5px solid #D9A928; border-bottom: none; border-left: none; border-right: none; padding: 0; padding-top: 8pt;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom: 0.8pt solid #D7DEE8; padding-bottom: 5pt;">
       <tr>
-        <td style="width: 40%; text-align: left; font-weight: bold; color: #667085; white-space: nowrap;">&copy; CareerShift &middot; Confidential &middot; {{ generated_date }}</td>
-        <td style="width: 30%; text-align: center; color: #D9A928; font-weight: bold;">www.careershift3b.com</td>
-        <td style="width: 30%; text-align: right; font-weight: bold; color: #667085;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+        <td width="38%" class="hdr-logo">Career<span class="hdr-logo-accent">Shift3B</span></td>
+        <td width="62%" class="hdr-sub">Career Intelligence Report · {{ recipient_name }}</td>
       </tr>
     </table>
   </div>
 
-  <h1 style="margin-top: 12pt;">Career Intelligence Report</h1>
-  <div class="meta" style="border-bottom: 1px solid #E4E7EC; padding-bottom: 12pt; margin-bottom: 16pt;">
-    <strong>Prepared for:</strong> <span style="color: #0A1F44; font-weight: bold;">{{ recipient_name }}</span><br/>
-    {{ overview.job_title }}, {{ overview.industry }}<br/>
-    <strong>Generated:</strong> {{ generated_date }}, Version {{ report_version }}
+  <div id="footer_content">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top: 0.8pt solid #D7DEE8; padding-top: 5pt;">
+      <tr>
+        <td width="42%" style="font-size: 7.5pt; color: #8A9BB0;">© CareerShift · Confidential · {{ generated_date }}</td>
+        <td width="28%" align="center" style="font-size: 7.5pt; color: #E8B923; font-weight: bold;">{{ site_url }}</td>
+        <td width="30%" align="right" style="font-size: 7.5pt; color: #8A9BB0;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+      </tr>
+    </table>
   </div>
 
-  <h2>Executive Overview</h2>
+  <!-- ========== 01 EXECUTIVE OVERVIEW ========== -->
+  <div class="section-no">01</div>
+  <div class="section-title">Executive Overview</div>
+  <div class="section-rule"></div>
+
   {% if strategic_note %}
-  <p><strong>Strategic Note:</strong> {{ strategic_note }}</p>
-  {% endif %}
-  {% if career_identity.executive_summary %}
-  <p>{{ career_identity.executive_summary }}</p>
-  {% endif %}
-
-  <table class="kpi-table">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 12pt 0 10pt 0;">
     <tr>
-      <th>Overall Score</th>
-      <th>Tasks Analyzed</th>
-      <th>Competencies</th>
-      <th>Automation</th>
-      <th>Career Risk</th>
-      <th>AI Tools</th>
-    </tr>
-    <tr>
-      <td>{{ overview.overall_score }}</td>
-      <td>{{ overview.tasks_analyzed }}</td>
-      <td>{{ overview.competency_count }}</td>
-      <td>{{ overview.automation_pct }}%</td>
-      <td>{{ overview.career_risk }}</td>
-      <td>{{ overview.ai_tools_count }}</td>
-    </tr>
-  </table>
-
-  <p>
-    <strong>Experience:</strong> {{ overview.experience_years }} years &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-    <strong>3B Mix:</strong> <span class="highlight">{{ build_count }} BUILD</span> &middot; <span class="highlight">{{ blend_count }} BLEND</span> &middot; <span class="highlight">{{ bot_count }} BOT</span>
-  </p>
-  {% if overview.profession_summary %}
-  <p><strong>Profession Summary:</strong> {{ overview.profession_summary }}</p>
-  {% endif %}
-
-  <h2>AI Readiness Dimensions</h2>
-  <table class="data-table">
-    <tr><th>Dimension</th><th>Score</th></tr>
-    {% for dim in ai_readiness.dimensions %}
-    <tr><td><strong>{{ dim.name }}</strong></td><td>{{ dim.score }}/100</td></tr>
-    {% endfor %}
-  </table>
-
-  <table style="width: 100%; border: none; margin: 12pt 0;">
-    <tr>
-      <td style="width: 50%; vertical-align: top; border: none; padding-right: 12pt;">
-        {% if ai_readiness.strengths %}
-        <h3 style="margin-top: 0;">Strengths</h3>
-        <ul>{% for s in ai_readiness.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
-        {% endif %}
+      <td bgcolor="#0B1D3A" style="padding: 12pt 14pt;">
+        <div style="font-size: 7.5pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; color: #E8B923; margin-bottom: 6pt;">Strategic Note</div>
+        <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ strategic_note }}</div>
       </td>
-      <td style="width: 50%; vertical-align: top; border: none; padding-left: 12pt;">
-        {% if ai_readiness.improvement_areas %}
-        <h3 style="margin-top: 0;">Improvement Areas</h3>
-        <ul>{% for s in ai_readiness.improvement_areas %}<li>{{ s }}</li>{% endfor %}</ul>
-        {% endif %}
+    </tr>
+  </table>
+  {% endif %}
+
+  <table class="kpi-wrap" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td width="16%" valign="top">
+        <div class="kpi-value">{{ overview.overall_score }}</div>
+        <div class="kpi-label">Overall Score</div>
+      </td>
+      <td width="16%" valign="top">
+        <div class="kpi-value">{{ overview.tasks_analyzed }}</div>
+        <div class="kpi-label">Tasks Analyzed</div>
+      </td>
+      <td width="16%" valign="top">
+        <div class="kpi-value">{{ overview.competency_count }}</div>
+        <div class="kpi-label">Competencies</div>
+      </td>
+      <td width="16%" valign="top">
+        <div class="kpi-value">{% if overview.automation_pct != '—' %}{{ overview.automation_pct }}%{% else %}—{% endif %}</div>
+        <div class="kpi-label">Automation</div>
+      </td>
+      <td width="20%" valign="top">
+        <div class="kpi-value" style="font-size: 12pt;">{{ overview.career_risk }}</div>
+        <div class="kpi-label">Career Risk</div>
+      </td>
+      <td width="16%" valign="top">
+        <div class="kpi-value">{{ overview.ai_tools_count }}</div>
+        <div class="kpi-label">AI Tools</div>
       </td>
     </tr>
   </table>
 
-  <h2>Career Identity</h2>
-  <p><strong>{{ career_identity.identity_title }}</strong> ({{ career_identity.confidence_pct }}% alignment)</p>
-  {% if career_identity.growth_strategy %}
-  <p>{{ career_identity.growth_strategy }}</p>
-  {% endif %}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 6pt;">
+    <tr>
+      <td width="48%" valign="top" style="padding-right: 12pt; border-right: 0.7pt solid #D7DEE8;">
+        <div class="subhead">Your 3B Task Mix</div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            {% if build_pct > 0 %}<td class="mix-seg" width="{{ build_pct }}%" bgcolor="#7C3AED"></td>{% endif %}
+            {% if blend_pct > 0 %}<td class="mix-seg" width="{{ blend_pct }}%" bgcolor="#E8B923"></td>{% endif %}
+            {% if bot_pct > 0 %}<td class="mix-seg" width="{{ bot_pct }}%" bgcolor="#14B8A6"></td>{% endif %}
+          </tr>
+        </table>
+        <div class="mix-legend">
+          <span class="mix-dot" style="color:#4F46E5;">●</span> {{ build_count }} BUILD IT &nbsp;
+          <span class="mix-dot" style="color:#E8B923;">●</span> {{ blend_count }} BLEND IT &nbsp;
+          <span class="mix-dot" style="color:#0D9488;">●</span> {{ bot_count }} BOT IT
+        </div>
+        <div class="muted" style="margin-top: 5pt;">BUILD = human judgment leads · BLEND = you + AI · BOT = automate</div>
+      </td>
+      <td width="52%" valign="top" style="padding-left: 12pt;">
+        <div class="subhead">Profession Summary</div>
+        {% if career_identity.executive_summary %}
+        <div class="body-navy">{{ career_identity.executive_summary }}</div>
+        {% endif %}
+        {% if overview.profession_summary %}
+        <div class="muted" style="margin-top: 6pt;">{{ overview.profession_summary }}</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
 
-  <h2>3B Task Analysis</h2>
-  {% for task in task_routing %}
-  <div class="task-item">
-    <div style="font-size: 11pt; font-weight: bold; color: #0A121F; margin-bottom: 4pt;">
-      {{ task.task_title }}
-      {% if task.category == 'BUILD' %}<span class="badge badge-build">BUILD</span>
-      {% elif task.category == 'BOT' %}<span class="badge badge-bot">BOT</span>
-      {% else %}<span class="badge badge-blend">BLEND</span>{% endif %}
-    </div>
-    {% if task.rationale %}<p><strong>Rationale:</strong> {{ task.rationale }}</p>{% endif %}
-    {% if task.reason %}<p><em>{{ task.reason }}</em></p>{% endif %}
-    {% if task.next_actions %}
-    <p style="margin-bottom: 2pt;"><strong>Actions:</strong></p>
-    <ul>{% for action in task.next_actions %}<li>{{ action }}</li>{% endfor %}</ul>
-    {% endif %}
-    {% if task.recommended_tools %}
-    <p><strong>Tools:</strong> {{ task.recommended_tools | join(', ') }}</p>
-    {% endif %}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14pt;">
+    <tr>
+      <td bgcolor="#0B1D3A" style="padding: 12pt 14pt;">
+        <div style="font-size: 7.5pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; color: #E8B923; margin-bottom: 6pt;">Career Identity</div>
+        <div style="font-size: 11pt; font-weight: bold; color: #FFFFFF; margin-bottom: 5pt;">
+          {{ career_identity.identity_title }}
+          <span style="color: #E8B923;"> · {{ career_identity.confidence_pct }}% alignment</span>
+        </div>
+        {% if career_identity.growth_strategy %}
+        <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ career_identity.growth_strategy }}</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <!-- ========== 02 AI READINESS ========== -->
+  <div class="page-break"></div>
+  <div class="section-no">02</div>
+  <div class="section-title">AI Readiness Profile</div>
+  <div class="section-rule"></div>
+  <div class="section-desc">
+    Six dimensions scored 0–100. Scores below 40 are shown in gold as your highest-leverage development areas.
   </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 10pt;">
+    {% for dim in ai_readiness.dimensions %}
+    <tr>
+      <td width="24%" class="dim-name" style="padding: 5pt 0;">{{ dim.name }}</td>
+      <td width="58%" style="padding: 5pt 8pt 5pt 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            {% if dim.width <= 0 %}
+            <td height="8" bgcolor="#E8EDF4">&nbsp;</td>
+            {% elif dim.width >= 100 %}
+            <td height="8" bgcolor="{{ dim.bar_color }}">&nbsp;</td>
+            {% else %}
+            <td height="8" width="{{ dim.width }}%" bgcolor="{{ dim.bar_color }}">&nbsp;</td>
+            <td height="8" width="{{ 100 - dim.width }}%" bgcolor="#E8EDF4">&nbsp;</td>
+            {% endif %}
+          </tr>
+        </table>
+      </td>
+      <td width="18%" class="dim-score" style="padding: 5pt 0;">{{ dim.score }}/100</td>
+    </tr>
+    {% else %}
+    <tr><td class="muted">No readiness dimensions available.</td></tr>
+    {% endfor %}
+  </table>
+
+  <table class="soft-box" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td width="48%" valign="top" style="padding-right: 10pt;">
+        <div class="soft-label">Strengths</div>
+        {% for s in ai_readiness.strengths %}
+        <div style="font-size: 9pt; color: #0B1D3A; margin-bottom: 3pt;"><span style="color:#0B1D3A; font-weight:bold;">✓</span> {{ s }}</div>
+        {% else %}
+        <div class="muted">No strengths listed.</div>
+        {% endfor %}
+      </td>
+      <td width="52%" valign="top" style="padding-left: 10pt; border-left: 0.7pt solid #D7DEE8;">
+        <div class="soft-label">Improvement Areas</div>
+        {% for s in ai_readiness.improvement_areas %}
+        <div style="font-size: 9pt; color: #0B1D3A; margin-bottom: 3pt;"><span style="color:#E8B923; font-weight:bold;">→</span> {{ s }}</div>
+        {% else %}
+        <div class="muted">No improvement areas listed.</div>
+        {% endfor %}
+      </td>
+    </tr>
+  </table>
+
+  <!-- ========== 03 3B TASK ANALYSIS ========== -->
+  <div style="margin-top: 18pt;">
+    <div class="section-no">03</div>
+    <div class="section-title">3B Task Analysis</div>
+    <div class="section-rule"></div>
+    <div class="section-desc">
+      Each task you shared is classified as BUILD (human judgment leads), BLEND (you + AI together) or BOT (automate). The left rule colour shows the classification.
+    </div>
+  </div>
+
+  {% for task in task_routing %}
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10pt 0;">
+    <tr>
+      <td width="3" bgcolor="{{ task.category_color }}" style="padding: 0; font-size: 1pt; line-height: 1pt;">&nbsp;</td>
+      <td valign="top" style="padding: 0 0 0 8pt;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td valign="middle" style="font-size: 10.5pt; font-weight: bold; color: #0B1D3A; padding: 0 8pt 0 0;">
+              {{ task.task_title }}
+            </td>
+            <td width="{{ task.badge_width }}" height="11" bgcolor="{{ task.badge_bg }}" align="center" valign="middle" style="font-size: 5.5pt; font-weight: bold; letter-spacing: 0.2pt; color: {{ task.badge_fg }}; line-height: 6pt; padding: 0;">
+              {{ task.category_label }}
+            </td>
+          </tr>
+        </table>
+        {% if task.meta_line %}<div class="task-meta">{{ task.meta_line }}</div>{% endif %}
+        {% if task.rationale %}<div class="task-insight">{{ task.rationale }}</div>{% endif %}
+        {% if task.reason %}<div class="task-body">{{ task.reason }}</div>{% endif %}
+        {% if task.next_actions %}
+        <div class="task-actions-label">Recommended Actions</div>
+        {% for action in task.next_actions %}
+        <div class="muted" style="margin: 0 0 3pt 0;">• {{ action }}</div>
+        {% endfor %}
+        {% endif %}
+        {% if task.recommended_tools %}
+        <div class="task-tools"><strong>Suggested tools:</strong> {{ task.recommended_tools | join(' · ') }}</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+  {% else %}
+  <p class="muted">No task analysis available yet.</p>
   {% endfor %}
 
-  <h2>Competencies</h2>
+  <!-- ========== 04 COMPETENCY MAP ========== -->
+  <div class="page-break"></div>
+  <div class="section-no">04</div>
+  <div class="section-title">Competency Map</div>
+  <div class="section-rule"></div>
+  <div class="section-desc">
+    The competencies attached to your role, their importance, and the level CareerShift expects you to reach as AI reshapes the work.
+  </div>
+  <div class="legend">
+    <span style="color:#0B1D3A;">●</span> Critical &nbsp;&nbsp;
+    <span style="color:#3B82F6;">●</span> High &nbsp;&nbsp;
+    <span style="color:#14B8A6;">●</span> Medium
+  </div>
+
   {% for group in competencies %}
-  <h3>{{ group.category }}</h3>
-  <ul>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" class="avoid-break" style="margin-bottom: 12pt;">
+    <tr>
+      <td class="comp-head" width="52%">{{ group.category }}</td>
+      <td class="comp-head" width="24%">Importance</td>
+      <td class="comp-head" width="24%" align="right">Expected Level</td>
+    </tr>
     {% for item in group['items'] %}
-    <li><strong>{{ item.name }}</strong>{% if item.importance %} &mdash; <span class="highlight">Importance:</span> {{ item.importance }}{% endif %}{% if item.expected_level %} &mdash; <span class="highlight">Expected:</span> {{ item.expected_level }}{% endif %}</li>
+    <tr class="{% if loop.index is odd %}comp-row-a{% else %}comp-row-b{% endif %}">
+      <td class="comp-name">{{ item.name }}</td>
+      <td class="comp-imp">
+        <span style="color: {{ item.importance_color }};">●</span> {{ item.importance }}
+      </td>
+      <td class="comp-level">{{ item.expected_level }}</td>
+    </tr>
     {% endfor %}
-  </ul>
+  </table>
+  {% else %}
+  <p class="muted">No competencies available.</p>
   {% endfor %}
 
-  <h2>Daily Work Profile</h2>
-  <p>Total hours/week analyzed: <strong>{{ daily_work.total_hours_per_week }}</strong></p>
-  <table class="data-table">
-    <tr><th>Task</th><th>Hours/week</th><th>Complexity</th><th>AI Usage</th></tr>
+  <!-- ========== 05 DAILY WORK ========== -->
+  <div class="page-break"></div>
+  <div class="section-no">05</div>
+  <div class="section-title">Daily Work Profile</div>
+  <div class="section-rule"></div>
+  <div class="section-desc">
+    {{ daily_work.total_hours_per_week|round(0)|int }} hours per week analysed across {{ daily_work.task_count }} tasks. Bars show each task's share of your week.
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 10pt;">
+    <tr>
+      <td class="dw-head" width="34%">Task</td>
+      <td class="dw-head" width="18%">Hours / Week</td>
+      <td class="dw-head" width="18%">Complexity</td>
+      <td class="dw-head" width="18%">AI Usage</td>
+      <td class="dw-head" width="12%">3B</td>
+    </tr>
     {% for t in daily_work.tasks %}
-    <tr>
-      <td><strong>{{ t.title }}</strong></td>
-      <td>{{ t.hours_per_week }}</td>
-      <td>{{ t.complexity }}</td>
-      <td>{{ t.ai_assistance or '—' }}</td>
+    <tr class="{% if loop.index is odd %}dw-row-a{% else %}dw-row-b{% endif %}">
+      <td class="dw-cell"><strong>{{ t.title }}</strong></td>
+      <td class="dw-cell">
+        <div style="margin-bottom: 2pt;">{{ t.hours_per_week|round(1) }}</div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            {% if t.bar_width <= 0 %}
+            <td height="6" bgcolor="#E8EDF4">&nbsp;</td>
+            {% elif t.bar_width >= 100 %}
+            <td height="6" bgcolor="#E8B923">&nbsp;</td>
+            {% else %}
+            <td height="6" width="{{ t.bar_width }}%" bgcolor="#E8B923">&nbsp;</td>
+            <td height="6" width="{{ 100 - t.bar_width }}%" bgcolor="#E8EDF4">&nbsp;</td>
+            {% endif %}
+          </tr>
+        </table>
+      </td>
+      <td class="dw-cell">{{ t.complexity }}</td>
+      <td class="dw-cell">{{ t.ai_assistance }}</td>
+      <td class="dw-cell" width="12%" valign="middle" align="left">
+        <table cellpadding="0" cellspacing="0" border="0" width="{{ t.badge_width }}">
+          <tr>
+            <td width="{{ t.badge_width }}" height="11" bgcolor="{{ t.badge_bg }}" align="center" valign="middle" style="font-size: 5.5pt; font-weight: bold; color: {{ t.badge_fg }}; line-height: 6pt;">
+              {{ t.category_label }}
+            </td>
+          </tr>
+        </table>
+      </td>
     </tr>
+    {% else %}
+    <tr><td class="dw-cell" colspan="5">No daily work profile available.</td></tr>
     {% endfor %}
   </table>
 
-  <h2>Learning Roadmap</h2>
-  {% for phase in learning_roadmap %}
-  <h3>{{ phase.horizon }} {{ phase.title }}</h3>
-  <ul>{% for item in phase['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
-  {% endfor %}
+  <!-- ========== 06 LEARNING ROADMAP ========== -->
+  <div class="page-break"></div>
+  <div class="section-no">06</div>
+  <div class="section-title">Learning Roadmap</div>
+  <div class="section-rule"></div>
+  <div class="section-desc">
+    A phased sequence: quick wins in 30 days, workflow shifts in 90, and capability depth over 12 months.
+  </div>
 
-  <h2>Action Plan</h2>
-  {% if action_plan.start %}
-  <h3>Start</h3><ul>{% for i in action_plan.start %}<li>{{ i }}</li>{% endfor %}</ul>
-  {% endif %}
-  {% if action_plan.automate %}
-  <h3>Automate</h3><ul>{% for i in action_plan.automate %}<li>{{ i }}</li>{% endfor %}</ul>
-  {% endif %}
-  {% if action_plan.learn %}
-  <h3>Learn</h3><ul>{% for i in action_plan.learn %}<li>{{ i }}</li>{% endfor %}</ul>
-  {% endif %}
+  <table width="100%" cellpadding="0" cellspacing="6" border="0" style="margin-top: 10pt;">
+    <tr>
+      {% for phase in learning_roadmap[:3] %}
+      <td class="phase-card" width="33%" bgcolor="#F7F9FC">
+        <div class="phase-no">{{ phase.phase_no }}</div>
+        <div class="phase-title">{{ phase.title }}</div>
+        <div style="margin-top: 8pt;">
+          {% for item in phase['items'] %}
+          <div class="phase-item">• {{ item }}</div>
+          {% else %}
+          <div class="phase-item">No items in this phase.</div>
+          {% endfor %}
+        </div>
+      </td>
+      {% else %}
+      <td class="muted">No learning roadmap available.</td>
+      {% endfor %}
+    </tr>
+  </table>
 
-  <h2>Recommended AI Toolkit</h2>
-  <table class="data-table">
-    <tr><th>Priority</th><th>Recommended AI Toolkit</th><th>Tool Category</th><th>Why</th></tr>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12pt;">
+    <tr>
+      <td bgcolor="#0B1D3A" style="padding: 12pt 14pt;">
+        <div style="font-size: 7.5pt; font-weight: bold; letter-spacing: 1.2pt; text-transform: uppercase; color: #E8B923; margin-bottom: 8pt;">Your Action Plan · Start · Automate · Learn</div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          {% if action_plan.start %}
+          <tr>
+            <td width="18%" valign="top" style="font-size: 8pt; font-weight: bold; color: #E8B923; padding-bottom: 6pt;">START</td>
+            <td width="82%" valign="top" style="font-size: 8.5pt; color: #FFFFFF; line-height: 1.4; padding-bottom: 6pt;">
+              {% for i in action_plan.start %}• {{ i }}{% if not loop.last %}<br/>{% endif %}{% endfor %}
+            </td>
+          </tr>
+          {% endif %}
+          {% if action_plan.automate %}
+          <tr>
+            <td width="18%" valign="top" style="font-size: 8pt; font-weight: bold; color: #E8B923; padding-bottom: 6pt;">AUTOMATE</td>
+            <td width="82%" valign="top" style="font-size: 8.5pt; color: #FFFFFF; line-height: 1.4; padding-bottom: 6pt;">
+              {% for i in action_plan.automate %}• {{ i }}{% if not loop.last %}<br/>{% endif %}{% endfor %}
+            </td>
+          </tr>
+          {% endif %}
+          {% if action_plan.learn %}
+          <tr>
+            <td width="18%" valign="top" style="font-size: 8pt; font-weight: bold; color: #E8B923;">LEARN</td>
+            <td width="82%" valign="top" style="font-size: 8.5pt; color: #FFFFFF; line-height: 1.4;">
+              {% for i in action_plan.learn %}• {{ i }}{% if not loop.last %}<br/>{% endif %}{% endfor %}
+            </td>
+          </tr>
+          {% endif %}
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- ========== 07 AI TOOLKIT ========== -->
+  <div class="page-break"></div>
+  <div class="section-no">07</div>
+  <div class="section-title">Recommended AI Toolkit</div>
+  <div class="section-rule"></div>
+  <div class="section-desc">
+    Tools ranked by how many of your tasks they touch and how much automatable (BOT) work they remove. Start at the top.
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 10pt;">
+    <tr>
+      <td class="tool-head" width="8%">#</td>
+      <td class="tool-head" width="24%">Tool</td>
+      <td class="tool-head" width="14%">Priority</td>
+      <td class="tool-head" width="54%">Why It Matters For You</td>
+    </tr>
     {% for tool in ai_toolkit %}
-    <tr>
-      <td style="width: 15%;">{% if tool.priority_rank %}<strong>#{{ tool.priority_rank }}</strong><br/>{{ tool.priority_label or '' }}{% else %}—{% endif %}</td>
-      <td style="width: 25%;"><strong>{{ tool.name }}</strong></td>
-      <td style="width: 20%;">{{ tool.category }}</td>
-      <td style="width: 40%;">{% if tool.priority_reason %}<strong>Priority:</strong> {{ tool.priority_reason }}<br/>{% endif %}<strong>Why:</strong> {{ tool.use_case }}</td>
+    <tr class="{% if loop.index is odd %}tool-row-a{% else %}tool-row-b{% endif %} avoid-break">
+      <td style="padding: 8pt 7pt; vertical-align: top;">
+        <div class="tool-num">{% if tool.priority_rank %}{% if tool.priority_rank < 10 %}0{% endif %}{{ tool.priority_rank }}{% else %}{% if loop.index < 10 %}0{% endif %}{{ loop.index }}{% endif %}</div>
+      </td>
+      <td style="padding: 8pt 7pt; vertical-align: top;">
+        <div class="tool-name">{{ tool.name }}</div>
+        <div class="tool-cat">{{ tool.category }}</div>
+      </td>
+      <td style="padding: 8pt 7pt; vertical-align: top;">
+        <div class="tool-priority">{{ tool.priority_label or '—' }}</div>
+      </td>
+      <td style="padding: 8pt 7pt; vertical-align: top;">
+        <div class="tool-why">
+          {% if tool.priority_reason %}{{ tool.priority_reason }} {% endif %}{{ tool.use_case }}
+        </div>
+        {% if tool.linked_task_titles %}
+        <div class="tool-links"><strong>Linked tasks:</strong> {{ tool.linked_task_titles | join(' · ') }}</div>
+        {% endif %}
+      </td>
     </tr>
+    {% else %}
+    <tr><td class="muted" colspan="4" style="padding: 8pt;">No toolkit recommendations available.</td></tr>
     {% endfor %}
   </table>
+
+  <div class="next-box avoid-break">
+    <div class="next-title">What Happens Next</div>
+    <div class="body-navy">
+      Work the 30-day actions first, then re-run your CareerShift assessment to track how your readiness score and 3B mix move. Your report is versioned, so every re-run builds a record of your shift.
+    </div>
+    <div style="margin-top: 8pt; font-size: 8.5pt; color: #7A8AA0;">
+      {{ site_url }} · Bridge Your Career to the AI Future
+    </div>
+  </div>
 
 </body>
 </html>
