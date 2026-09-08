@@ -53,6 +53,8 @@ class StripePaymentService:
         params: dict = {
             "mode": "payment",
             "line_items": [{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
+            # Lets users enter Stripe promotion codes (e.g. LUNCH100) for 100% off
+            "allow_promotion_codes": True,
             "success_url": (
                 f"{self._frontend_url()}/payment/success"
                 "?session_id={CHECKOUT_SESSION_ID}"
