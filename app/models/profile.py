@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import String, Integer, Float, ForeignKey, JSON
+from sqlalchemy import String, Integer, Float, ForeignKey, JSON, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
@@ -34,6 +35,11 @@ class UserProfile(AuditMixin, Base):
     ai_frequency: Mapped[str] = mapped_column(String, nullable=False)
     ai_tools: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     ai_comfort_level: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Legal consent (Terms & Conditions + Privacy Policy)
+    terms_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    privacy_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    consent_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="profile")

@@ -16,13 +16,9 @@ class ProfileService:
         if existing_profile:
             raise HTTPException(status_code=400, detail="Profile already exists for this user.")
         
-        # We need to pass the user_id when creating the profile
         obj_in_data = obj_in.model_dump()
         obj_in_data["user_id"] = user_id
-        
-        # We can't directly use profile_repo.create with obj_in because obj_in doesn't have user_id, 
-        # so we'll construct the dict directly or use a private schema.
-        # But actually obj_in doesn't have user_id, so we modify the creation step.
+
         db_obj = UserProfile(**obj_in_data)
         db.add(db_obj)
         await db.commit()

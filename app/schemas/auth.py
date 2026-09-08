@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from typing import Optional
 from app.core.constants import PASSWORD_REGEX
 
@@ -28,6 +28,16 @@ class RegisterRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    terms_accepted: bool = Field(..., description="User accepted Terms & Conditions")
+    privacy_accepted: bool = Field(..., description="User accepted Privacy Policy")
+
+    @model_validator(mode="after")
+    def require_legal_consent(self):
+        if not self.terms_accepted or not self.privacy_accepted:
+            raise ValueError(
+                "You must accept the Terms & Conditions and Privacy Policy to create an account."
+            )
+        return self
 
 class LogoutRequest(BaseModel):
     refresh_token: Optional[str] = None

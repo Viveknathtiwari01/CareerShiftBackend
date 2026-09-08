@@ -48,6 +48,9 @@ class UserProfileUpdate(BaseModel):
 class UserProfileResponse(UserProfileBase):
     id: UUID4
     user_id: UUID4
+    terms_accepted: bool = False
+    privacy_accepted: bool = False
+    consent_accepted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     
@@ -87,4 +90,3 @@ class SuggestIdentityResponse(BaseModel):
     functional_domain: FieldSuggestion
     specialization: FieldSuggestion
     job_title: FieldSuggestion
-

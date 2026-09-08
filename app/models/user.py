@@ -32,6 +32,11 @@ class User(AuditMixin, Base):
     has_paid: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Legal consent (accepted at account creation)
+    terms_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    privacy_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    consent_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     # Relationships
     roles = relationship("Role", secondary="user_roles", back_populates="users", lazy="selectin")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")

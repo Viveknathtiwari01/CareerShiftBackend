@@ -70,6 +70,13 @@ class AuthService:
             
         hashed_pw = SecurityService.get_password_hash(req_data["password"])
         
+        terms_accepted = bool(req_data.get("terms_accepted"))
+        privacy_accepted = bool(req_data.get("privacy_accepted"))
+        if not terms_accepted or not privacy_accepted:
+            raise ValueError(
+                "You must accept the Terms & Conditions and Privacy Policy to create an account."
+            )
+
         create_data = {
             "email": req_data["email"],
             "username": req_data["username"],
@@ -77,7 +84,10 @@ class AuthService:
             "last_name": req_data.get("last_name"),
             "phone": req_data.get("phone"),
             "password_hash": hashed_pw,
-            "email_verified": True
+            "email_verified": True,
+            "terms_accepted": True,
+            "privacy_accepted": True,
+            "consent_accepted_at": datetime.now(timezone.utc),
         }
         
         from app.models.user import User
