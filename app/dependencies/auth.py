@@ -35,3 +35,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if user.status != "active":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return user
+
+
+async def require_paid_user(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.has_paid:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Payment required to access this resource",
+        )
+    return current_user

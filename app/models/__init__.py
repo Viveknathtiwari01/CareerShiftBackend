@@ -1,5 +1,6 @@
 from app.database.base import Base
 from app.models.user import User
+from app.models.payment import Payment
 from app.models.role import Role, Permission, UserRole, RolePermission
 from app.models.session import Session
 from app.models.device import Device

@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     from app.api.v1.assessment.analysis_routes import router as assessment_analysis_router
     from app.api.v1.assessment.readiness_routes import router as assessment_readiness_router
     from app.api.v1.assessment.report_routes import router as assessment_report_router
+    from app.api.v1.payments.routes import router as payments_router
     from app.middleware.exception_handler import add_exception_handlers
     
     app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
@@ -59,6 +60,11 @@ def create_app() -> FastAPI:
         assessment_report_router,
         prefix=f"{settings.API_V1_STR}/assessment",
         tags=["Career Intelligence Report"],
+    )
+    app.include_router(
+        payments_router,
+        prefix=f"{settings.API_V1_STR}/payments",
+        tags=["Payments"],
     )
 
     add_exception_handlers(app)

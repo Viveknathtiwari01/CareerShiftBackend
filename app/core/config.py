@@ -104,6 +104,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("APP_PUBLIC_URL", "FRONTEND_URL"),
     )
 
+    # Stripe (one-time Checkout)
+    STRIPE_SECRET_KEY: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
+    STRIPE_PRICE_ID: str | None = None
+
     # Production hardening (Phase 8)
     COMPETENCY_PIPELINE_TIMEOUT_SECONDS: int = 600
     PIPELINE_STALE_AFTER_SECONDS: int = 900

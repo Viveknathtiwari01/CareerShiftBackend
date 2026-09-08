@@ -26,6 +26,8 @@ class UserResponse(UserBase):
     status: str
     email_verified: bool
     mfa_enabled: bool
+    has_paid: bool = False
+    paid_at: Optional[datetime] = None
     roles: List[str] = []
     created_at: datetime
     updated_at: datetime

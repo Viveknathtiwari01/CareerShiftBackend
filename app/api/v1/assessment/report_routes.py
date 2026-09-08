@@ -6,7 +6,7 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_paid_user as get_current_user
 from app.dependencies.rate_limit import rate_limit_report_generate
 from app.models.user import User
 from app.schemas.career_intelligence_report import CareerIntelligenceReportResponse

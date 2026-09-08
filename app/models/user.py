@@ -28,8 +28,13 @@ class User(AuditMixin, Base):
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    stripe_customer_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True, index=True)
+    has_paid: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     # Relationships
     roles = relationship("Role", secondary="user_roles", back_populates="users", lazy="selectin")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     devices = relationship("Device", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
