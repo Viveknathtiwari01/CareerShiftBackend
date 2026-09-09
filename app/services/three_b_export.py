@@ -146,7 +146,24 @@ def html_to_pdf(html: str) -> bytes:
 
 
 def render_category_pdf(context: dict[str, Any]) -> bytes:
-    return html_to_pdf(render_category_html(context))
+    from app.services.report_cover import render_cover_pdf
+    from app.services.report_export import merge_cover_and_body
+
+    profile = context.get("profile", {})
+    recipient_name = profile.get("name") or "Professional"
+    experience_years = str(profile.get("experience_years") or "—")
+    category = context.get("category", "")
+
+    cover_pdf = render_cover_pdf(
+        recipient_name=recipient_name,
+        role_line=f"3B Analysis: {category}",
+        generated_date=context.get("generated_at", ""),
+        report_version="1.0",
+        experience_years=experience_years,
+        overall_score=None,
+    )
+    body_pdf = html_to_pdf(render_category_html(context))
+    return merge_cover_and_body(cover_pdf, body_pdf)
 
 
 def build_task_export_context(

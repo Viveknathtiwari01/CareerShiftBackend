@@ -5,341 +5,357 @@
   <title>CareerShift3B — {{ category }}</title>
   <style>
     @page {
-      size: A4 portrait;
-      margin: 2.6cm 1.5cm 2cm 1.5cm;
+      size: A4;
+      margin: 2.4cm 1.4cm 1.9cm 1.4cm;
       @frame header_frame {
-        -pdf-frame-content: page_header;
-        left: 1.5cm;
-        width: 17cm;
-        top: 0.55cm;
+        -pdf-frame-content: header_content;
+        top: 0.7cm;
+        margin-left: 1.4cm;
+        margin-right: 1.4cm;
+        height: 1.4cm;
       }
       @frame footer_frame {
-        -pdf-frame-content: page_footer;
-        left: 1.5cm;
-        width: 17cm;
-        bottom: 0.45cm;
-        height: 0.9cm;
+        -pdf-frame-content: footer_content;
+        bottom: 0.55cm;
+        margin-left: 1.4cm;
+        margin-right: 1.4cm;
+        height: 1.1cm;
       }
     }
 
     body {
       font-family: Helvetica, Arial, sans-serif;
-      color: #1e293b;
-      font-size: 9.5pt;
-      line-height: 1.45;
-      margin: 0;
-      padding: 0;
+      font-size: 16pt;
+      color: #0B1D3A;
+      line-height: 1.5;
     }
 
-    h1 {
+    p { margin: 0 0 12pt 0; }
+    ul { margin: 6pt 0 12pt 18pt; padding: 0; }
+    li { margin: 0 0 5pt 0; }
+
+    .hdr-logo { font-size: 18pt; font-weight: bold; color: #0B1D3A; }
+    .hdr-logo-accent { color: #E8B923; }
+    .hdr-sub { font-size: 12pt; color: #8A9BB0; text-align: right; }
+
+    .section-no {
       font-size: 18pt;
       font-weight: bold;
-      color: #0f172a;
-      margin: 0 0 4pt;
+      color: #E8B923;
+      letter-spacing: 0.5pt;
+      padding-top: 6pt;
     }
-    h2 {
+    .section-title {
+      margin: 2pt 0 0 0;
+      font-size: 28pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      line-height: 1.2;
+      padding-top: 6pt;
+    }
+    .section-rule {
+      margin-top: 8pt;
+      width: 60pt;
+      border-top: 4pt solid #E8B923;
+    }
+    .section-desc {
+      margin-top: 12pt;
+      font-size: 16pt;
+      color: #5B6B82;
+      line-height: 1.5;
+    }
+
+    .navy-box {
+      background-color: #0B1D3A;
+      color: #FFFFFF;
+      padding: 16pt 18pt;
+      margin: 16pt 0 14pt 0;
+    }
+    .navy-label {
+      font-size: 14pt;
+      font-weight: bold;
+      letter-spacing: 1.3pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin-bottom: 10pt;
+      padding-top: 4pt;
+    }
+    .navy-text {
+      font-size: 16pt;
+      color: #FFFFFF;
+      line-height: 1.5;
+    }
+    .navy-title {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #FFFFFF;
+      margin-bottom: 8pt;
+      padding-top: 4pt;
+    }
+    .navy-title-accent { color: #E8B923; }
+
+    .kpi-wrap {
+      margin: 20pt 0 16pt 0;
+      border-top: 4pt solid #E8B923;
+      padding-top: 14pt;
+    }
+    .kpi-value {
+      font-size: 24pt;
+      font-weight: bold;
+      color: #0B1D3A;
+      line-height: 1.2;
+      padding-top: 4pt;
+    }
+    .kpi-label {
+      margin-top: 4pt;
+      font-size: 12pt;
+      letter-spacing: 0.8pt;
+      text-transform: uppercase;
+      color: #7A8AA0;
+    }
+
+    .subhead {
+      font-size: 16pt;
+      font-weight: bold;
+      letter-spacing: 1.2pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin: 0 0 10pt 0;
+      padding-top: 4pt;
+    }
+    .muted { color: #5B6B82; font-size: 16pt; line-height: 1.5; }
+    .body-navy { color: #0B1D3A; font-size: 17pt; line-height: 1.5; }
+
+    .soft-box {
+      background-color: #F3F6FA;
+      padding: 14pt 16pt;
+      margin-top: 14pt;
+    }
+    .soft-label {
+      font-size: 14pt;
+      font-weight: bold;
+      letter-spacing: 1.1pt;
+      text-transform: uppercase;
+      color: #E8B923;
+      margin-bottom: 8pt;
+      padding-top: 4pt;
+    }
+
+    .task-card {
+      margin: 24pt 0 16pt 0;
+      border-top: 2pt solid #E8EDF4;
+      padding-top: 18pt;
+    }
+    .task-title { font-size: 18pt; font-weight: bold; color: #0B1D3A; margin-bottom: 6pt; padding-top: 6pt; }
+    .task-meta { font-size: 14pt; color: #7A8AA0; margin: 4pt 0 8pt 0; }
+    .task-insight { font-size: 14pt; font-weight: bold; color: #0B1D3A; margin: 0 0 6pt 0; padding-top: 4pt; }
+    .task-body { font-size: 16pt; color: #5B6B82; line-height: 1.5; margin: 0 0 8pt 0; }
+
+    .unverified {
       font-size: 10pt;
       font-weight: bold;
-      color: {{ category_meta.accent }};
-      margin: 0 0 10pt;
-    }
-    p {
-      margin: 0 0 8pt;
-    }
-    .meta {
-      font-size: 8.5pt;
-      color: #64748b;
-      margin-bottom: 12pt;
-    }
-    .intro {
-      font-size: 9pt;
-      color: #475569;
-      margin-bottom: 14pt;
-    }
-
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0 0 18pt;
-      border-top: 0.5pt solid #e2e8f0;
-      border-bottom: 0.5pt solid #e2e8f0;
-    }
-    .stats-table td {
-      text-align: center;
-      padding: 8pt 4pt;
-      width: 33%;
-      border-right: 0.5pt solid #e2e8f0;
-    }
-    .stats-table td.last {
-      border-right: none;
-    }
-    .stat-value {
-      font-size: 15pt;
-      font-weight: bold;
-      color: {{ category_meta.accent }};
-    }
-    .stat-label {
-      font-size: 7.5pt;
-      color: #64748b;
-      text-transform: uppercase;
-      padding-top: 3pt;
-    }
-
-    .task-separator {
-      border: none;
-      border-top: 0.5pt solid #e2e8f0;
-      margin: 14pt 0;
-    }
-    .task-label {
-      font-size: 7.5pt;
-      font-weight: bold;
-      color: {{ category_meta.accent }};
-      text-transform: uppercase;
-      margin: 0 0 2pt;
-    }
-    .task-title {
-      font-size: 11pt;
-      font-weight: bold;
-      color: #0f172a;
-      margin: 0 0 4pt;
-    }
-    .task-rationale {
-      font-size: 8.5pt;
-      color: #64748b;
-      font-style: italic;
-      margin: 0 0 6pt;
-    }
-    .task-body {
-      font-size: 9.5pt;
-      color: #334155;
-      margin: 0 0 6pt;
-    }
-    .task-hours {
-      font-size: 8pt;
-      color: #64748b;
-      margin: 0 0 8pt;
+      color: #92400e;
+      background-color: #fef3c7;
+      padding: 3pt 5pt;
     }
 
     .component-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 0 0 8pt;
+      margin: 0 0 12pt;
     }
     .component-table td {
       vertical-align: top;
       padding: 0;
     }
     .component-border {
-      width: 3pt;
-      border-left: 2pt solid {{ category_meta.accent }};
+      width: 4pt;
+      border-left: 3pt solid #E8B923;
     }
     .component-body {
-      padding-left: 8pt;
+      padding-left: 12pt;
     }
     .component-name {
-      font-size: 9.5pt;
+      font-size: 16pt;
       font-weight: bold;
-      color: #1e293b;
-      margin: 0 0 2pt;
+      color: #0B1D3A;
+      margin: 0 0 4pt;
+      padding-top: 8pt;
     }
     .component-desc {
-      font-size: 9pt;
-      color: #475569;
-      margin: 0 0 3pt;
+      font-size: 16pt;
+      color: #5B6B82;
+      margin: 0 0 5pt;
     }
     .component-meta {
-      font-size: 7.5pt;
-      color: #94a3b8;
-      margin: 0 0 4pt;
+      font-size: 12pt;
+      color: #8A9BB0;
+      margin: 0 0 6pt;
     }
 
     .tool-line {
-      font-size: 8.5pt;
-      color: #334155;
-      margin: 0 0 4pt;
-      padding-left: 8pt;
+      font-size: 15pt;
+      color: #0B1D3A;
+      margin: 0 0 6pt;
+      padding-left: 12pt;
     }
     .tool-name {
       font-weight: bold;
-      color: #1e293b;
+      color: #0B1D3A;
     }
     .tool-meta {
-      color: #64748b;
-      font-size: 7.5pt;
+      color: #5B6B82;
+      font-size: 14pt;
     }
     .tool-detail {
-      font-size: 8pt;
-      color: #475569;
-      margin: 0 0 3pt;
-      padding-left: 8pt;
-    }
-    .unverified {
-      font-size: 6.5pt;
-      font-weight: bold;
-      color: #92400e;
-      background-color: #fef3c7;
-      padding: 1pt 3pt;
-    }
-
-    .actions-title {
-      font-size: 9pt;
-      font-weight: bold;
-      color: #1e293b;
-      margin: 8pt 0 4pt;
-    }
-    ul {
-      margin: 0 0 10pt;
-      padding-left: 14pt;
-    }
-    li {
-      font-size: 9pt;
-      color: #334155;
-      margin-bottom: 3pt;
-    }
-
-    .disclaimer {
-      margin-top: 16pt;
-      padding-top: 8pt;
-      border-top: 0.5pt solid #e2e8f0;
-      font-size: 7.5pt;
-      color: #94a3b8;
+      font-size: 14pt;
+      color: #5B6B82;
+      margin: 0 0 5pt;
+      padding-left: 12pt;
     }
   </style>
 </head>
 <body>
 
-  <!-- Repeating header on every page -->
-  <div id="page_header">
+  <!-- PAGE HEADER -->
+  <div id="header_content">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td width="55%" valign="bottom">
-          <span style="font-size:16pt;font-weight:bold;color:{{ brand.navy }};">Career</span><span style="font-size:16pt;font-weight:bold;color:{{ brand.gold }};">Shift3B</span><br/>
-          <span style="font-size:7pt;color:#64748b;letter-spacing:0.05em;">AI CAREER INTELLIGENCE</span>
+        <td width="50%" valign="bottom">
+          <div class="hdr-logo">Career<span class="hdr-logo-accent">Shift3B</span></div>
+          <div style="font-size: 6pt; letter-spacing: 1.5pt; color: #8A9BB0; margin-top: 1pt;">AI CAREER INTELLIGENCE</div>
         </td>
-        <td width="45%" align="right" valign="bottom">
-          <span style="font-size:9pt;font-weight:bold;color:{{ category_meta.accent }};">3B Analysis · {{ category_meta.title }}</span><br/>
-          <span style="font-size:7pt;color:#94a3b8;text-transform:uppercase;">{{ category_meta.tagline }}</span>
+        <td width="50%" valign="bottom" align="right">
+          <div style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">3B Analysis · {{ category_meta.title }}</div>
+          <div class="hdr-sub" style="margin-top: 1pt; text-transform: uppercase;">{{ category_meta.tagline }}</div>
         </td>
       </tr>
     </table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:5pt;">
-      <tr>
-        <td style="border-top:2pt solid {{ brand.gold }};font-size:1pt;line-height:1pt;">&nbsp;</td>
-      </tr>
-      <tr>
-        <td style="border-top:0.75pt solid {{ category_meta.accent }};font-size:1pt;line-height:1pt;padding-top:1pt;">&nbsp;</td>
-      </tr>
-    </table>
+    <div style="margin-top: 6pt; border-top: 1pt solid #E8EDF4;"></div>
   </div>
 
-  <!-- Repeating footer on every page -->
-  <div id="page_footer">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:0.5pt solid #e2e8f0;padding-top:4pt;">
-      <tr>
-        <td style="font-size:7.5pt;color:#94a3b8;">
-          © <span style="font-weight:bold;color:{{ brand.navy }};">Career</span><span style="font-weight:bold;color:{{ brand.gold }};">Shift3B</span>
-          · Confidential · {{ generated_at }}
-        </td>
-        <td align="right" style="font-size:7.5pt;color:#94a3b8;">
-          3B {{ category }} Report
-        </td>
-      </tr>
-    </table>
+  <!-- PAGE FOOTER -->
+  <div id="footer_content">
+    <div style="border-top: 1pt solid #E8EDF4; padding-top: 4pt;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="70%" style="font-size: 7.5pt; color: #8A9BB0;">
+            © <span style="color:#0B1D3A; font-weight:bold;">CareerShift3B</span> &middot; Confidential &middot; Prepared for {{ profile.name }}
+          </td>
+          <td width="30%" align="right" style="font-size: 7.5pt; color: #8A9BB0;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+        </tr>
+      </table>
+    </div>
   </div>
 
-  <h1>3B Analysis — {{ category_meta.title }}</h1>
-  <h2>{{ category_meta.tagline }}</h2>
+  <div class="section-no">01</div>
+  <h1 class="section-title">3B Analysis — {{ category_meta.title }}</h1>
+  <div class="section-rule"></div>
 
-  <p class="meta">
+  <p class="section-desc">
     <strong>{{ profile.job_title }}</strong> · {{ profile.industry }}<br/>
     Generated {{ generated_at }}
   </p>
 
-  <p class="intro">{{ category_meta.description }}</p>
+  <p class="body-navy" style="margin-top:12pt; margin-bottom:18pt;">{{ category_meta.description }}</p>
 
-  <table class="stats-table">
+  <!-- KPI Block -->
+  <table width="100%" cellpadding="0" cellspacing="0" class="kpi-wrap">
     <tr>
-      <td><span class="stat-value">{{ hours.weekly }}h</span></td>
-      <td><span class="stat-value">{{ hours.annual }}h</span></td>
-      <td class="last"><span class="stat-value">{{ hours.task_count }}</span></td>
-    </tr>
-    <tr>
-      <td><span class="stat-label">Weekly hours</span></td>
-      <td><span class="stat-label">Annual hours</span></td>
-      <td class="last"><span class="stat-label">{{ category_meta.title }} tasks</span></td>
+      <td width="33%" valign="top" align="center">
+        <div class="kpi-value">{{ hours.weekly }}h</div>
+        <div class="kpi-label">Weekly hours</div>
+      </td>
+      <td width="33%" valign="top" align="center">
+        <div class="kpi-value">{{ hours.annual }}h</div>
+        <div class="kpi-label">Annual hours</div>
+      </td>
+      <td width="34%" valign="top" align="center">
+        <div class="kpi-value">{{ hours.task_count }}</div>
+        <div class="kpi-label">{{ category_meta.title }} tasks</div>
+      </td>
     </tr>
   </table>
 
   {% for task in analyses %}
-  {% if not loop.first %}
-  <hr class="task-separator" />
-  {% endif %}
+  <div class="task-card">
+    <div class="subhead">Task {{ loop.index }} of {{ analyses | length }}</div>
+    <div class="task-title">{{ task.task_title }}</div>
+    {% if task.rationale %}<p class="muted" style="font-style: italic;">{{ task.rationale }}</p>{% endif %}
+    {% if task.reason %}<p class="task-body">{{ task.reason }}</p>{% endif %}
+    <p class="task-meta">{{ task.weekly_hours }}h/week &middot; {{ task.annual_hours }}h/year</p>
 
-  <p class="task-label">Task {{ loop.index }} of {{ analyses | length }}</p>
-  <p class="task-title">{{ task.task_title }}</p>
-  {% if task.rationale %}<p class="task-rationale">{{ task.rationale }}</p>{% endif %}
-  {% if task.reason %}<p class="task-body">{{ task.reason }}</p>{% endif %}
-  <p class="task-hours">{{ task.weekly_hours }}h/week · {{ task.annual_hours }}h/year</p>
+    {% for comp in task.components %}
+    <div style="margin-top: 10pt;">
+      <table class="component-table">
+        <tr>
+          <td class="component-border">&nbsp;</td>
+          <td class="component-body">
+            <p class="component-name">{{ comp.name }}</p>
+            {% if comp.description %}<p class="component-desc">{{ comp.description }}</p>{% endif %}
+            <p class="component-meta">Capability: {{ comp.capability }} &middot; Pattern: {{ comp.solution_pattern }}</p>
 
-  {% for comp in task.components %}
-  <table class="component-table">
-    <tr>
-      <td class="component-border">&nbsp;</td>
-      <td class="component-body">
-        <p class="component-name">{{ comp.name }}</p>
-        {% if comp.description %}<p class="component-desc">{{ comp.description }}</p>{% endif %}
-        <p class="component-meta">Capability: {{ comp.capability }} · Pattern: {{ comp.solution_pattern }}</p>
-
-        {% for tool in comp.tools %}
-        <p class="tool-line">
-          <span class="tool-name">{{ tool.name }}</span>
-          <span class="tool-meta"> · {{ tool.cost_band_label }} · {{ tool.feasibility_label }}</span>
-          <span class="unverified"> UNVERIFIED</span>
-        </p>
-        {% if tool.credibility_note %}<p class="tool-detail">{{ tool.credibility_note }}</p>{% endif %}
-        {% if tool.pros %}<p class="tool-detail">+ {{ tool.pros | join(' · ') }}</p>{% endif %}
-        {% if tool.cons %}<p class="tool-detail">− {{ tool.cons | join(' · ') }}</p>{% endif %}
-        {% endfor %}
-      </td>
-    </tr>
-  </table>
-  {% endfor %}
-
-  {% if task.human_capability %}
-  <h2>Human capability to strengthen</h2>
-  <p>{{ task.human_capability }}</p>
-  {% endif %}
-
-  {% if task.cost_of_staying_as_is %}
-  <h2>Cost of staying as-is</h2>
-  <p><strong>{{ task.cost_of_staying_as_is.annual_hours }} hrs/year.</strong> {{ task.cost_of_staying_as_is.narrative }}</p>
-  {% endif %}
-
-  {% if task.next_action %}
-  <p class="actions-title">Next best action</p>
-  <p class="task-body">{{ task.next_action }}</p>
-  {% elif task.next_actions %}
-  <p class="actions-title">Recommended next actions</p>
-  <ul>
-    {% for action in task.next_actions %}
-    <li>{{ action }}</li>
+            {% for tool in comp.tools %}
+            <p class="tool-line">
+              <span class="tool-name">{{ tool.name }}</span>
+              <span class="tool-meta"> &middot; {{ tool.cost_band_label }} &middot; {{ tool.feasibility_label }}</span>
+              <span class="unverified"> UNVERIFIED</span>
+            </p>
+            {% if tool.credibility_note %}<p class="tool-detail">{{ tool.credibility_note }}</p>{% endif %}
+            {% if tool.pros %}<p class="tool-detail">+ {{ tool.pros | join(' · ') }}</p>{% endif %}
+            {% if tool.cons %}<p class="tool-detail">&minus; {{ tool.cons | join(' · ') }}</p>{% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+      </table>
+    </div>
     {% endfor %}
-  </ul>
-  {% endif %}
 
-  {% if task.learn_gap or task.learn_do or task.learn_dont or task.where_to_learn %}
-  <div style="background:#1a202c;color:#fff;padding:10pt;border-radius:6pt;margin-top:10pt;">
-    <p style="color:#63b3ed;font-size:8pt;font-weight:bold;margin:0 0 6pt;">LEARNING IMPLICATION</p>
-    {% if task.learn_gap %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Gap:</strong> {{ task.learn_gap }}</p>{% endif %}
-    {% if task.learn_do %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Learn:</strong> {{ task.learn_do }}</p>{% endif %}
-    {% if task.learn_dont %}<p style="font-size:9pt;margin:0 0 4pt;"><strong>Don't learn:</strong> {{ task.learn_dont }}</p>{% endif %}
-    {% if task.where_to_learn %}<p style="font-size:9pt;margin:0;"><strong>Where:</strong> {{ task.where_to_learn }}</p>{% endif %}
+    {% if task.human_capability %}
+    <div class="soft-box">
+      <div class="soft-label">Human capability to strengthen</div>
+      <p class="body-navy" style="margin-bottom: 0;">{{ task.human_capability }}</p>
+    </div>
+    {% endif %}
+
+    {% if task.cost_of_staying_as_is %}
+    <div class="soft-box">
+      <div class="soft-label">Cost of staying as-is</div>
+      <p class="body-navy" style="margin-bottom: 0;"><strong>{{ task.cost_of_staying_as_is.annual_hours }} hrs/year.</strong> {{ task.cost_of_staying_as_is.narrative }}</p>
+    </div>
+    {% endif %}
+
+    {% if task.next_action %}
+    <div class="navy-box">
+      <div class="navy-label">Next best action</div>
+      <p class="navy-text" style="margin-bottom: 0;">{{ task.next_action }}</p>
+    </div>
+    {% elif task.next_actions %}
+    <div class="navy-box">
+      <div class="navy-label">Recommended next actions</div>
+      <ul style="margin-bottom: 0; padding-left: 14pt; color: #FFFFFF; font-size: 9.5pt; line-height: 1.5;">
+        {% for action in task.next_actions %}
+        <li style="margin-bottom: 3pt;">{{ action }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if task.learn_gap or task.learn_do or task.learn_dont or task.where_to_learn %}
+    <div class="navy-box" style="background-color: #112844;">
+      <div class="navy-label" style="color: #63b3ed;">LEARNING IMPLICATION</div>
+      {% if task.learn_gap %}<p class="navy-text"><strong>Gap:</strong> {{ task.learn_gap }}</p>{% endif %}
+      {% if task.learn_do %}<p class="navy-text"><strong>Learn:</strong> {{ task.learn_do }}</p>{% endif %}
+      {% if task.learn_dont %}<p class="navy-text"><strong>Don't learn:</strong> {{ task.learn_dont }}</p>{% endif %}
+      {% if task.where_to_learn %}<p class="navy-text" style="margin-bottom: 0;"><strong>Where:</strong> {{ task.where_to_learn }}</p>{% endif %}
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
-
   {% endfor %}
 
-  <p class="disclaimer">{{ disclaimer }}</p>
+  <div style="margin-top: 24pt; border-top: 1pt solid #E8EDF4; padding-top: 10pt;">
+    <p class="muted" style="font-size: 7.5pt;">{{ disclaimer }}</p>
+  </div>
 
 </body>
 </html>

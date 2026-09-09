@@ -427,27 +427,27 @@
 
   <table class="kpi-wrap" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
-      <td width="16%" valign="top">
+      <td width="16%" valign="top" align="center">
         <div class="kpi-value">{{ overview.overall_score }}</div>
         <div class="kpi-label">Overall Score</div>
       </td>
-      <td width="16%" valign="top">
+      <td width="16%" valign="top" align="center">
         <div class="kpi-value">{{ overview.tasks_analyzed }}</div>
         <div class="kpi-label">Tasks Analyzed</div>
       </td>
-      <td width="16%" valign="top">
+      <td width="16%" valign="top" align="center">
         <div class="kpi-value">{{ overview.competency_count }}</div>
         <div class="kpi-label">Competencies</div>
       </td>
-      <td width="16%" valign="top">
+      <td width="16%" valign="top" align="center">
         <div class="kpi-value">{% if overview.automation_pct != '—' %}{{ overview.automation_pct }}%{% else %}—{% endif %}</div>
         <div class="kpi-label">Automation</div>
       </td>
-      <td width="20%" valign="top">
+      <td width="20%" valign="top" align="center">
         <div class="kpi-value" style="font-size: 12pt;">{{ overview.career_risk }}</div>
         <div class="kpi-label">Career Risk</div>
       </td>
-      <td width="16%" valign="top">
+      <td width="16%" valign="top" align="center">
         <div class="kpi-value">{{ overview.ai_tools_count }}</div>
         <div class="kpi-label">AI Tools</div>
       </td>
@@ -510,18 +510,19 @@
 
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 10pt;">
     {% for dim in ai_readiness.dimensions %}
+    {% set bar_color = '#0B1D3A' if loop.index0 % 2 == 0 else '#E8B923' %}
     <tr>
       <td width="24%" class="dim-name" style="padding: 5pt 0;">{{ dim.name }}</td>
-      <td width="58%" style="padding: 5pt 8pt 5pt 0;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <td width="58%" style="padding: 5pt 8pt 5pt 0; vertical-align: middle;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 1pt; line-height: 1pt;">
           <tr>
             {% if dim.width <= 0 %}
-            <td height="8" bgcolor="#E8EDF4">&nbsp;</td>
+            <td height="10" width="100%" bgcolor="#E8EDF4"></td>
             {% elif dim.width >= 100 %}
-            <td height="8" bgcolor="{{ dim.bar_color }}">&nbsp;</td>
+            <td height="10" width="100%" bgcolor="{{ bar_color }}"></td>
             {% else %}
-            <td height="8" width="{{ dim.width }}%" bgcolor="{{ dim.bar_color }}">&nbsp;</td>
-            <td height="8" width="{{ 100 - dim.width }}%" bgcolor="#E8EDF4">&nbsp;</td>
+            <td height="10" width="{{ dim.width }}%" bgcolor="{{ bar_color }}"></td>
+            <td height="10" width="{{ 100 - dim.width }}%" bgcolor="#E8EDF4"></td>
             {% endif %}
           </tr>
         </table>
@@ -574,7 +575,7 @@
             <td valign="middle" style="font-size: 10.5pt; font-weight: bold; color: #0B1D3A; padding: 0 8pt 0 0;">
               {{ task.task_title }}
             </td>
-            <td width="{{ task.badge_width }}" height="11" bgcolor="{{ task.badge_bg }}" align="center" valign="middle" style="font-size: 5.5pt; font-weight: bold; letter-spacing: 0.2pt; color: {{ task.badge_fg }}; line-height: 6pt; padding: 0;">
+            <td width="{{ task.badge_width }}" height="11" bgcolor="{{ task.badge_bg }}" align="center" valign="middle" style="font-size: 7.5pt; font-weight: bold; letter-spacing: 0.2pt; color: {{ task.badge_fg }}; line-height: 8pt; padding: 0; border-radius: 4px;">
               {{ task.category_label }}
             </td>
           </tr>
@@ -673,7 +674,7 @@
       <td class="dw-cell" width="12%" valign="middle" align="left">
         <table cellpadding="0" cellspacing="0" border="0" width="{{ t.badge_width }}">
           <tr>
-            <td width="{{ t.badge_width }}" height="11" bgcolor="{{ t.badge_bg }}" align="center" valign="middle" style="font-size: 5.5pt; font-weight: bold; color: {{ t.badge_fg }}; line-height: 6pt;">
+            <td width="{{ t.badge_width }}" height="11" bgcolor="{{ t.badge_bg }}" align="center" valign="middle" style="font-size: 7.5pt; font-weight: bold; color: {{ t.badge_fg }}; line-height: 8pt; border-radius: 4px;">
               {{ t.category_label }}
             </td>
           </tr>

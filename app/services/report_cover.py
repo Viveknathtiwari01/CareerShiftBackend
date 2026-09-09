@@ -81,7 +81,7 @@ def render_cover_pdf(
     generated_date: str,
     report_version: str,
     experience_years: str,
-    overall_score: int,
+    overall_score: int | None = None,
     site_url: str = "www.careershift3b.com",
 ) -> bytes:
     """Render the dark navy cover page to match the reference design."""
@@ -182,12 +182,15 @@ def render_cover_pdf(
         c.setFillColor(WHITE)
         c.setFont("Helvetica-Bold", 10)
         c.drawString(col_x, meta_y - 15, value)
-        col_x += 120
+        
+        val_width = c.stringWidth(value, "Helvetica-Bold", 10)
+        col_x += max(120, val_width + 30)
 
-    # Score gauge
-    gauge_cx = width - 122
-    gauge_cy = 175
-    _draw_progress_ring(c, gauge_cx, gauge_cy, radius=62, stroke=12, score=overall_score)
+    # Score gauge (optional)
+    if overall_score is not None:
+        gauge_cx = width - 122
+        gauge_cy = 175
+        _draw_progress_ring(c, gauge_cx, gauge_cy, radius=62, stroke=12, score=overall_score)
 
     # Footer
     footer_y = 30

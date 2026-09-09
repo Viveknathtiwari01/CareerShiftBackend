@@ -416,7 +416,7 @@ def html_to_pdf(html: str) -> bytes:
     return buffer.getvalue()
 
 
-def _merge_cover_and_body(cover_pdf: bytes, body_pdf: bytes) -> bytes:
+def merge_cover_and_body(cover_pdf: bytes, body_pdf: bytes) -> bytes:
     from pypdf import PdfReader, PdfWriter
 
     writer = PdfWriter()
@@ -458,7 +458,7 @@ def render_report_pdf(
         job_title=job_title,
     )
     body_pdf = html_to_pdf(html)
-    return _merge_cover_and_body(cover_pdf, body_pdf)
+    return merge_cover_and_body(cover_pdf, body_pdf)
 
 
 def _add_bullet_list(doc, items: list[str]) -> None:
