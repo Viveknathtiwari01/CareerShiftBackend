@@ -23,10 +23,18 @@ def add_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        formatted_errors = []
+        for err in exc.errors():
+            field = str(err.get("loc", [""])[-1])
+            if err.get("type") == "string_pattern_mismatch" and "password" in field.lower():
+                formatted_errors.append("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character.")
+            else:
+                formatted_errors.append(f"{field}: {err.get('msg', 'Validation error')}" if field else err.get("msg", "Validation error"))
+
         response = APIResponse(
             success=False,
             message="Validation error",
-            errors=[str(err) for err in exc.errors()]
+            errors=formatted_errors
         )
         return JSONResponse(status_code=422, content=response.model_dump(mode="json"))
         

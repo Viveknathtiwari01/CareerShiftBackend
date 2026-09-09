@@ -4,7 +4,7 @@ import re
 # Password Policy Regex
 # At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character
 PASSWORD_REGEX = re.compile(
-    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"
 )
 
 # Roles
