@@ -7,20 +7,6 @@
     @page {
       size: A4;
       margin: 2.4cm 1.4cm 1.9cm 1.4cm;
-      @frame header_frame {
-        -pdf-frame-content: header_content;
-        top: 0.7cm;
-        margin-left: 1.4cm;
-        margin-right: 1.4cm;
-        height: 1.4cm;
-      }
-      @frame footer_frame {
-        -pdf-frame-content: footer_content;
-        bottom: 0.55cm;
-        margin-left: 1.4cm;
-        margin-right: 1.4cm;
-        height: 1.1cm;
-      }
     }
 
     body {
@@ -218,16 +204,16 @@
 <body>
 
   <!-- PAGE HEADER -->
-  <div id="header_content">
-    <table width="100%" cellpadding="0" cellspacing="0">
+  <div id="header_content" style="display: none;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="width: 100%;">
       <tr>
         <td width="50%" valign="bottom">
-          <div class="hdr-logo">Career<span class="hdr-logo-accent">Shift3B</span></div>
+          <div style="font-size: 18pt; font-weight: bold; color: #0B1D3A;">Career<span style="color: #E8B923;">Shift3B</span></div>
           <div style="font-size: 6pt; letter-spacing: 1.5pt; color: #8A9BB0; margin-top: 1pt;">AI CAREER INTELLIGENCE</div>
         </td>
         <td width="50%" valign="bottom" align="right">
           <div style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">3B Analysis · {{ category_meta.title }}</div>
-          <div class="hdr-sub" style="margin-top: 1pt; text-transform: uppercase;">{{ category_meta.tagline }}</div>
+          <div style="font-size: 12pt; color: #8A9BB0; text-align: right; margin-top: 1pt; text-transform: uppercase;">{{ category_meta.tagline }}</div>
         </td>
       </tr>
     </table>
@@ -235,14 +221,14 @@
   </div>
 
   <!-- PAGE FOOTER -->
-  <div id="footer_content">
-    <div style="border-top: 1pt solid #E8EDF4; padding-top: 4pt;">
-      <table width="100%" cellpadding="0" cellspacing="0">
+  <div id="footer_content" style="display: none;">
+    <div style="border-top: 1pt solid #E8EDF4; padding-top: 4pt; width: 100%;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="width: 100%;">
         <tr>
           <td width="70%" style="font-size: 7.5pt; color: #8A9BB0;">
             © <span style="color:#0B1D3A; font-weight:bold;">CareerShift3B</span> &middot; Confidential &middot; Prepared for {{ profile.name }}
           </td>
-          <td width="30%" align="right" style="font-size: 7.5pt; color: #8A9BB0;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+          <td width="30%" align="right" style="font-size: 7.5pt; color: #8A9BB0;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></td>
         </tr>
       </table>
     </div>
