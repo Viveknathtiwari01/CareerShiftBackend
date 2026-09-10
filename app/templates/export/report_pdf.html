@@ -7,6 +7,7 @@
     @page {
       size: A4;
       margin: 2.4cm 1.4cm 1.9cm 1.4cm;
+      background-color: #FAF8F5;
       @frame header_frame {
         -pdf-frame-content: header_content;
         top: 0.7cm;
@@ -412,92 +413,122 @@
   <!-- ========== 01 EXECUTIVE OVERVIEW ========== -->
   <div class="section-no">01</div>
   <div class="section-title">Executive Overview</div>
-  <div class="section-rule"></div>
+  <div class="section-rule" style="margin-bottom: 16pt;"></div>
 
   {% if strategic_note %}
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 12pt 0 10pt 0;">
-    <tr>
-      <td bgcolor="#0B1D3A" style="padding: 12pt 14pt;">
-        <div style="font-size: 7.5pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; color: #E8B923; margin-bottom: 6pt;">Strategic Note</div>
-        <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ strategic_note }}</div>
-      </td>
-    </tr>
-  </table>
+  <div style="background-color: #0B1D3A; border-radius: 6pt; padding: 12pt 14pt; margin: 0 0 14pt 0;">
+    <div style="font-size: 8.5pt; font-weight: bold; color: #E8B923; margin-bottom: 6pt;">Strategic note</div>
+    <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ strategic_note }}</div>
+  </div>
   {% endif %}
 
-  <table class="kpi-wrap" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 0.5pt solid #D7DEE8; border-radius: 6pt; background-color: #F8FAFC; margin-bottom: 14pt;">
     <tr>
-      <td width="16%" valign="top" align="center">
-        <div class="kpi-value">{{ overview.overall_score }}</div>
-        <div class="kpi-label">Overall Score</div>
+      <td width="16%" valign="middle" align="center" style="background-color: #FFFFFF; border-top: 3pt solid #E8B923; padding: 10pt 0 8pt 0; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 18pt; font-weight: bold; color: #0B1D3A; line-height: 1;">{{ overview.overall_score }}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">Overall score</div>
       </td>
-      <td width="16%" valign="top" align="center">
-        <div class="kpi-value">{{ overview.tasks_analyzed }}</div>
-        <div class="kpi-label">Tasks Analyzed</div>
+      <td width="16%" valign="middle" align="center" style="padding: 10pt 0 8pt 0; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 14pt; font-weight: bold; color: #0B1D3A; line-height: 1;">{{ overview.tasks_analyzed }}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">Tasks analysed</div>
       </td>
-      <td width="16%" valign="top" align="center">
-        <div class="kpi-value">{{ overview.competency_count }}</div>
-        <div class="kpi-label">Competencies</div>
+      <td width="16%" valign="middle" align="center" style="padding: 10pt 0 8pt 0; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 14pt; font-weight: bold; color: #0B1D3A; line-height: 1;">{{ overview.competency_count }}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">Competencies</div>
       </td>
-      <td width="16%" valign="top" align="center">
-        <div class="kpi-value">{% if overview.automation_pct != '—' %}{{ overview.automation_pct }}%{% else %}—{% endif %}</div>
-        <div class="kpi-label">Automation</div>
+      <td width="16%" valign="middle" align="center" style="padding: 10pt 0 8pt 0; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 14pt; font-weight: bold; color: #0B1D3A; line-height: 1;">{% if overview.automation_pct != '—' %}{{ overview.automation_pct }}%{% else %}—{% endif %}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">Automation</div>
       </td>
-      <td width="20%" valign="top" align="center">
-        <div class="kpi-value" style="font-size: 12pt;">{{ overview.career_risk }}</div>
-        <div class="kpi-label">Career Risk</div>
+      <td width="20%" valign="middle" align="center" style="padding: 10pt 0 8pt 0; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 10.5pt; font-weight: bold; color: #0B1D3A; line-height: 1.2; white-space: nowrap;">{{ overview.career_risk }}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">Career risk</div>
       </td>
-      <td width="16%" valign="top" align="center">
-        <div class="kpi-value">{{ overview.ai_tools_count }}</div>
-        <div class="kpi-label">AI Tools</div>
+      <td width="16%" valign="middle" align="center" style="padding: 10pt 0 8pt 0;">
+        <div style="font-size: 14pt; font-weight: bold; color: #0B1D3A; line-height: 1;">{{ overview.ai_tools_count }}</div>
+        <div style="font-size: 7.5pt; color: #7A8AA0; margin-top: 4pt;">AI tools</div>
       </td>
     </tr>
   </table>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 6pt;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 14pt;">
     <tr>
-      <td width="48%" valign="top" style="padding-right: 12pt; border-right: 0.7pt solid #D7DEE8;">
-        <div class="subhead">Your 3B Task Mix</div>
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <td width="48%" valign="top" style="padding-right: 14pt; border-right: 0.5pt solid #D7DEE8;">
+        <div style="font-size: 9.5pt; font-weight: bold; color: #B38F1B; margin-bottom: 10pt;">Your 3B task mix</div>
+        {% set max_count = [build_count, blend_count, bot_count]|max %}
+        {% set max_count = max_count if max_count > 0 else 1 %}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 8pt;">
           <tr>
-            {% if build_pct > 0 %}<td class="mix-seg" width="{{ build_pct }}%" bgcolor="#7C3AED"></td>{% endif %}
-            {% if blend_pct > 0 %}<td class="mix-seg" width="{{ blend_pct }}%" bgcolor="#E8B923"></td>{% endif %}
-            {% if bot_pct > 0 %}<td class="mix-seg" width="{{ bot_pct }}%" bgcolor="#14B8A6"></td>{% endif %}
+            <td width="25%" style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">
+              <span style="color:#6366F1;">●</span> BUILD IT
+            </td>
+            <td width="60%" valign="middle">
+              {% set b1 = (build_count / max_count * 85)|round|int %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="height: 6pt; background-color: #E8EDF4; border-radius: 3pt;">
+                <tr>
+                  {% if b1 > 0 %}<td width="{{ b1 }}%" style="background-color: #6366F1; border-radius: 3pt;"></td>{% endif %}
+                  <td width="{{ 100 - b1 }}%"></td>
+                </tr>
+              </table>
+            </td>
+            <td width="15%" align="right" style="font-size: 8.5pt; color: #7A8AA0;">{{ build_count }}</td>
+          </tr>
+          <tr><td colspan="3" height="6"></td></tr>
+          <tr>
+            <td width="25%" style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">
+              <span style="color:#EAB308;">●</span> BLEND IT
+            </td>
+            <td width="60%" valign="middle">
+              {% set b2 = (blend_count / max_count * 85)|round|int %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="height: 6pt; background-color: #E8EDF4; border-radius: 3pt;">
+                <tr>
+                  {% if b2 > 0 %}<td width="{{ b2 }}%" style="background-color: #EAB308; border-radius: 3pt;"></td>{% endif %}
+                  <td width="{{ 100 - b2 }}%"></td>
+                </tr>
+              </table>
+            </td>
+            <td width="15%" align="right" style="font-size: 8.5pt; color: #7A8AA0;">{{ blend_count }}</td>
+          </tr>
+          <tr><td colspan="3" height="6"></td></tr>
+          <tr>
+            <td width="25%" style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">
+              <span style="color:#14B8A6;">●</span> BOT IT
+            </td>
+            <td width="60%" valign="middle">
+              {% set b3 = (bot_count / max_count * 85)|round|int %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="height: 6pt; background-color: #E8EDF4; border-radius: 3pt;">
+                <tr>
+                  {% if b3 > 0 %}<td width="{{ b3 }}%" style="background-color: #14B8A6; border-radius: 3pt;"></td>{% endif %}
+                  <td width="{{ 100 - b3 }}%"></td>
+                </tr>
+              </table>
+            </td>
+            <td width="15%" align="right" style="font-size: 8.5pt; color: #7A8AA0;">{{ bot_count }}</td>
           </tr>
         </table>
-        <div class="mix-legend">
-          <span class="mix-dot" style="color:#4F46E5;">●</span> {{ build_count }} BUILD IT &nbsp;
-          <span class="mix-dot" style="color:#E8B923;">●</span> {{ blend_count }} BLEND IT &nbsp;
-          <span class="mix-dot" style="color:#0D9488;">●</span> {{ bot_count }} BOT IT
-        </div>
-        <div class="muted" style="margin-top: 5pt;">BUILD = human judgment leads · BLEND = you + AI · BOT = automate</div>
+        <div style="font-size: 8.5pt; color: #7A8AA0; margin-top: 6pt;">BUILD = human judgment leads · BLEND = you + AI · BOT = automate</div>
       </td>
-      <td width="52%" valign="top" style="padding-left: 12pt;">
-        <div class="subhead">Profession Summary</div>
+      <td width="52%" valign="top" style="padding-left: 14pt;">
+        <div style="font-size: 9.5pt; font-weight: bold; color: #B38F1B; margin-bottom: 10pt;">Profession summary</div>
         {% if career_identity.executive_summary %}
-        <div class="body-navy">{{ career_identity.executive_summary }}</div>
+        <div style="font-size: 10pt; color: #0B1D3A; line-height: 1.4; margin-bottom: 8pt;">{{ career_identity.executive_summary }}</div>
         {% endif %}
         {% if overview.profession_summary %}
-        <div class="muted" style="margin-top: 6pt;">{{ overview.profession_summary }}</div>
+        <div style="font-size: 9pt; color: #7A8AA0; line-height: 1.45;">{{ overview.profession_summary }}</div>
         {% endif %}
       </td>
     </tr>
   </table>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 14pt;">
-    <tr>
-      <td bgcolor="#0B1D3A" style="padding: 12pt 14pt;">
-        <div style="font-size: 7.5pt; font-weight: bold; letter-spacing: 1.3pt; text-transform: uppercase; color: #E8B923; margin-bottom: 6pt;">Career Identity</div>
-        <div style="font-size: 11pt; font-weight: bold; color: #FFFFFF; margin-bottom: 5pt;">
-          {{ career_identity.identity_title }}
-          <span style="color: #E8B923;"> · {{ career_identity.confidence_pct }}% alignment</span>
-        </div>
-        {% if career_identity.growth_strategy %}
-        <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ career_identity.growth_strategy }}</div>
-        {% endif %}
-      </td>
-    </tr>
-  </table>
+  <div style="background-color: #0B1D3A; border-radius: 6pt; padding: 12pt 14pt; margin-top: 10pt;">
+    <div style="font-size: 8.5pt; font-weight: bold; color: #E8B923; margin-bottom: 6pt;">Career identity</div>
+    <div style="font-size: 11pt; font-weight: bold; color: #FFFFFF; margin-bottom: 5pt;">
+      {{ career_identity.identity_title }} <span style="color: #E8B923;">· {{ career_identity.confidence_pct }}% alignment</span>
+    </div>
+    {% if career_identity.growth_strategy %}
+    <div style="font-size: 9.5pt; color: #FFFFFF; line-height: 1.5;">{{ career_identity.growth_strategy }}</div>
+    {% endif %}
+  </div>
 
   <!-- ========== 02 AI READINESS ========== -->
   <div class="page-break"></div>
