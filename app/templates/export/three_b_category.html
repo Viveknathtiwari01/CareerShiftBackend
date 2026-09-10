@@ -11,21 +11,22 @@
 
     body {
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 16pt;
+      font-size: 9.5pt;
       color: #0B1D3A;
-      line-height: 1.5;
+      line-height: 1.45;
+      background-color: #FAF8F5;
     }
 
     p { margin: 0 0 12pt 0; }
     ul { margin: 6pt 0 12pt 18pt; padding: 0; }
     li { margin: 0 0 5pt 0; }
 
-    .hdr-logo { font-size: 18pt; font-weight: bold; color: #0B1D3A; }
+    .hdr-logo { font-size: 11pt; font-weight: bold; color: #0B1D3A; }
     .hdr-logo-accent { color: #E8B923; }
-    .hdr-sub { font-size: 12pt; color: #8A9BB0; text-align: right; }
+    .hdr-sub { font-size: 8pt; color: #8A9BB0; text-align: right; }
 
     .section-no {
-      font-size: 18pt;
+      font-size: 9pt;
       font-weight: bold;
       color: #E8B923;
       letter-spacing: 0.5pt;
@@ -33,22 +34,22 @@
     }
     .section-title {
       margin: 2pt 0 0 0;
-      font-size: 28pt;
+      font-size: 18pt;
       font-weight: bold;
       color: #0B1D3A;
-      line-height: 1.2;
+      line-height: 1.15;
       padding-top: 6pt;
     }
     .section-rule {
-      margin-top: 8pt;
-      width: 60pt;
-      border-top: 4pt solid #E8B923;
+      margin-top: 5pt;
+      width: 48pt;
+      border-top: 2.5pt solid #E8B923;
     }
     .section-desc {
-      margin-top: 12pt;
-      font-size: 16pt;
+      margin-top: 8pt;
+      font-size: 9pt;
       color: #5B6B82;
-      line-height: 1.5;
+      line-height: 1.45;
     }
 
     .navy-box {
@@ -56,69 +57,72 @@
       color: #FFFFFF;
       padding: 16pt 18pt;
       margin: 16pt 0 14pt 0;
+      border-radius: 12pt;
     }
     .navy-label {
-      font-size: 14pt;
+      font-size: 7.5pt;
       font-weight: bold;
       letter-spacing: 1.3pt;
       text-transform: uppercase;
       color: #E8B923;
-      margin-bottom: 10pt;
+      margin-bottom: 6pt;
       padding-top: 4pt;
     }
     .navy-text {
-      font-size: 16pt;
+      font-size: 9.5pt;
       color: #FFFFFF;
       line-height: 1.5;
     }
     .navy-title {
-      font-size: 18pt;
+      font-size: 11pt;
       font-weight: bold;
       color: #FFFFFF;
-      margin-bottom: 8pt;
+      margin-bottom: 5pt;
       padding-top: 4pt;
     }
     .navy-title-accent { color: #E8B923; }
 
     .kpi-wrap {
-      margin: 20pt 0 16pt 0;
-      border-top: 4pt solid #E8B923;
-      padding-top: 14pt;
+      margin: 4pt 0 12pt 0;
+      border-top: 2.5pt solid #E8B923;
+      padding-top: 10pt;
     }
     .kpi-value {
-      font-size: 24pt;
+      font-size: 15pt;
       font-weight: bold;
       color: #0B1D3A;
-      line-height: 1.2;
+      line-height: 1.1;
       padding-top: 4pt;
     }
     .kpi-label {
-      margin-top: 4pt;
-      font-size: 12pt;
+      margin-top: 2pt;
+      font-size: 6.5pt;
       letter-spacing: 0.8pt;
       text-transform: uppercase;
       color: #7A8AA0;
     }
 
     .subhead {
-      font-size: 16pt;
+      font-size: 7.5pt;
       font-weight: bold;
       letter-spacing: 1.2pt;
       text-transform: uppercase;
       color: #E8B923;
-      margin: 0 0 10pt 0;
+      margin: 0 0 7pt 0;
       padding-top: 4pt;
     }
-    .muted { color: #5B6B82; font-size: 16pt; line-height: 1.5; }
-    .body-navy { color: #0B1D3A; font-size: 17pt; line-height: 1.5; }
+    .muted { color: #5B6B82; font-size: 8.5pt; line-height: 1.45; }
+    .body-navy { color: #0B1D3A; font-size: 9pt; line-height: 1.5; }
 
     .soft-box {
-      background-color: #F3F6FA;
+      background-color: #F8FAFC;
+      border: 1pt solid #E8EDF4;
+      border-radius: 12pt;
       padding: 14pt 16pt;
       margin-top: 14pt;
     }
     .soft-label {
-      font-size: 14pt;
+      font-size: 9.5pt;
       font-weight: bold;
       letter-spacing: 1.1pt;
       text-transform: uppercase;
@@ -128,21 +132,27 @@
     }
 
     .task-card {
+      background-color: #FFFFFF;
+      border: 1pt solid #E8EDF4;
+      border-radius: 12pt;
+      padding: 18pt 20pt;
       margin: 24pt 0 16pt 0;
-      border-top: 2pt solid #E8EDF4;
-      padding-top: 18pt;
+      box-shadow: 0 4pt 12pt rgba(11, 29, 58, 0.03);
     }
-    .task-title { font-size: 18pt; font-weight: bold; color: #0B1D3A; margin-bottom: 6pt; padding-top: 6pt; }
-    .task-meta { font-size: 14pt; color: #7A8AA0; margin: 4pt 0 8pt 0; }
-    .task-insight { font-size: 14pt; font-weight: bold; color: #0B1D3A; margin: 0 0 6pt 0; padding-top: 4pt; }
-    .task-body { font-size: 16pt; color: #5B6B82; line-height: 1.5; margin: 0 0 8pt 0; }
+    .task-title { font-size: 10.5pt; font-weight: bold; color: #0B1D3A; margin-bottom: 6pt; padding-top: 6pt; }
+    .task-meta { font-size: 8pt; color: #7A8AA0; margin: 4pt 0 8pt 0; }
+    .task-insight { font-size: 9.5pt; font-weight: bold; color: #0B1D3A; margin: 0 0 6pt 0; padding-top: 4pt; }
+    .task-body { font-size: 8.8pt; color: #5B6B82; line-height: 1.45; margin: 0 0 8pt 0; }
 
     .unverified {
-      font-size: 10pt;
+      font-size: 7pt;
       font-weight: bold;
       color: #92400e;
       background-color: #fef3c7;
-      padding: 3pt 5pt;
+      padding: 3pt 6pt;
+      border-radius: 9999px;
+      vertical-align: middle;
+      margin-left: 6pt;
     }
 
     .component-table {
@@ -162,25 +172,25 @@
       padding-left: 12pt;
     }
     .component-name {
-      font-size: 16pt;
+      font-size: 9.5pt;
       font-weight: bold;
       color: #0B1D3A;
       margin: 0 0 4pt;
       padding-top: 8pt;
     }
     .component-desc {
-      font-size: 16pt;
+      font-size: 9pt;
       color: #5B6B82;
       margin: 0 0 5pt;
     }
     .component-meta {
-      font-size: 12pt;
+      font-size: 7.5pt;
       color: #8A9BB0;
       margin: 0 0 6pt;
     }
 
     .tool-line {
-      font-size: 15pt;
+      font-size: 9pt;
       color: #0B1D3A;
       margin: 0 0 6pt;
       padding-left: 12pt;
@@ -191,10 +201,10 @@
     }
     .tool-meta {
       color: #5B6B82;
-      font-size: 14pt;
+      font-size: 8pt;
     }
     .tool-detail {
-      font-size: 14pt;
+      font-size: 8pt;
       color: #5B6B82;
       margin: 0 0 5pt;
       padding-left: 12pt;
@@ -208,16 +218,16 @@
     <table width="100%" cellpadding="0" cellspacing="0" style="width: 100%;">
       <tr>
         <td width="50%" valign="bottom">
-          <div style="font-size: 18pt; font-weight: bold; color: #0B1D3A;">Career<span style="color: #E8B923;">Shift3B</span></div>
-          <div style="font-size: 6pt; letter-spacing: 1.5pt; color: #8A9BB0; margin-top: 1pt;">AI CAREER INTELLIGENCE</div>
+          <div style="font-size: 11pt; font-weight: bold; color: #0B1D3A;">Career<span style="color: #E8B923;">Shift3B</span></div>
+          <div style="font-size: 5pt; letter-spacing: 1.5pt; color: #8A9BB0; margin-top: 1pt;">AI CAREER INTELLIGENCE</div>
         </td>
         <td width="50%" valign="bottom" align="right">
-          <div style="font-size: 8pt; font-weight: bold; color: #0B1D3A;">3B Analysis · {{ category_meta.title }}</div>
-          <div style="font-size: 12pt; color: #8A9BB0; text-align: right; margin-top: 1pt; text-transform: uppercase;">{{ category_meta.tagline }}</div>
+          <div style="font-size: 7.5pt; font-weight: bold; color: #0B1D3A;">3B Analysis · {{ category_meta.title }}</div>
+          <div style="font-size: 7.5pt; color: #8A9BB0; text-align: right; margin-top: 1pt; text-transform: uppercase;">{{ category_meta.tagline }}</div>
         </td>
       </tr>
     </table>
-    <div style="margin-top: 6pt; border-top: 1pt solid #E8EDF4;"></div>
+    <div style="margin-top: 5pt; border-top: 1.5pt solid #E8EDF4;"></div>
   </div>
 
   <!-- PAGE FOOTER -->
@@ -226,7 +236,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" style="width: 100%;">
         <tr>
           <td width="70%" style="font-size: 7.5pt; color: #8A9BB0;">
-            © <span style="color:#0B1D3A; font-weight:bold;">CareerShift3B</span> &middot; Confidential &middot; Prepared for {{ profile.name }}
+            © <span style="color:#0B1D3A; font-weight:bold;">CareerShift3B</span> &middot; Confidential &middot; Prepared for {{ profile.name }} &middot; <span style="color: #E8B923; font-weight: bold;">https://careershift3b.com/</span>
           </td>
           <td width="30%" align="right" style="font-size: 7.5pt; color: #8A9BB0;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></td>
         </tr>
@@ -328,7 +338,7 @@
     {% endif %}
 
     {% if task.learn_gap or task.learn_do or task.learn_dont or task.where_to_learn %}
-    <div class="navy-box" style="background-color: #112844;">
+    <div class="navy-box" style="background-color: #112844; border-radius: 12pt;">
       <div class="navy-label" style="color: #63b3ed;">LEARNING IMPLICATION</div>
       {% if task.learn_gap %}<p class="navy-text"><strong>Gap:</strong> {{ task.learn_gap }}</p>{% endif %}
       {% if task.learn_do %}<p class="navy-text"><strong>Learn:</strong> {{ task.learn_do }}</p>{% endif %}
