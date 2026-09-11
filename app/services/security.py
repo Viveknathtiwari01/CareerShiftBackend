@@ -9,12 +9,19 @@ pwd_context = CryptContext(schemes=["bcrypt", "argon2"], deprecated="auto")
 
 class SecurityService:
     @staticmethod
+    def _truncate_password(password: str) -> str:
+        encoded = password.encode("utf-8")
+        if len(encoded) > 72:
+            return encoded[:72].decode("utf-8", "ignore")
+        return password
+
+    @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password[:72], hashed_password)
+        return pwd_context.verify(SecurityService._truncate_password(plain_password), hashed_password)
 
     @staticmethod
     def get_password_hash(password: str) -> str:
-        return pwd_context.hash(password[:72])
+        return pwd_context.hash(SecurityService._truncate_password(password))
 
     @staticmethod
     def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
