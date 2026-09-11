@@ -407,7 +407,11 @@ def render_toolkit_html(
 
 
 def html_to_pdf(html: str) -> bytes:
+    import os
     import re
+
+    # Must match render_build.sh: browsers are installed into the Playwright package.
+    os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "0")
 
     header_match = re.search(r'<div id="header_content" style="display: none;">(.*?)</div>', html, re.DOTALL)
     header_html = header_match.group(1) if header_match else "<span></span>"
@@ -421,19 +425,30 @@ def html_to_pdf(html: str) -> bytes:
     def _generate_pdf() -> bytes:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.set_content(html)
-            pdf_bytes = page.pdf(
-                format="A4",
-                print_background=True,
-                display_header_footer=True,
-                header_template=header_template,
-                footer_template=footer_template,
-                margin={"top": "2.4cm", "right": "1.4cm", "bottom": "1.9cm", "left": "1.4cm"},
+            # no-sandbox / disable-dev-shm-usage required on many PaaS hosts (Render).
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
             )
-            browser.close()
-            return pdf_bytes
+            try:
+                page = browser.new_page()
+                page.set_content(html, wait_until="load")
+                pdf_bytes = page.pdf(
+                    format="A4",
+                    print_background=True,
+                    display_header_footer=True,
+                    header_template=header_template,
+                    footer_template=footer_template,
+                    margin={"top": "2.4cm", "right": "1.4cm", "bottom": "1.9cm", "left": "1.4cm"},
+                )
+                return pdf_bytes
+            finally:
+                browser.close()
 
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
