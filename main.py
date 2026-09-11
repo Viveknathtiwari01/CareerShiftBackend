@@ -1,3 +1,8 @@
+import os
+
+# Align with render_build.sh / Dockerfile so PDF export finds Chromium on Render.
+os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "0")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings

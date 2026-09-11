@@ -138,37 +138,9 @@ def render_category_json(context: dict[str, Any]) -> bytes:
 
 
 def html_to_pdf(html: str) -> bytes:
-    import re
+    from app.services.report_export import html_to_pdf as _html_to_pdf
 
-    header_match = re.search(r'<div id="header_content" style="display: none;">(.*?)</div>', html, re.DOTALL)
-    header_html = header_match.group(1) if header_match else "<span></span>"
-    
-    footer_match = re.search(r'<div id="footer_content" style="display: none;">(.*?)</div>', html, re.DOTALL)
-    footer_html = footer_match.group(1) if footer_match else "<span></span>"
-
-    header_template = f'<div style="width: 100%; font-family: Helvetica, Arial, sans-serif; padding: 0 1.4cm; -webkit-print-color-adjust: exact;">{header_html}</div>'
-    footer_template = f'<div style="width: 100%; font-family: Helvetica, Arial, sans-serif; padding: 0 1.4cm; -webkit-print-color-adjust: exact;">{footer_html}</div>'
-
-    def _generate_pdf() -> bytes:
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.set_content(html)
-            pdf_bytes = page.pdf(
-                format="A4",
-                print_background=True,
-                display_header_footer=True,
-                header_template=header_template,
-                footer_template=footer_template,
-                margin={"top": "2.4cm", "right": "1.4cm", "bottom": "1.9cm", "left": "1.4cm"},
-            )
-            browser.close()
-            return pdf_bytes
-
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        return executor.submit(_generate_pdf).result()
+    return _html_to_pdf(html)
 
 
 def render_category_pdf(context: dict[str, Any]) -> bytes:

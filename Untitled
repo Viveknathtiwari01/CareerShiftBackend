@@ -1,0 +1,8 @@
+Request URL
+https://careershiftbackend.onrender.com/api/v1/assessment/1f18155a-cdc5-4244-8167-242c664d93df/analysis/export?category=BLEND&format=pdf
+Request Method
+GET
+Status Code
+500 Internal Server Error
+Referrer Policy
+strict-origin-when-cross-origin
