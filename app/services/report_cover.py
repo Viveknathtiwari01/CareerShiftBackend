@@ -186,11 +186,11 @@ def render_cover_pdf(
         val_width = c.stringWidth(value, "Helvetica-Bold", 10)
         col_x += max(120, val_width + 30)
 
-    # Score gauge (optional)
-    if overall_score is not None:
-        gauge_cx = width - 122
-        gauge_cy = 175
-        _draw_progress_ring(c, gauge_cx, gauge_cy, radius=62, stroke=12, score=overall_score)
+    # Score gauge (optional) - removed per user request
+    # if overall_score is not None:
+    #     gauge_cx = width - 122
+    #     gauge_cy = 175
+    #     _draw_progress_ring(c, gauge_cx, gauge_cy, radius=62, stroke=12, score=overall_score)
 
     # Footer
     footer_y = 30
