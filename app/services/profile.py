@@ -30,6 +30,20 @@ class ProfileService:
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found.")
         
-        return await profile_repo.update(db, db_obj=profile, obj_in=obj_in)
+        career_identity_fields = ["job_title", "industry", "business_function", "domain", "specialization"]
+        update_data = obj_in.model_dump(exclude_unset=True)
+        
+        if any(field in update_data for field in career_identity_fields):
+            raise HTTPException(status_code=400, detail="You cannot edit your Current Career Identity once it has been created.")
+            
+        if not update_data:
+            return profile
+            
+        if getattr(profile, "edit_count", 0) >= 3:
+            raise HTTPException(status_code=400, detail="You have reached the maximum limit of 3 edits for your profile sections.")
+            
+        update_data["edit_count"] = getattr(profile, "edit_count", 0) + 1
+        
+        return await profile_repo.update(db, db_obj=profile, obj_in=update_data)
 
 profile_service = ProfileService()

@@ -48,6 +48,7 @@ class UserProfileUpdate(BaseModel):
 class UserProfileResponse(UserProfileBase):
     id: UUID4
     user_id: UUID4
+    edit_count: int
     terms_accepted: bool = False
     privacy_accepted: bool = False
     consent_accepted_at: Optional[datetime] = None

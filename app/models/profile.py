@@ -36,6 +36,9 @@ class UserProfile(AuditMixin, Base):
     ai_tools: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     ai_comfort_level: Mapped[int] = mapped_column(Integer, nullable=False)
 
+    # Edit tracking
+    edit_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+
     # Legal consent (Terms & Conditions + Privacy Policy)
     terms_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     privacy_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
