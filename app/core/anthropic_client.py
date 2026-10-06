@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from anthropic import Anthropic, AsyncAnthropic
+from anthropic import Anthropic, AsyncAnthropic, Timeout
 from dotenv import load_dotenv
 
 # Ensure Backend/.env is loaded before reading settings (services/client.py lives outside app/)
@@ -69,6 +69,11 @@ def create_sync_client() -> Anthropic:
 
 def create_async_client() -> AsyncAnthropic:
     return AsyncAnthropic(api_key=get_anthropic_api_key())
+
+
+def long_request_timeout() -> Timeout:
+    """SDK timeout. Anthropic 1.x rejects a raw httpx.Timeout because it uses httpx2."""
+    return Timeout(300.0, connect=30.0)
 
 
 def extract_response_text(response: Any) -> str:

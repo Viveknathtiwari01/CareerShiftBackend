@@ -4,7 +4,6 @@ import logging
 import re
 from typing import Any
 
-import httpx
 from anthropic import (
     APIConnectionError,
     APIStatusError,
@@ -20,6 +19,7 @@ from app.core.anthropic_client import (
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
+    long_request_timeout,
     model_supports_sampling_params,
 )
 from app.services.task_3b_verification import (
@@ -90,7 +90,7 @@ async def _call_anthropic_for_3b_chunk(
     # and surfaces in the browser as "Failed to fetch".
     client: AsyncAnthropic = AsyncAnthropic(
         api_key=get_anthropic_api_key(),
-        timeout=httpx.Timeout(300.0, connect=30.0),
+        timeout=long_request_timeout(),
         max_retries=2,
     )
     max_attempts = 3

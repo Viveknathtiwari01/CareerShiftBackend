@@ -29,8 +29,12 @@ def file_extension(filename: str | None) -> str:
     return filename.rsplit(".", 1)[-1].lower()
 
 
+_GLUED_JUNK_RE = re.compile(r"(?:\.is[A-Z]\w*|(?:\.0){3,})")
+
+
 def normalize_resume_text(text: str) -> str:
     cleaned = text.replace("\x00", " ")
+    cleaned = _GLUED_JUNK_RE.sub(" ", cleaned)
     cleaned = re.sub(r"[^\S\n]+", " ", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()

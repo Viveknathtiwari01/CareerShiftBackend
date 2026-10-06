@@ -61,6 +61,8 @@ _IDENTITY_RETRY_MAX_TOKENS = 8192
 
 _FENCE_RE = re.compile(r"```(?:json)?\s*([\s\S]*?)```", re.IGNORECASE)
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+# Resume text sometimes appends code-like noise, and the model copies it into a reason.
+_GLUED_JUNK_RE = re.compile(r"(?:\.is[A-Z]\w*|(?:\.0){3,}).*")
 
 
 class AITimeoutError(Exception):
@@ -216,11 +218,27 @@ def _normalize_field_payload(raw: Any) -> Any:
 
     reason = normalized.get("reason")
     if isinstance(reason, str):
-        collapsed = " ".join(reason.split())
-        if len(collapsed) > 160:
-            collapsed = collapsed[:160].rstrip()
-        normalized["reason"] = collapsed
+        normalized["reason"] = _clean_reason(reason)
     return normalized
+
+
+def _clean_reason(reason: str) -> str:
+    """Keep the user-facing sentence and drop glued-on junk such as `.isEqual.0.0.0`."""
+    collapsed = " ".join(reason.split()).strip()
+    if not _GLUED_JUNK_RE.search(collapsed):
+        if len(collapsed) > 160:
+            return collapsed[:160].rstrip()
+        return collapsed
+
+    cleaned = _GLUED_JUNK_RE.sub("", collapsed).strip(" .")
+    if not cleaned:
+        if len(collapsed) > 160:
+            return collapsed[:160].rstrip()
+        return collapsed
+    cleaned = f"{cleaned}."
+    if len(cleaned) > 160:
+        cleaned = cleaned[:160].rstrip()
+    return cleaned
 
 
 def _attach_identity_json_schema(request_kwargs: dict[str, Any]) -> None:

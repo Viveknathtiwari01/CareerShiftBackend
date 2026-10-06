@@ -104,6 +104,18 @@ def test_overlong_reason_is_truncated():
     assert result.industry.reason == "x" * 160
 
 
+def test_reason_drops_glued_junk():
+    junk = (
+        "You worked as a developer/trainee at technology service companies building software "
+        "solutions.isEqual.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0."
+    )
+    payload = _payload(industry=_field("Information Technology", 0.85, junk))
+    result = parse_and_validate_identity_payload(json.dumps(payload))
+    assert result.industry.reason == (
+        "You worked as a developer/trainee at technology service companies building software solutions."
+    )
+
+
 def test_numeric_string_confidence_is_coerced():
     payload = _payload(industry={"value": "Healthcare", "confidence": "0.95", "reason": "Stated."})
     result = parse_and_validate_identity_payload(json.dumps(payload))
