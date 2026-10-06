@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
@@ -11,6 +11,7 @@ from app.schemas.profile import (
     UserProfileUpdate,
     UserProfileResponse,
     GenerateSkillsRequest,
+    ResumeProfileResponse,
     SuggestIdentityRequest,
     SuggestIdentityResponse,
 )
@@ -24,6 +25,8 @@ from app.services.ai_career_identity import (
     AIUnavailableError,
     suggest_career_identity_from_ai,
 )
+from app.services.resume_profile import suggest_profile_from_resume
+from app.services.resume_text import MAX_RESUME_BYTES, ResumeReadError
 router = APIRouter()
 
 @router.get("/me", response_model=APIResponse[UserProfileResponse])
@@ -163,5 +166,53 @@ async def suggest_identity_api(
     return APIResponse(
         success=True,
         message="Career identity suggestions generated successfully",
+        data=suggestions,
+    )
+
+
+def _raise_identity_ai_error(exc: Exception) -> None:
+    if isinstance(exc, AITimeoutError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    if isinstance(exc, AIUnavailableError):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    if isinstance(exc, (AIParseError, AISchemaValidationError)):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    raise exc
+
+
+@router.post("/suggest-identity/resume", response_model=APIResponse[ResumeProfileResponse])
+async def suggest_identity_from_resume(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(rate_limit_suggest_identity),
+):
+    """Map a PDF or DOCX resume onto career identity, tools, skills, and experience."""
+    payload = await file.read(MAX_RESUME_BYTES + 1)
+    await file.close()
+    request_id = getattr(request.state, "request_id", None)
+    try:
+        suggestions = await suggest_profile_from_resume(
+            payload,
+            file.filename,
+            request_id=str(request_id) if request_id else None,
+            user_id=str(current_user.id),
+        )
+    except ResumeReadError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    except (AITimeoutError, AIUnavailableError, AIParseError, AISchemaValidationError) as exc:
+        _raise_identity_ai_error(exc)
+
+    return APIResponse(
+        success=True,
+        message="Resume profile suggestions generated successfully",
         data=suggestions,
     )

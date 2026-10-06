@@ -91,3 +91,25 @@ class SuggestIdentityResponse(BaseModel):
     functional_domain: FieldSuggestion
     specialization: FieldSuggestion
     job_title: FieldSuggestion
+
+
+class ResumeExtractedDetails(BaseModel):
+    """Experience, tools, and skills read from a resume. Empty lists are valid."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    experience_years: Optional[int] = Field(None, ge=0, le=60)
+    experience_level: Optional[str] = None
+    tools: List[str] = Field(default_factory=list)
+    technical_skills: List[str] = Field(default_factory=list)
+    professional_skills: List[str] = Field(default_factory=list)
+    soft_skills: List[str] = Field(default_factory=list)
+    behavioural_skills: List[str] = Field(default_factory=list)
+    digital_skills: List[str] = Field(default_factory=list)
+    ai_tools: List[str] = Field(default_factory=list)
+
+
+class ResumeProfileResponse(SuggestIdentityResponse):
+    """Identity suggestions plus the other details extracted from a resume."""
+
+    resume_details: ResumeExtractedDetails = Field(default_factory=ResumeExtractedDetails)

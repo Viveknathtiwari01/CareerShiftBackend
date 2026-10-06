@@ -1,14 +1,22 @@
+import asyncio
 import json
 import logging
 import re
 from typing import Any
 
-from anthropic import APIStatusError, AsyncAnthropic, AuthenticationError
+import httpx
+from anthropic import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AsyncAnthropic,
+    AuthenticationError,
+)
 
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
-    create_async_client,
     extract_response_text,
+    get_anthropic_api_key,
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -78,9 +86,15 @@ async def _call_anthropic_for_3b_chunk(
         messages=[{"role": "user", "content": user_prompt}],
     )
 
-    client: AsyncAnthropic = create_async_client()
-    max_attempts = 2
-    
+    # Default SDK connect timeout is 5s, which drops the next chunk on a slow link
+    # and surfaces in the browser as "Failed to fetch".
+    client: AsyncAnthropic = AsyncAnthropic(
+        api_key=get_anthropic_api_key(),
+        timeout=httpx.Timeout(300.0, connect=30.0),
+        max_retries=2,
+    )
+    max_attempts = 3
+
     for attempt in range(1, max_attempts + 1):
         try:
             response = await client.messages.create(**request_kwargs)
@@ -94,6 +108,24 @@ async def _call_anthropic_for_3b_chunk(
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"AI service error: {message}"
+            ) from exc
+        except (APITimeoutError, APIConnectionError) as exc:
+            logger.warning(
+                "3B classification connection issue (attempt %d/%d, tasks=%d): %s",
+                attempt,
+                max_attempts,
+                len(tasks),
+                exc,
+            )
+            if attempt < max_attempts:
+                await asyncio.sleep(1.5 * attempt)
+                continue
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=(
+                    "The AI service did not respond in time while preparing your 3B analysis. "
+                    "Please try again."
+                ),
             ) from exc
 
         output_text = extract_response_text(response)
