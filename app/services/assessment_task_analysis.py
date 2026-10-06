@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.constants import PIPELINE_STATUS_COMPLETED
 from app.models.assessment_task_analysis import AssessmentTaskAnalysis
@@ -27,6 +28,7 @@ from app.schemas.assessment_task_analysis import (
 )
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
+from app.services.task_ai_tools import recommend_tools_for_tasks
 from app.services.task_3b_derivations import (
     derive_importance,
     enrich_cost_of_staying_as_is,
@@ -408,6 +410,114 @@ class AssessmentTaskAnalysisService:
             generated_at=generated_at,
             assessment=assessment,
         )
+
+    async def generate_ai_tools(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        assessment_id: UUID,
+    ) -> TaskAnalysisRunResponse:
+        """Attach industry tool recommendations to existing 3B work components."""
+        assessment = await self._get_owned_assessment(db, user_id, assessment_id)
+        rows = await self._repo.list_for_assessment(db, assessment_id=assessment_id)
+        if not rows:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Complete 3B analysis before generating AI tools.",
+            )
+
+        profile = await profile_repo.get_by_user_id(db, user_id)
+        profile_context = {
+            "job_title": getattr(profile, "job_title", None),
+            "industry": getattr(profile, "industry", None),
+            "business_function": getattr(profile, "business_function", None),
+            "domain": getattr(profile, "domain", None),
+            "specialization": getattr(profile, "specialization", None),
+        }
+
+        task_payload: list[dict] = []
+        for row in rows:
+            components = []
+            for component in row.components or []:
+                if not isinstance(component, dict) or not component.get("name"):
+                    continue
+                components.append(
+                    {
+                        "name": component.get("name"),
+                        "description": component.get("description") or "",
+                        "capability": component.get("capability") or "",
+                        "solution_pattern": component.get("solution_pattern") or "",
+                        "is_automatable": bool(component.get("is_automatable")),
+                    }
+                )
+            task = row.task
+            task_payload.append(
+                {
+                    "task_id": str(row.task_id),
+                    "title": task.title if task else "",
+                    "description": task.description if task else "",
+                    "category": row.category,
+                    "components": components,
+                }
+            )
+
+        recommendations = await recommend_tools_for_tasks(
+            profile=profile_context,
+            tasks=task_payload,
+        )
+        tools_by_task = {item["task_id"]: item for item in recommendations}
+        tools_by_title = {
+            str(item.get("title") or "").strip().lower(): item
+            for item in recommendations
+            if str(item.get("title") or "").strip()
+        }
+        if not tools_by_task and not tools_by_title:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI did not return tool recommendations. Please try again.",
+            )
+
+        for row in rows:
+            task = row.task
+            title_key = (task.title if task else "").strip().lower()
+            match = tools_by_task.get(str(row.task_id)) or tools_by_title.get(title_key)
+            components = [dict(component) for component in (row.components or []) if isinstance(component, dict)]
+            tools_by_name = {}
+            if match:
+                for component in match.get("components") or []:
+                    tools_by_name[str(component.get("name") or "").strip().lower()] = component.get("tools") or []
+
+            recommended: list[str] = []
+            for component in components:
+                key = str(component.get("name") or "").strip().lower()
+                tools = tools_by_name.get(key) or []
+                component["tools"] = tools
+                for tool in tools:
+                    name = tool.get("name")
+                    if name and name not in recommended:
+                        recommended.append(name)
+
+            row.components = components
+            row.recommended_tools = recommended
+            flag_modified(row, "components")
+            flag_modified(row, "recommended_tools")
+            db.add(row)
+
+        if not any(row.recommended_tools for row in rows):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="AI could not match real tools to your work components. Please try again.",
+            )
+
+        analyses_payload = analysis_dicts_from_rows(
+            rows,
+            task_title_for=self._task_title_for_row,
+        )
+        await self._persist_toolkit_snapshot(db, assessment, analyses_payload)
+        await db.commit()
+
+        logger.info("AI tools saved for assessment %s (%d tasks)", assessment_id, len(rows))
+        return await self.get_analysis(db, user_id, assessment_id)
 
     async def update_task_status(
         self,

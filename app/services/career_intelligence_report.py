@@ -203,6 +203,7 @@ class CareerIntelligenceReportService:
                 "risk_level": row.risk_level,
                 "future_impact": row.future_impact,
                 "recommended_tools": list(row.recommended_tools or []),
+                "components": list(row.components or []),
             }
             for row in analysis_rows
         ]

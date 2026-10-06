@@ -386,120 +386,18 @@ GOOD:
 The solution pattern must sit between capability and tool.
 
 ============================================================
-9. TOOL RECOMMENDATIONS
+9. DO NOT RECOMMEND TOOLS
 ============================================================
 
-Tools are recommendations, NOT verified facts.
+This step classifies work. It does not recommend products.
 
-Recommend tools only when a component genuinely benefits from technology.
+For every component, set "tools" to an empty array: [].
 
-Do not generate tools simply to fill the array.
+Do not name software, vendors, or AI products anywhere in components.
+Product recommendations are generated in a later step from these components.
 
-For BOT and BLEND components where tools are appropriate:
-
-- EVERY automatable component you list MUST include 2-4 realistic tool options.
-- Do NOT list multiple components and then provide tools for only one of them.
-- If a component cannot support meaningful tool recommendations, mark it is_automatable = false
-  and explain it in description instead.
-- recommend 2-4 realistic options per automatable component
-- span at least 2 different feasibility tiers when realistically possible
-- prioritize relevance over quantity
-- include a mixture of practical options where justified
-- include Microsoft ecosystem tools when they genuinely fit the component
-- include open/free options when they are realistically useful
-- include paid options when they offer meaningful additional capability
-
-IMPORTANT:
-
-Do NOT force a free + paid combination when it would make the recommendation
-less relevant.
-
-A relevant single tool is better than two irrelevant tools.
-
-Tools must be mapped to the specific:
-
-component
-+
-capability
-+
-solution_pattern
-
-Do not produce generic tool lists.
-
-Example:
-
-Component:
-"Automated data extraction"
-
-Capability:
-"structured data extraction"
-
-Solution pattern:
-"automated data ingestion"
-
-Good tools:
-
-- Power Automate
-- Python
-- Make
-
-Bad:
-
-- Slack
-- Zoom
-- Notion
-
-unless they actually implement the required solution pattern.
-
-============================================================
-10. TOOL CONTEXTUAL FIT
-============================================================
-
-For every tool provide TWO distinct text fields:
-
-fit_description — WHY this option fits this user's specific task, industry,
-or workflow. Reference the task description when possible.
-
-market_note — A brief contextual proof point (italic-style summary) such as
-deployment patterns or common adoption — without inventing statistics.
-
-Do not combine fit_description and market_note into one string.
-
-Do not say:
-
-"widely used by professionals"
-
-unless that fact is actually necessary and safe.
-
-Do not claim:
-
-- employer already owns it
-- employer allows it
-- user already uses it
-- user can purchase it
-- enterprise approval exists
-
-unless explicitly provided.
-
-============================================================
-11. TOOL COST AND PRICING NOTE
-============================================================
-
-Use normalized cost_band:
-
-free
-freemium
-paid_individual
-paid_team
-enterprise
-
-Also provide pricing_note — a short human-readable access line such as:
-"Included in Microsoft 365 plans" or "Free tier available; paid plans from ~$20–30/month".
-
-pricing_note may include approximate price ranges as indicative guidance only.
-Do NOT claim current pricing is verified.
-
-Do NOT invent exact verified prices.
+Still fill capability and solution_pattern. The solution pattern stays abstract
+and must not be a product name.
 
 ============================================================
 12. FEASIBILITY
@@ -822,22 +720,7 @@ Schema:
           "is_automatable": true,
           "capability": "One stable underlying capability.",
           "solution_pattern": "One abstract solution pattern.",
-          "tools": [
-            {
-              "name": "Relevant tool",
-              "cost_band": "free|freemium|paid_individual|paid_team|enterprise",
-              "pricing_note": "Human-readable access or indicative pricing line.",
-              "feasibility": "self_serve|company_tech|org_must_enable|stays_human_led",
-              "fit_description": "Why this tool fits this component and user context.",
-              "market_note": "Brief contextual proof point without invented statistics.",
-              "pros": [
-                "Specific advantage"
-              ],
-              "cons": [
-                "Specific limitation"
-              ]
-            }
-          ]
+          "tools": []
         }
       ]
     }
@@ -861,10 +744,10 @@ Before returning JSON, internally verify:
 9. Components are meaningful, not padded.
 10. Maximum 7 components per task.
 11. Every listed component has capability and solution_pattern filled in.
-12. Every automatable component has 2-4 tool recommendations.
+12. Every component tools array is empty.
 13. Capability contains exactly one stable capability.
-14. Solution pattern is not a tool name.
-15. Tools are specific to the component.
+14. Solution pattern is not a product or tool name.
+15. No software product is named in components.
 16. No tool verification claims exist.
 17. No employer assumptions exist.
 18. No invented market statistics exist.
@@ -895,10 +778,10 @@ For each reviewed task:
 2. Write rationale and reason in plain, user-facing language (see section 3B).
 3. Identify meaningful work components only where decomposition adds value.
 4. Map each component to exactly one capability.
-5. Map the capability to a solution pattern.
-6. For every component where is_automatable is true, recommend 2-4 relevant tools.
+5. Map the capability to a solution pattern. Do not name a product.
+6. Set every component tools array to [].
 7. For every component where is_automatable is false, explain why it stays human-led in description.
-8. Recommend relevant tools only when they genuinely fit.
+8. Do not recommend software, vendors, or AI products.
 9. Explain the human capability that remains valuable.
 10. Explain the cost of continuing the current approach.
 11. Identify the future capability requirement and learning gap.
@@ -907,6 +790,7 @@ For each reviewed task:
 
 Do not calculate hours.
 Do not provide numeric market statistics or hiring percentages.
+Do not name or recommend any software product.
 Do not claim tool verification.
 Do not assume employer licenses or permissions.
 Do not invent information missing from the payload.

@@ -121,6 +121,13 @@ def test_parse_resume_details_normalizes_lists_and_years():
     assert details.technical_skills == ["Critical care protocols"]
 
 
+def test_parse_resume_details_accepts_fenced_json_with_preamble():
+    payload = json.dumps({"experience_years": 6, "tools": ["Excel"]})
+    details = parse_resume_details_payload(f"Extracted details:\n```json\n{payload}\n```")
+    assert details.experience_years == 6
+    assert details.tools == ["Excel"]
+
+
 def test_parse_resume_details_rejects_invalid_json():
     with pytest.raises(AIParseError):
         parse_resume_details_payload("not json")

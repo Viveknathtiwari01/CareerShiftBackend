@@ -28,6 +28,7 @@ from app.services.ai_career_identity import (
     AISchemaValidationError,
     AITimeoutError,
     AIUnavailableError,
+    loads_model_json,
     suggest_career_identity_from_ai,
 )
 from app.services.resume_text import extract_resume_text
@@ -77,14 +78,6 @@ def empty_resume_details() -> ResumeExtractedDetails:
     return ResumeExtractedDetails()
 
 
-def _strip_markdown_json(text: str) -> str:
-    clean = text.strip()
-    if clean.startswith("```"):
-        clean = re.sub(r"^```(?:json)?\s*", "", clean)
-        clean = re.sub(r"\s*```$", "", clean)
-    return clean.strip()
-
-
 def _clean_item_list(raw: Any) -> list[str]:
     if not isinstance(raw, list):
         return []
@@ -128,7 +121,7 @@ def _parse_years(raw: Any) -> int | None:
 def parse_resume_details_payload(output_text: str) -> ResumeExtractedDetails:
     """Parse model text into resume details. Raises AIParseError on invalid JSON."""
     try:
-        parsed = json.loads(_strip_markdown_json(output_text))
+        parsed = loads_model_json(output_text)
     except json.JSONDecodeError as exc:
         raise AIParseError("AI returned invalid JSON for resume details.") from exc
     if not isinstance(parsed, dict):
@@ -166,7 +159,7 @@ async def _extract_details_from_ai(
 ) -> ResumeExtractedDetails:
     get_anthropic_api_key()
     model = get_anthropic_model()
-    user_prompt = USER_PROMPT_TEMPLATE.format(resume_text=resume_text)
+    user_prompt = USER_PROMPT_TEMPLATE.replace("{resume_text}", resume_text)
     request_kwargs = build_messages_create_kwargs(
         model,
         max_tokens=2048,

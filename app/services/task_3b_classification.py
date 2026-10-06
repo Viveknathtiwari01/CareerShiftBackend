@@ -179,36 +179,50 @@ async def classify_tasks_3b_from_ai(
 ) -> dict[str, Any]:
     """Call Anthropic to classify tasks into BUILD/BOT/BLEND with chunking."""
     tasks = grounding_payload.get("reviewed_tasks") or []
-    
+
     CHUNK_SIZE = 5
     if len(tasks) <= CHUNK_SIZE:
-        return await _call_anthropic_for_3b_chunk(grounding_payload=grounding_payload)
+        return _without_tool_recommendations(
+            await _call_anthropic_for_3b_chunk(grounding_payload=grounding_payload)
+        )
 
     logger.info("Chunking %d tasks for 3B classification (chunk size %d)", len(tasks), CHUNK_SIZE)
-    
+
     all_analyses = []
     final_parsed = None
-    
+
     for i in range(0, len(tasks), CHUNK_SIZE):
         chunk_tasks = tasks[i:i + CHUNK_SIZE]
         chunk_payload = dict(grounding_payload)
         chunk_payload["reviewed_tasks"] = chunk_tasks
-        
+
         parsed = await _call_anthropic_for_3b_chunk(grounding_payload=chunk_payload)
-        
+
         chunk_analyses = parsed.get("analyses", [])
         for analysis in chunk_analyses:
             if "task_index" in analysis and isinstance(analysis["task_index"], int):
                 analysis["task_index"] += i
-                
+
         if final_parsed is None:
             final_parsed = dict(parsed)
-            final_parsed["analyses"] = []  # We will extend it with all_analyses later
+            final_parsed["analyses"] = []
             all_analyses.extend(chunk_analyses)
         else:
             all_analyses.extend(chunk_analyses)
-            
+
     if final_parsed:
         final_parsed["analyses"] = all_analyses
-        return final_parsed
+        return _without_tool_recommendations(final_parsed)
     return {}
+
+
+def _without_tool_recommendations(parsed: dict[str, Any]) -> dict[str, Any]:
+    """3B classification identifies work. Product recommendations are a later step."""
+    for analysis in parsed.get("analyses") or []:
+        if not isinstance(analysis, dict):
+            continue
+        analysis["recommended_tools"] = []
+        for component in analysis.get("components") or []:
+            if isinstance(component, dict):
+                component["tools"] = []
+    return parsed

@@ -61,6 +61,17 @@ async def run_task_analysis(
     return APIResponse(success=True, message=message, data=data)
 
 
+@router.post("/{assessment_id}/ai-tools", response_model=APIResponse[TaskAnalysisRunResponse])
+async def generate_task_ai_tools(
+    assessment_id: UUID,
+    current_user: User = Depends(rate_limit_analyze),
+    db: AsyncSession = Depends(get_db),
+    analysis_service: AssessmentTaskAnalysisService = Depends(get_analysis_service),
+):
+    data = await analysis_service.generate_ai_tools(db, current_user.id, assessment_id)
+    return APIResponse(success=True, message="AI tools generated", data=data)
+
+
 from app.schemas.assessment_task_analysis import TaskAnalysisItem, TaskAnalysisStatusUpdate
 
 @router.patch(
