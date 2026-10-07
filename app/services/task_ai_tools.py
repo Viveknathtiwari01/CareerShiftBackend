@@ -3,7 +3,6 @@
 import asyncio
 import json
 import logging
-import re
 from typing import Any
 
 from anthropic import APIConnectionError, APIStatusError, APITimeoutError, AsyncAnthropic, AuthenticationError
@@ -19,6 +18,7 @@ from app.core.anthropic_client import (
     long_request_timeout,
     model_supports_sampling_params,
 )
+from app.services.ai_career_identity import loads_model_json
 from app.services.task_3b_verification import _sanitize_tool_option
 from promppts.TaskAIToolsService import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
@@ -27,27 +27,25 @@ logger = logging.getLogger(__name__)
 CHUNK_SIZE = 3
 
 
-def _strip_markdown_json(text: str) -> str:
-    clean = text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean)
-    if match:
-        clean = match.group(1).strip()
-    else:
-        start = clean.find("{")
-        end = clean.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            clean = clean[start : end + 1]
-    return clean.strip()
-
-
 def _parse_tools_json(output_text: str) -> dict[str, Any]:
-    parsed = json.loads(_strip_markdown_json(output_text))
+    """Parse a tools reply. Accepts fences, prose around the object, and common JSON mistakes."""
+    parsed = loads_model_json(output_text)
+    if isinstance(parsed, list):
+        return {"tasks": parsed}
     if not isinstance(parsed, dict):
         raise ValueError("AI response was not a JSON object.")
+    if parsed.get("task_id") and "tasks" not in parsed:
+        return {"tasks": [parsed]}
     tasks = parsed.get("tasks")
     if not isinstance(tasks, list):
         raise ValueError("tasks must be a list")
     return parsed
+
+
+def _parse_failure_detail(exc: Exception) -> str:
+    if isinstance(exc, json.JSONDecodeError):
+        return f"json_error={exc.msg} line={exc.lineno} col={exc.colno}"
+    return f"error={type(exc).__name__}"
 
 
 def _sanitize_task_tools(raw_tasks: list[Any]) -> list[dict[str, Any]]:
@@ -141,6 +139,7 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
             ) from exc
 
         output_text = extract_response_text(response)
+        stop_reason = getattr(response, "stop_reason", None)
         if not output_text:
             if attempt < max_attempts:
                 continue
@@ -152,7 +151,25 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
             parsed = _parse_tools_json(output_text)
             break
         except (json.JSONDecodeError, ValueError) as exc:
-            logger.warning("Failed to parse AI tools JSON (attempt %d)", attempt)
+            logger.warning(
+                "Failed to parse AI tools JSON attempt=%s tasks=%s stop_reason=%s output_chars=%s %s",
+                attempt,
+                len(tasks),
+                stop_reason,
+                len(output_text),
+                _parse_failure_detail(exc),
+            )
+            if len(tasks) > 1:
+                midpoint = max(1, len(tasks) // 2)
+                logger.info(
+                    "Splitting AI tools chunk of %s into %s and %s after invalid JSON",
+                    len(tasks),
+                    midpoint,
+                    len(tasks) - midpoint,
+                )
+                first = await _call_tools_chunk(profile=profile, tasks=tasks[:midpoint])
+                second = await _call_tools_chunk(profile=profile, tasks=tasks[midpoint:])
+                return first + second
             if attempt < max_attempts:
                 continue
             raise HTTPException(
