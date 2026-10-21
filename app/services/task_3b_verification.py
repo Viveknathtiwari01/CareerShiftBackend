@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 from app.core.constants import (
+    ACCESS_CLASSES,
     CATEGORY_BLEND,
     CATEGORY_BOT,
     CATEGORY_BUILD,
@@ -47,6 +48,24 @@ def _normalize_cost_band(value: str | None) -> str:
         if normalized == key or normalized.endswith(key):
             return mapped if mapped in COST_BANDS else "paid_individual"
     return normalized if normalized in COST_BANDS else "paid_individual"
+
+
+def _normalize_access_class(value: str | None, *, feasibility: str, cost_band: str) -> str:
+    raw = str(value or "").strip().lower().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "enterprise": "enterprise",
+        "enterprise_ai": "enterprise",
+        "enterprise_ai_tools": "enterprise",
+        "external": "external",
+        "external_ai": "external",
+        "external_ai_tools": "external",
+    }
+    mapped = aliases.get(raw)
+    if mapped in ACCESS_CLASSES:
+        return mapped
+    if feasibility in {"org_must_enable", "company_tech"} or cost_band == "enterprise":
+        return "enterprise"
+    return "external"
 
 
 def _normalize_feasibility(value: str | None) -> str:
@@ -112,20 +131,41 @@ def _sanitize_tool_option(raw: dict[str, Any]) -> dict[str, Any] | None:
     if isinstance(raw.get("cons"), str) and not cons:
         cons = [_sanitize_text(raw.get("cons"), 200)]
 
+    cost_band = _normalize_cost_band(raw.get("cost_band") or raw.get("cost_tier"))
+    feasibility = _normalize_feasibility(raw.get("feasibility"))
+    why_this_tool = _sanitize_text(raw.get("why_this_tool") or raw.get("fit_description"), 500)
+    how_to_use = _sanitize_text(raw.get("how_to_use"), 600)
+    fit_description = _sanitize_text(
+        raw.get("fit_description") or why_this_tool or raw.get("credibility_note"), 500
+    )
+    expected_benefit = _sanitize_text(raw.get("expected_benefit"), 300)
+    limitations = _sanitize_text(raw.get("limitations"), 400)
+    if not pros and expected_benefit:
+        pros = [expected_benefit]
+    if not cons and limitations:
+        cons = [limitations]
+
     return {
         "name": name,
-        "cost_band": _normalize_cost_band(raw.get("cost_band") or raw.get("cost_tier")),
+        "cost_band": cost_band,
         "pricing_note": _sanitize_text(raw.get("pricing_note"), 300),
-        "fit_description": _sanitize_text(
-            raw.get("fit_description") or raw.get("credibility_note"), 500
-        ),
+        "fit_description": fit_description,
         "market_note": _sanitize_text(raw.get("market_note"), 500),
         "pros": pros,
         "cons": cons,
         "credibility_note": _sanitize_text(
-            raw.get("fit_description") or raw.get("credibility_note"), 500
+            raw.get("fit_description") or raw.get("credibility_note") or why_this_tool, 500
         ),
-        "feasibility": _normalize_feasibility(raw.get("feasibility")),
+        "feasibility": feasibility,
+        "access_class": _normalize_access_class(
+            raw.get("access_class"), feasibility=feasibility, cost_band=cost_band
+        ),
+        "why_this_tool": why_this_tool,
+        "how_to_use": how_to_use,
+        "task_connection": _sanitize_text(raw.get("task_connection"), 300),
+        "expected_benefit": expected_benefit,
+        "starting_point": _sanitize_text(raw.get("starting_point"), 400),
+        "limitations": limitations,
         "verification_status": VERIFICATION_UNVERIFIED,
         "verified_at": None,
         "verified_by": None,

@@ -11,6 +11,7 @@ FeasibilityTier = Literal[
     "self_serve", "company_tech", "org_must_enable", "stays_human_led"
 ]
 VerificationStatus = Literal["UNVERIFIED", "VERIFIED", "REJECTED"]
+AccessClass = Literal["enterprise", "external"]
 
 
 class ToolOptionSchema(BaseModel):
@@ -23,6 +24,13 @@ class ToolOptionSchema(BaseModel):
     cons: list[str] = Field(default_factory=list, max_length=4)
     credibility_note: str = Field(default="", max_length=500)
     feasibility: FeasibilityTier = "self_serve"
+    access_class: AccessClass = "external"
+    why_this_tool: str = Field(default="", max_length=500)
+    how_to_use: str = Field(default="", max_length=600)
+    task_connection: str = Field(default="", max_length=300)
+    expected_benefit: str = Field(default="", max_length=300)
+    starting_point: str = Field(default="", max_length=400)
+    limitations: str = Field(default="", max_length=400)
     verification_status: VerificationStatus = "UNVERIFIED"
     verified_at: datetime | None = None
     verified_by: str | None = None

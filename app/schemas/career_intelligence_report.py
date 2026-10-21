@@ -98,6 +98,9 @@ class ReportToolkitCategory(BaseModel):
 class ReportToolkitTaskLink(BaseModel):
     task_title: str
     reason: str
+    how_to_use: str = ""
+    starting_point: str = ""
+    limitations: str = ""
 
 
 class ReportToolkitItem(BaseModel):

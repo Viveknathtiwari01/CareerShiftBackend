@@ -518,8 +518,40 @@ def _task_links_from_entries(entries: list[dict]) -> list[ReportToolkitTaskLink]
         task_title = (entry.get("task_title") or "").strip()
         reason = (entry.get("reason") or entry.get("rationale") or "").strip()
         if task_title and reason:
-            links.append(ReportToolkitTaskLink(task_title=task_title, reason=reason))
+            links.append(
+                ReportToolkitTaskLink(
+                    task_title=task_title,
+                    reason=reason,
+                    how_to_use=str(entry.get("how_to_use") or ""),
+                    starting_point=str(entry.get("starting_point") or ""),
+                    limitations=str(entry.get("limitations") or ""),
+                )
+            )
     return links
+
+
+def _access_category_label(access_class: str | None) -> str | None:
+    if access_class == "enterprise":
+        return "Enterprise AI Tools"
+    if access_class == "external":
+        return "External AI Tools"
+    return None
+
+
+def _category_from_entries(name: str, entries: list[dict]) -> str:
+    classes = [
+        entry.get("access_class")
+        for entry in entries
+        if entry.get("access_class") in {"enterprise", "external"}
+    ]
+    if classes:
+        enterprise = classes.count("enterprise")
+        external = classes.count("external")
+        if enterprise >= external and enterprise:
+            return _access_category_label("enterprise") or "Enterprise AI Tools"
+        if external:
+            return _access_category_label("external") or "External AI Tools"
+    return _tool_category_label(name)
 
 
 def _tool_category_label(name: str) -> str:
@@ -532,57 +564,9 @@ def _build_enriched_toolkit(
     data: ReportGeneratorInput,
     readiness: AIReadinessResponse,
 ) -> list[ReportToolkitItem]:
-    """Ranked toolkit with task-specific reasons derived from 3B analysis."""
+    """Ranked toolkit drawn only from tools attached to the user's 3B tasks."""
+    _ = readiness
     items = _aggregate_tools(data.analyses)
-    seen = {_tool_key(item["name"]) for item in items}
-
-    start_rank = len(items) + 1
-    extra_rank = start_rank
-    for tool in readiness.recommended_tools[:3]:
-        key = _tool_key(tool.name)
-        if key in seen:
-            continue
-        seen.add(key)
-        items.append(
-            _build_toolkit_item(
-                tool.name,
-                entries=[],
-                rank=extra_rank,
-                category=_tool_category_label(tool.name),
-                source="Profile",
-            )
-        )
-        extra_rank += 1
-
-    for tool in data.profile.get("ai_tools") or []:
-        name = str(tool)
-        key = _tool_key(name)
-        if key in seen:
-            continue
-        seen.add(key)
-        items.append(
-            _build_toolkit_item(
-                name,
-                entries=[],
-                rank=extra_rank,
-                category=_tool_category_label(name),
-                source="Profile",
-            )
-        )
-        extra_rank += 1
-
-    if not items:
-        for rank, fallback in enumerate(["ChatGPT", "Claude"], start=1):
-            items.append(
-                _build_toolkit_item(
-                    fallback,
-                    entries=[],
-                    rank=rank,
-                    category=_tool_category_label(fallback),
-                    source="Recommended",
-                )
-            )
-
     return [ReportToolkitItem(**item) for item in items[:12]]
 
 
@@ -872,21 +856,44 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
             "risk_level": row.get("risk_level"),
         }
 
-        tool_names: list[str] = []
+        component_tools: list[dict] = []
         for comp in row.get("components") or []:
+            if not isinstance(comp, dict):
+                continue
             for tool in comp.get("tools") or comp.get("tool_options") or []:
                 if isinstance(tool, dict) and tool.get("name"):
-                    tool_names.append(str(tool["name"]).strip())
-        if not tool_names:
-            for tool in row.get("recommended_tools") or []:
-                if tool:
-                    tool_names.append(str(tool).strip())
+                    component_tools.append(tool)
 
-        for name in tool_names:
+        if component_tools:
+            for tool in component_tools:
+                name = str(tool.get("name") or "").strip()
+                if not name:
+                    continue
+                specific = (
+                    tool.get("why_this_tool")
+                    or tool.get("fit_description")
+                    or entry_meta.get("reason")
+                    or entry_meta.get("rationale")
+                )
+                entry = dict(entry_meta)
+                if specific:
+                    entry["reason"] = specific
+                entry["how_to_use"] = tool.get("how_to_use") or ""
+                entry["starting_point"] = tool.get("starting_point") or ""
+                entry["limitations"] = tool.get("limitations") or ""
+                entry["access_class"] = tool.get("access_class")
+                entries = tool_entries.setdefault(name, [])
+                if any(existing.get("task_title") == task_title for existing in entries):
+                    continue
+                entries.append(entry)
+            continue
+
+        for tool in row.get("recommended_tools") or []:
+            name = str(tool).strip() if tool else ""
             if not name:
                 continue
             entries = tool_entries.setdefault(name, [])
-            if any(entry.get("task_title") == task_title for entry in entries):
+            if any(existing.get("task_title") == task_title for existing in entries):
                 continue
             entries.append(dict(entry_meta))
     return tool_entries
@@ -1106,7 +1113,12 @@ def _aggregate_tools(analyses: list[dict]) -> list[dict]:
     ]
     scored.sort(key=lambda item: (-item[2], item[0]))
     return [
-        _build_toolkit_item(name, entries=entries, rank=rank, category=_tool_category_label(name))
+        _build_toolkit_item(
+            name,
+            entries=entries,
+            rank=rank,
+            category=_category_from_entries(name, entries),
+        )
         for rank, (name, entries, _score) in enumerate(scored[:12], start=1)
     ]
 

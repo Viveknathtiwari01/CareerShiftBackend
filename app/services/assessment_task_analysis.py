@@ -28,7 +28,7 @@ from app.schemas.assessment_task_analysis import (
 )
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
-from app.services.task_ai_tools import recommend_tools_for_tasks
+from app.services.task_ai_tools import apply_tool_recommendations, recommend_tools_for_tasks
 from app.services.task_3b_derivations import (
     derive_importance,
     enrich_cost_of_staying_as_is,
@@ -427,12 +427,20 @@ class AssessmentTaskAnalysisService:
             )
 
         profile = await profile_repo.get_by_user_id(db, user_id)
+        mentioned: list[str] = []
+        for value in list(getattr(profile, "ai_tools", None) or []) + list(
+            getattr(profile, "digital_skills", None) or []
+        ):
+            name = str(value).strip()
+            if name and name not in mentioned:
+                mentioned.append(name)
         profile_context = {
             "job_title": getattr(profile, "job_title", None),
             "industry": getattr(profile, "industry", None),
             "business_function": getattr(profile, "business_function", None),
             "domain": getattr(profile, "domain", None),
             "specialization": getattr(profile, "specialization", None),
+            "systems_already_mentioned": mentioned[:12],
         }
 
         task_payload: list[dict] = []
@@ -455,8 +463,10 @@ class AssessmentTaskAnalysisService:
                 {
                     "task_id": str(row.task_id),
                     "title": task.title if task else "",
-                    "description": task.description if task else "",
+                    "description": (task.description if task else "") or "",
                     "category": row.category,
+                    "reason": (row.reason or "")[:500],
+                    "deliverable": (row.rationale or "")[:300],
                     "components": components,
                 }
             )
@@ -482,21 +492,10 @@ class AssessmentTaskAnalysisService:
             title_key = (task.title if task else "").strip().lower()
             match = tools_by_task.get(str(row.task_id)) or tools_by_title.get(title_key)
             components = [dict(component) for component in (row.components or []) if isinstance(component, dict)]
-            tools_by_name = {}
-            if match:
-                for component in match.get("components") or []:
-                    tools_by_name[str(component.get("name") or "").strip().lower()] = component.get("tools") or []
-
-            recommended: list[str] = []
-            for component in components:
-                key = str(component.get("name") or "").strip().lower()
-                tools = tools_by_name.get(key) or []
-                component["tools"] = tools
-                for tool in tools:
-                    name = tool.get("name")
-                    if name and name not in recommended:
-                        recommended.append(name)
-
+            components, recommended = apply_tool_recommendations(
+                components,
+                (match or {}).get("components"),
+            )
             row.components = components
             row.recommended_tools = recommended
             flag_modified(row, "components")

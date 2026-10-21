@@ -49,6 +49,7 @@ COST_BANDS = frozenset(
 FEASIBILITY_TIERS = frozenset(
     {"self_serve", "company_tech", "org_must_enable", "stays_human_led"}
 )
+ACCESS_CLASSES = frozenset({"enterprise", "external"})
 VERIFICATION_UNVERIFIED = "UNVERIFIED"
 VERIFICATION_VERIFIED = "VERIFIED"
 VERIFICATION_REJECTED = "REJECTED"
