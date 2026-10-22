@@ -101,6 +101,9 @@ class ReportToolkitTaskLink(BaseModel):
     how_to_use: str = ""
     starting_point: str = ""
     limitations: str = ""
+    task_priority_rank: int | None = None
+    task_priority_label: str | None = None
+    task_priority_reason: str | None = None
 
 
 class ReportToolkitItem(BaseModel):

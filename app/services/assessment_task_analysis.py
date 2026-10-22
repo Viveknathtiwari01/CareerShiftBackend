@@ -28,7 +28,7 @@ from app.schemas.assessment_task_analysis import (
 )
 from app.services.report_generator import analysis_dicts_from_rows, build_toolkit_from_analyses
 from app.services.task_3b_classification import classify_tasks_3b_from_ai
-from app.services.task_ai_tools import apply_tool_recommendations, recommend_tools_for_tasks
+from app.services.task_ai_tools import apply_tool_recommendations, canonical_product_id, recommend_tools_for_tasks
 from app.services.task_3b_derivations import (
     derive_importance,
     enrich_cost_of_staying_as_is,
@@ -427,6 +427,9 @@ class AssessmentTaskAnalysisService:
             )
 
         profile = await profile_repo.get_by_user_id(db, user_id)
+        mapping = await competency_mapping_repo.get_by_assessment_id(db, assessment_id=assessment_id)
+        final_output = mapping.final_output_json if mapping else None
+
         mentioned: list[str] = []
         for value in list(getattr(profile, "ai_tools", None) or []) + list(
             getattr(profile, "digital_skills", None) or []
@@ -434,12 +437,33 @@ class AssessmentTaskAnalysisService:
             name = str(value).strip()
             if name and name not in mentioned:
                 mentioned.append(name)
+
+        # Build compact competency list to give the AI contextual understanding
+        # of the user's actual skills — so it can tie tools to real capability gaps.
+        top_competencies: list[dict] = []
+        if final_output and isinstance(final_output.get("competencies"), list):
+            for comp in final_output["competencies"][:10]:
+                if not isinstance(comp, dict) or not comp.get("name"):
+                    continue
+                top_competencies.append({
+                    "name": comp.get("name"),
+                    "category": comp.get("category"),
+                    "importance": comp.get("importance"),
+                    "expected_level": comp.get("expected_level"),
+                })
+
         profile_context = {
             "job_title": getattr(profile, "job_title", None),
             "industry": getattr(profile, "industry", None),
             "business_function": getattr(profile, "business_function", None),
             "domain": getattr(profile, "domain", None),
             "specialization": getattr(profile, "specialization", None),
+            "experience_years": getattr(profile, "experience_years", None),
+            "ai_comfort_level": getattr(profile, "ai_comfort_level", None),
+            "profession_summary": (
+                final_output.get("profession_summary") if final_output else None
+            ),
+            "top_competencies": top_competencies,
             "systems_already_mentioned": mentioned[:12],
         }
 
@@ -465,8 +489,20 @@ class AssessmentTaskAnalysisService:
                     "title": task.title if task else "",
                     "description": (task.description if task else "") or "",
                     "category": row.category,
-                    "reason": (row.reason or "")[:500],
-                    "deliverable": (row.rationale or "")[:300],
+                    # Classification context — what the user actually does and how
+                    "classification_rationale": (row.rationale or "")[:300],
+                    "classification_reason": (row.reason or "")[:500],
+                    "human_capability_retained": row.human_capability or "",
+                    # Task signals — essential for specialist tool selection
+                    "hours_per_week": getattr(task, "hours_per_week", None) if task else None,
+                    "frequency": getattr(task, "frequency", None) if task else None,
+                    "complexity": getattr(task, "complexity", None) if task else None,
+                    "human_touch": getattr(task, "human_touch", None) if task else None,
+                    "business_criticality": getattr(task, "business_criticality", None) if task else None,
+                    "ai_assistance_current": getattr(task, "ai_assistance", None) if task else None,
+                    "manual_notes": (
+                        str(getattr(task, "manual_notes", None) or "").strip() or None
+                    ) if task else None,
                     "components": components,
                 }
             )
@@ -502,11 +538,21 @@ class AssessmentTaskAnalysisService:
             flag_modified(row, "recommended_tools")
             db.add(row)
 
-        if not any(row.recommended_tools for row in rows):
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="AI could not match real tools to your work components. Please try again.",
-            )
+        for row in rows:
+            distinct_cids = {
+                canonical_product_id(name)
+                for name in (row.recommended_tools or [])
+            }
+            distinct_cids.discard("")
+            if len(distinct_cids) < 2:
+                task_label = row.task.title if row.task and row.task.title else str(row.task_id)
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=(
+                        f"Task '{task_label}' could not be completed with the minimum 2 distinct validated AI tools. "
+                        "Assessment incomplete. Please try again."
+                    ),
+                )
 
         analyses_payload = analysis_dicts_from_rows(
             rows,

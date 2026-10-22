@@ -35,8 +35,8 @@ from app.schemas.career_intelligence_report import (
     ReportUrgencyBar,
 )
 from app.services.ai_readiness_scorer import ScorerInput, compute_ai_readiness
-
 from app.services.report_version import REPORT_VERSION
+from app.services.task_ai_tools import canonical_product_id
 
 CATEGORY_ICONS: dict[str, str] = {
     "technical": "technical",
@@ -123,11 +123,27 @@ TOOL_CATALOG: dict[str, dict[str, str]] = {
 }
 
 CATEGORY_TITLES: dict[str, str] = {
+    "enterprise": "Enterprise AI Tools",
+    "external": "External AI Tools",
     "development": "Development Tools",
     "productivity": "Business & Productivity",
     "automation": "Automation & Workflows",
-    "general": "Recommended AI Tools",
+    "general": "External AI Tools",
 }
+
+_ENTERPRISE_TOOL_PATTERNS: tuple[str, ...] = (
+    "workday", "sap", "oracle", "servicenow", "salesforce", "eightfold", "visier",
+    "cornerstone", "uipath", "celonis", "ibm watson", "watsonx", "copilot studio",
+    "power bi", "power automate", "qualtrics", "questionpro", "adobe acrobat",
+    "tableau", "snowflake", "databricks", "alteryx", "informatica", "workato",
+    "mulesoft", "peoplesoft", "successfactors", "talent intelligence", "skills cloud",
+    "skills graph", "enterprise", "dynamics 365", "microsoft 365", "jira", "confluence",
+)
+
+
+def _is_enterprise_tool_name(name: str) -> bool:
+    norm = _normalize(name)
+    return any(p in norm for p in _ENTERPRISE_TOOL_PATTERNS)
 
 
 @dataclass
@@ -232,12 +248,20 @@ def _lookup_tool(name: str) -> dict[str, str]:
     for catalog_key, meta in TOOL_CATALOG.items():
         if catalog_key in key or key in catalog_key:
             return meta
+    if _is_enterprise_tool_name(name):
+        return {
+            "description": f"Enterprise platform for workflow and workforce capabilities: {name}.",
+            "use_cases": "Enterprise-grade automation, governance, and centralized workflow execution.",
+            "why": "Identified as a core enterprise system for scaling your assessed responsibilities.",
+            "efficiency_gain": "30–45%",
+            "category": "enterprise",
+        }
     return {
-        "description": f"AI tool recommended for your workflow: {name}.",
-        "use_cases": "Task augmentation, drafting, and workflow support.",
-        "why": "Surfaced from your 3B analysis as a strong fit for your tasks.",
-        "efficiency_gain": "20%",
-        "category": "general",
+        "description": f"AI tool recommended for task augmentation: {name}.",
+        "use_cases": "Task-specific automation, intelligent drafting, analysis, and workflow support.",
+        "why": "Selected as a high-fit tool for accelerating specific components of your workflow.",
+        "efficiency_gain": "25–35%",
+        "category": "external",
     }
 
 
@@ -525,6 +549,9 @@ def _task_links_from_entries(entries: list[dict]) -> list[ReportToolkitTaskLink]
                     how_to_use=str(entry.get("how_to_use") or ""),
                     starting_point=str(entry.get("starting_point") or ""),
                     limitations=str(entry.get("limitations") or ""),
+                    task_priority_rank=entry.get("task_priority_rank"),
+                    task_priority_label=entry.get("task_priority_label"),
+                    task_priority_reason=entry.get("task_priority_reason"),
                 )
             )
     return links
@@ -551,6 +578,8 @@ def _category_from_entries(name: str, entries: list[dict]) -> str:
             return _access_category_label("enterprise") or "Enterprise AI Tools"
         if external:
             return _access_category_label("external") or "External AI Tools"
+    if _is_enterprise_tool_name(name):
+        return "Enterprise AI Tools"
     return _tool_category_label(name)
 
 
@@ -865,10 +894,23 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
                     component_tools.append(tool)
 
         if component_tools:
+            seen_in_task: set[str] = set()
+            tool_idx = 0
             for tool in component_tools:
                 name = str(tool.get("name") or "").strip()
-                if not name:
+                cid = canonical_product_id(name)
+                if not cid or cid in seen_in_task:
                     continue
+                seen_in_task.add(cid)
+                tool_idx += 1
+                task_rank = tool.get("task_fit_rank") or tool_idx
+                task_label = "Critical" if task_rank == 1 else ("High" if task_rank == 2 else "Medium")
+                task_reason = tool.get("task_fit_reason") or (
+                    f"Top recommendation for {task_title}: directly targets core deliverable."
+                    if task_rank == 1
+                    else f"High-fit complementary AI tool for {task_title}."
+                )
+
                 specific = (
                     tool.get("why_this_tool")
                     or tool.get("fit_description")
@@ -882,20 +924,36 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
                 entry["starting_point"] = tool.get("starting_point") or ""
                 entry["limitations"] = tool.get("limitations") or ""
                 entry["access_class"] = tool.get("access_class")
+                entry["task_priority_rank"] = task_rank
+                entry["task_priority_label"] = task_label
+                entry["task_priority_reason"] = task_reason
                 entries = tool_entries.setdefault(name, [])
                 if any(existing.get("task_title") == task_title for existing in entries):
                     continue
                 entries.append(entry)
             continue
 
-        for tool in row.get("recommended_tools") or []:
+        seen_in_task_rec: set[str] = set()
+        for idx, tool in enumerate(row.get("recommended_tools") or [], start=1):
             name = str(tool).strip() if tool else ""
             if not name:
                 continue
+            cid = canonical_product_id(name)
+            if not cid or cid in seen_in_task_rec:
+                continue
+            seen_in_task_rec.add(cid)
+            entry = dict(entry_meta)
+            entry["task_priority_rank"] = idx
+            entry["task_priority_label"] = "Critical" if idx == 1 else ("High" if idx == 2 else "Medium")
+            entry["task_priority_reason"] = (
+                f"Top recommendation for {task_title}."
+                if idx == 1
+                else f"Supporting AI tool for {task_title}."
+            )
             entries = tool_entries.setdefault(name, [])
             if any(existing.get("task_title") == task_title for existing in entries):
                 continue
-            entries.append(dict(entry_meta))
+            entries.append(entry)
     return tool_entries
 
 
@@ -934,8 +992,11 @@ def _tool_priority_score(entries: list[dict]) -> int:
         risk = _level_score(entry.get("risk_level"), _RISK_SCORE)
         category = _CATEGORY_SCORE.get(str(entry.get("category") or "BLEND").upper(), 2)
         auto = int(entry.get("auto_potential") or 50)
-        score += impact * 12 + risk * 6 + category * 5 + auto // 5
-    score += len(entries) * 10
+        task_rank = int(entry.get("task_priority_rank") or 1)
+        rank_bonus = 15 if task_rank == 1 else (8 if task_rank == 2 else 3)
+        score += impact * 10 + risk * 5 + category * 4 + (auto // 5) + rank_bonus
+    # Frequency bonus is modest so tools are not ranked #1 merely because they appear on multiple tasks
+    score += min(len(entries), 3) * 5
     return score
 
 

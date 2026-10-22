@@ -2,7 +2,13 @@
 
 from promppts.TaskAIToolsService import SYSTEM_PROMPT
 from app.services.report_generator import build_toolkit_from_analyses
-from app.services.task_ai_tools import apply_tool_recommendations, prepare_tool_recommendations
+from app.services.task_ai_tools import (
+    apply_tool_recommendations,
+    canonical_product_id,
+    prepare_tool_recommendations,
+    _tasks_lacking_tools,
+    _is_conventional_non_ai_tool,
+)
 
 
 def _tool(
@@ -353,3 +359,296 @@ def test_toolkit_uses_task_guidance_and_does_not_invent_tools():
 
 def test_empty_analysis_does_not_add_generic_fallback_tools():
     assert build_toolkit_from_analyses([]) == []
+
+
+def test_conventional_non_ai_tools_are_rejected():
+    long_why = "This tool is used for automated execution and checking the code outputs."
+    long_how = "Run the tool on the command line or via script, check the test report, and fix failures."
+    prepared = prepare_tool_recommendations(
+        [
+            _task(
+                "task-test",
+                "Unit and integration testing",
+                "Automated testing",
+                [
+                    _tool(
+                        "Jest",
+                        access_class="external",
+                        why=long_why,
+                        how=long_how,
+                        connection="Test runner",
+                    ),
+                    _tool(
+                        "Husky",
+                        access_class="external",
+                        why=long_why,
+                        how=long_how,
+                        connection="Git hooks",
+                    ),
+                    _tool(
+                        "Qodo",
+                        access_class="external",
+                        why="Qodo generates unit and integration testing suites automatically using AI analysis.",
+                        how="Point Qodo at the unit and integration testing target file, review test suggestions, and execute the generated suite.",
+                        connection="AI test generation for unit testing",
+                    ),
+                ],
+            )
+        ]
+    )
+    tools = prepared[0]["components"][0]["tools"]
+    names = [t["name"] for t in tools]
+    assert "Jest" not in names
+    assert "Husky" not in names
+    assert "Qodo" in names
+
+
+def test_task_priority_fields_passed_to_task_links():
+    analyses = [
+        {
+            "task_title": "Code Review",
+            "category": "BLEND",
+            "reason": "Human approval required for architectural soundness.",
+            "recommended_tools": [],
+            "components": [
+                {
+                    "name": "Quality checks",
+                    "tools": [
+                        {
+                            "name": "SonarQube AI",
+                            "access_class": "enterprise",
+                            "task_fit_rank": 1,
+                            "task_fit_reason": "Primary static analysis and vulnerability scanning platform.",
+                            "why_this_tool": "SonarQube AI automates code quality scanning during Code Review.",
+                            "how_to_use": "Configure PR quality gates in SonarQube AI and check flagged security issues.",
+                            "starting_point": "Review SonarQube AI dashboard on open PR.",
+                            "limitations": "Requires server integration.",
+                        },
+                        {
+                            "name": "Cursor Composer",
+                            "access_class": "external",
+                            "task_fit_rank": 2,
+                            "task_fit_reason": "Complementary multi-file diff reasoning in editor.",
+                            "why_this_tool": "Cursor Composer inspects complex diffs during Code Review.",
+                            "how_to_use": "Open PR branch in Cursor Composer, ask for architectural critique.",
+                            "starting_point": "Use Cmd+I in Cursor on modified files.",
+                            "limitations": "Individual license needed.",
+                        },
+                    ],
+                }
+            ],
+        }
+    ]
+    toolkit = build_toolkit_from_analyses(analyses)
+    sonar = next(t for t in toolkit if t["name"] == "SonarQube AI")
+    cursor = next(t for t in toolkit if t["name"] == "Cursor Composer")
+
+    assert sonar["category"] == "Enterprise AI Tools"
+    assert len(sonar["task_links"]) == 1
+    assert sonar["task_links"][0]["task_priority_rank"] == 1
+    assert sonar["task_links"][0]["task_priority_label"] == "Critical"
+    assert "Primary static analysis" in sonar["task_links"][0]["task_priority_reason"]
+
+    assert cursor["category"] == "External AI Tools"
+    assert len(cursor["task_links"]) == 1
+    assert cursor["task_links"][0]["task_priority_rank"] == 2
+    assert cursor["task_links"][0]["task_priority_label"] == "High"
+
+
+def test_dynamic_discovery_allows_unfamiliar_and_specialized_products():
+    """Unfamiliar or newly released AI products with genuine AI capabilities are dynamically accepted."""
+    prepared = prepare_tool_recommendations(
+        [
+            _task(
+                "task-sql",
+                "Database Query Optimization",
+                "SQL Query Tuning",
+                [
+                    _tool(
+                        "Outerbase",
+                        access_class="external",
+                        why="Outerbase uses AI to write, explain, and optimize SQL queries against postgres database tables.",
+                        how="Connect your database schema to Outerbase, ask for indexing recommendations on slow joins, and verify explain plans.",
+                        connection="SQL Query Tuning for database optimization",
+                    ),
+                    _tool(
+                        "Supermaven",
+                        access_class="external",
+                        why="Supermaven accelerates repetitive query migration scripts with high-speed 300,000-token context AI autocompletion.",
+                        how="Install the Supermaven extension, scaffold your database migration scripts, and review suggested SQL schema definitions.",
+                        connection="Schema script generation for database optimization",
+                    ),
+                ],
+            )
+        ]
+    )
+    tools = prepared[0]["components"][0]["tools"]
+    names = [t["name"] for t in tools]
+    assert names == ["Outerbase", "Supermaven"]
+
+
+def test_invalid_ai_claims_and_bare_vendor_platforms_are_rejected():
+    """Conventional utilities and bare vendor platforms lacking explicit AI capabilities are rejected."""
+    # Strict conventional utilities
+    assert _is_conventional_non_ai_tool({"name": "Jest", "why_this_tool": "Runs unit tests"}) is True
+    assert _is_conventional_non_ai_tool({"name": "Husky", "why_this_tool": "Runs git pre-commit hooks"}) is True
+    assert _is_conventional_non_ai_tool({"name": "phpMyAdmin", "why_this_tool": "Web based DB admin"}) is True
+    assert _is_conventional_non_ai_tool({"name": "Chrome DevTools", "why_this_tool": "Debugs frontends"}) is True
+
+    # Bare vendor platform without explicit AI capability is rejected even if description mentions AI
+    assert _is_conventional_non_ai_tool({
+        "name": "Postman",
+        "why_this_tool": "Postman has an AI assistant named Postbot to generate test scripts.",
+        "how_to_use": "Open Postman and write API collection tests.",
+    }) is True
+
+    # Explicit AI product/capability on vendor platform is accepted
+    assert _is_conventional_non_ai_tool({
+        "name": "Postman AI (Postbot)",
+        "why_this_tool": "Postman AI generates API test assertions automatically.",
+        "how_to_use": "Open Postman AI, generate test assertions for status codes.",
+    }) is False
+
+    # Bare GitHub vs GitHub Copilot
+    assert _is_conventional_non_ai_tool({"name": "GitHub"}) is True
+    assert _is_conventional_non_ai_tool({"name": "GitHub Copilot"}) is False
+
+    # Bare Datadog vs Datadog Bits AI
+    assert _is_conventional_non_ai_tool({"name": "Datadog"}) is True
+    assert _is_conventional_non_ai_tool({"name": "Datadog Bits AI"}) is False
+
+
+def test_canonical_deduplication_prevents_superficial_variants_from_counting_twice():
+    """Superficial naming variations map to the same canonical product and cannot count twice on a task."""
+    assert canonical_product_id("Cursor") == canonical_product_id("Cursor AI") == "cursor"
+    assert canonical_product_id("Cursor Composer") == "cursor"
+    assert canonical_product_id("GitHub Copilot") == canonical_product_id("Copilot") == "github-copilot"
+    assert canonical_product_id("v0 by Vercel") == canonical_product_id("v0") == "v0"
+    assert canonical_product_id("Postman AI (Postbot)") == canonical_product_id("Postbot") == "postman-postbot"
+    assert canonical_product_id("MyCustomTool AI") == canonical_product_id("MyCustomTool")
+
+    # In prepare_tool_recommendations, duplicate variants on the same task are deduplicated
+    prepared = prepare_tool_recommendations(
+        [
+            {
+                "task_id": "task-dup",
+                "title": "Backend feature development",
+                "components": [
+                    {
+                        "name": "API Scaffolding",
+                        "tools": [
+                            _tool(
+                                "Cursor",
+                                access_class="external",
+                                why="Cursor accelerates API scaffolding with inline code generation.",
+                                how="Open the repository in Cursor and generate the backend routes.",
+                                connection="API scaffolding",
+                            ),
+                        ],
+                    },
+                    {
+                        "name": "Service Logic",
+                        "tools": [
+                            _tool(
+                                "Cursor AI",
+                                access_class="external",
+                                why="Cursor AI refactors backend service logic across multiple files.",
+                                how="Use Cursor AI composer to write the backend service functions.",
+                                connection="Service logic",
+                            ),
+                        ],
+                    },
+                ],
+            }
+        ]
+    )
+    tools_c1 = prepared[0]["components"][0]["tools"]
+    tools_c2 = prepared[0]["components"][1]["tools"]
+    assert len(tools_c1) == 1
+    assert tools_c1[0]["name"] == "Cursor"
+    # Second component's duplicate variant was deduplicated
+    assert len(tools_c2) == 0
+
+
+def test_incomplete_task_with_duplicate_variants_cannot_produce_false_success():
+    """A task with fewer than 2 distinct canonical AI tools is detected as incomplete."""
+    task_def = [
+        {
+            "task_id": "task-dup",
+            "title": "Feature Development",
+            "components": [
+                {
+                    "name": "Component 1",
+                    "tools": [
+                        _tool(
+                            "Cursor",
+                            access_class="external",
+                            why="Cursor generates the frontend components quickly.",
+                            how="Open the project in Cursor and generate React components.",
+                            connection="Frontend components",
+                        )
+                    ],
+                },
+                {
+                    "name": "Component 2",
+                    "tools": [
+                        _tool(
+                            "Cursor AI",
+                            access_class="external",
+                            why="Cursor AI assists with editing the frontend code.",
+                            how="Open Cursor AI and refactor styling and layout code.",
+                            connection="Frontend editing",
+                        )
+                    ],
+                },
+            ],
+        }
+    ]
+    prepared = prepare_tool_recommendations(task_def)
+    missing = _tasks_lacking_tools(task_def, prepared)
+    # Even though there were 2 raw tools, they are the same canonical product, so task is incomplete!
+    assert missing == ["Feature Development"]
+
+
+def test_candidate_filtering_on_one_component_preserves_other_components():
+    """Matching keywords on Component 1 must never drop valid actionable tools on Component 2."""
+    task_def = [
+        {
+            "task_id": "task-multi-comp",
+            "title": "Fullstack System Implementation",
+            "components": [
+                {
+                    "name": "Fullstack Architecture",
+                    "description": "System architecture design",
+                    "tools": [
+                        _tool(
+                            "Claude Code",
+                            access_class="external",
+                            why="Claude Code analyzes fullstack system implementation architecture from terminal.",
+                            how="Run claude in the repository to scaffold the fullstack system architecture.",
+                            connection="Architecture review for fullstack system implementation",
+                        ),
+                    ],
+                },
+                {
+                    "name": "Data Storage Layer",
+                    "description": "Persistence setup",
+                    "tools": [
+                        _tool(
+                            "Outerbase",
+                            access_class="external",
+                            why="Outerbase assists with creating and optimizing schema tables and indexes.",
+                            how="Connect Outerbase to the staging database and verify generated schema queries.",
+                            connection="Schema definitions for persistence layer",
+                        ),
+                    ],
+                },
+            ],
+        }
+    ]
+    prepared = prepare_tool_recommendations(task_def)
+    comp1_tools = [t["name"] for t in prepared[0]["components"][0]["tools"]]
+    comp2_tools = [t["name"] for t in prepared[0]["components"][1]["tools"]]
+
+    assert "Claude Code" in comp1_tools
+    assert "Outerbase" in comp2_tools
