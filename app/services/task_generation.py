@@ -9,6 +9,7 @@ from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_async_client,
     extract_response_text,
+    get_active_provider,
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -77,8 +78,9 @@ async def generate_tasks_from_ai(
     try:
         response = await client.messages.create(**request_kwargs)
     except AuthenticationError as exc:
+        provider = get_active_provider().upper()
         raise ValueError(
-            "AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env."
+            f"AI service authentication failed. Check {provider}_API_KEY in Backend/.env."
         ) from exc
     except APIStatusError as exc:
         message = exc.message or str(exc)

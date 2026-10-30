@@ -106,3 +106,59 @@ def test_validate_production_settings_blocks_missing_smtp_and_anthropic(monkeypa
 
     with pytest.raises(RuntimeError, match="SMTP"):
         validate_production_settings()
+
+
+def test_validate_production_settings_allows_openai_when_anthropic_missing(monkeypatch):
+    monkeypatch.setattr(
+        config_module,
+        "settings",
+        Settings(
+            ENVIRONMENT="production",
+            DB_HOST="db",
+            DB_PORT=5432,
+            DB_USER="user",
+            DB_PASSWORD="pass",
+            DB_NAME="careershift",
+            SECRET_KEY="x" * 32,
+            BACKEND_CORS_ORIGINS=["https://app.example.com"],
+            APP_PUBLIC_URL="https://app.example.com",
+            SMTP_HOST="smtp.example.com",
+            SMTP_USER="user",
+            SMTP_PASSWORD="password",
+            EMAILS_FROM_EMAIL="noreply@example.com",
+            ANTHROPIC_API_KEY=None,
+            OPENAI_API_KEY="sk-proj-test",
+            REPORT_READY_EMAIL_ENABLED=True,
+        ),
+    )
+
+    validate_production_settings()
+
+
+def test_validate_production_settings_blocks_when_both_ai_keys_missing(monkeypatch):
+    monkeypatch.setattr(
+        config_module,
+        "settings",
+        Settings(
+            ENVIRONMENT="production",
+            DB_HOST="db",
+            DB_PORT=5432,
+            DB_USER="user",
+            DB_PASSWORD="pass",
+            DB_NAME="careershift",
+            SECRET_KEY="x" * 32,
+            BACKEND_CORS_ORIGINS=["https://app.example.com"],
+            APP_PUBLIC_URL="https://app.example.com",
+            SMTP_HOST="smtp.example.com",
+            SMTP_USER="user",
+            SMTP_PASSWORD="password",
+            EMAILS_FROM_EMAIL="noreply@example.com",
+            ANTHROPIC_API_KEY=None,
+            OPENAI_API_KEY=None,
+            REPORT_READY_EMAIL_ENABLED=True,
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="API_KEY"):
+        validate_production_settings()
+

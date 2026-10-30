@@ -94,11 +94,17 @@ class AssessmentTaskService:
         final_output = mapping.final_output_json
         competencies = final_output.get("competencies", [])
 
-        ai_result = await generate_tasks_from_ai(
-            profile_data=profile_data,
-            competencies=competencies,
-            profession_summary=final_output.get("profession_summary"),
-        )
+        try:
+            ai_result = await generate_tasks_from_ai(
+                profile_data=profile_data,
+                competencies=competencies,
+                profession_summary=final_output.get("profession_summary"),
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(exc),
+            ) from exc
 
         primary_tasks = ai_result.get("tasks", [])
         if len(primary_tasks) < 3:

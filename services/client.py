@@ -17,9 +17,16 @@ from app.core.anthropic_client import (
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-client = create_sync_client()
-MODEL_NAME = get_anthropic_model()
-TEMPERATURE = get_anthropic_temperature()
+try:
+    client = create_sync_client()
+except Exception:
+    client = None
+
+def _get_active_client():
+    global client
+    if client is None:
+        client = create_sync_client()
+    return client
 
 
 def extract_text(response: Any) -> str:
@@ -99,10 +106,13 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     Maintains the exact public API required.
     """
     def _make_api_call():
+        active_client = _get_active_client()
+        model_name = get_anthropic_model()
+        temperature = get_anthropic_temperature()
         request_kwargs = build_messages_create_kwargs(
-            MODEL_NAME,
+            model_name,
             max_tokens=8192,
-            temperature=TEMPERATURE,
+            temperature=temperature,
             system=system_prompt,
             messages=[
                 {
@@ -111,7 +121,7 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
                 }
             ],
         )
-        response = client.messages.create(**request_kwargs)
+        response = active_client.messages.create(**request_kwargs)
         
         response_text = extract_text(response)
         block_types = [getattr(b, 'type', type(b).__name__) for b in response.content]
@@ -120,7 +130,7 @@ def call_anthropic(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         first_500 = response_text[:500] if char_count > 0 else ""
         last_500 = response_text[-500:] if char_count > 500 else response_text
         
-        logger.info(f"Model: {MODEL_NAME}")
+        logger.info(f"Model: {model_name}")
         logger.info(f"Stop Reason: {response.stop_reason}")
         if hasattr(response, 'usage'):
             logger.info(f"Usage: input_tokens={getattr(response.usage, 'input_tokens', 'N/A')}, output_tokens={getattr(response.usage, 'output_tokens', 'N/A')}")

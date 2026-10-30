@@ -95,10 +95,14 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str | None = None
     EMAILS_FROM_NAME: str | None = None
+    # AI Providers (Anthropic has priority if ANTHROPIC_API_KEY is configured; otherwise OpenAI is used)
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
     ANTHROPIC_TEMPERATURE: float = 0.0
     ANTHROPIC_EFFORT: str = "low"
+    OPENAI_API_KEY: str | None = None
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_TEMPERATURE: float = 0.0
     APP_PUBLIC_URL: str = Field(
         default="http://localhost:5173",
         validation_alias=AliasChoices("APP_PUBLIC_URL", "FRONTEND_URL"),
@@ -209,8 +213,8 @@ def validate_production_settings() -> None:
     missing: list[str] = []
     if not settings.email_configured:
         missing.append("SMTP (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, EMAILS_FROM_EMAIL)")
-    if not settings.ANTHROPIC_API_KEY:
-        missing.append("ANTHROPIC_API_KEY")
+    if not settings.ANTHROPIC_API_KEY and not settings.OPENAI_API_KEY:
+        missing.append("ANTHROPIC_API_KEY or OPENAI_API_KEY")
     public_url = settings.effective_app_public_url
     if settings.REPORT_READY_EMAIL_ENABLED and (
         not public_url or public_url.startswith("http://localhost")

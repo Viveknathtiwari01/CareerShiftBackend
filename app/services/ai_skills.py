@@ -9,6 +9,7 @@ from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_async_client,
     extract_response_text,
+    get_active_provider,
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -105,9 +106,10 @@ async def generate_skills_from_ai(
     try:
         response = await client.messages.create(**request_kwargs)
     except AuthenticationError as exc:
-        logger.error("Anthropic authentication failed: %s", exc)
+        provider = get_active_provider().upper()
+        logger.error("%s authentication failed: %s", provider, exc)
         raise ValueError(
-            "AI service authentication failed. The ANTHROPIC_API_KEY in Backend/.env is invalid or revoked."
+            f"AI service authentication failed. The {provider}_API_KEY in Backend/.env is invalid or revoked."
         ) from exc
     except APIStatusError as exc:
         logger.exception("Anthropic API error status=%s", exc.status_code)

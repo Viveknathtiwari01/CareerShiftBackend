@@ -14,6 +14,7 @@ from anthropic import (
 
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
+    create_async_client,
     extract_response_text,
     get_anthropic_api_key,
     get_anthropic_effort,
@@ -86,13 +87,7 @@ async def _call_anthropic_for_3b_chunk(
         messages=[{"role": "user", "content": user_prompt}],
     )
 
-    # Default SDK connect timeout is 5s, which drops the next chunk on a slow link
-    # and surfaces in the browser as "Failed to fetch".
-    client: AsyncAnthropic = AsyncAnthropic(
-        api_key=get_anthropic_api_key(),
-        timeout=long_request_timeout(),
-        max_retries=2,
-    )
+    client = create_async_client()
     max_attempts = 3
 
     for attempt in range(1, max_attempts + 1):
@@ -101,7 +96,7 @@ async def _call_anthropic_for_3b_chunk(
         except AuthenticationError as exc:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env."
+                detail="AI service authentication failed. Check ANTHROPIC_API_KEY or OPENAI_API_KEY in Backend/.env."
             ) from exc
         except APIStatusError as exc:
             message = exc.message or str(exc)
