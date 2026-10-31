@@ -101,6 +101,8 @@ class ReportToolkitTaskLink(BaseModel):
     how_to_use: str = ""
     starting_point: str = ""
     limitations: str = ""
+    pros: list[str] = Field(default_factory=list)
+    cons: list[str] = Field(default_factory=list)
     task_priority_rank: int | None = None
     task_priority_label: str | None = None
     task_priority_reason: str | None = None
@@ -114,6 +116,8 @@ class ReportToolkitItem(BaseModel):
     priority_rank: int | None = None
     priority_label: str | None = None
     priority_reason: str | None = None
+    pros: list[str] = Field(default_factory=list)
+    cons: list[str] = Field(default_factory=list)
     task_links: list[ReportToolkitTaskLink] = Field(default_factory=list)
 
 

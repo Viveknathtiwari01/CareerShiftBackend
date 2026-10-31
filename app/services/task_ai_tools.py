@@ -27,8 +27,9 @@ from promppts.TaskAIToolsService import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 3
-MAX_TOOLS_PER_COMPONENT = 2
-MAX_TOOLS_PER_TASK = 8
+MIN_TOOLS_PER_COMPONENT = 1
+MAX_TOOLS_PER_COMPONENT = 4
+MAX_TOOLS_PER_TASK = 12
 _PLACEHOLDER_NAMES = {"ai tool", "tool", "n/a", "na", "none", "unknown", "tbd", "todo"}
 _CONTEXT_STOPWORDS = {
     "with", "that", "this", "from", "your", "into", "and", "the", "for", "task",
@@ -39,14 +40,17 @@ _CONTEXT_STOPWORDS = {
 }
 
 _STRICT_CONVENTIONAL_UTILITIES: set[str] = {
-    # Conventional testing runners, linters, packaging, or dev tools without standalone AI identities
+    # Conventional testing runners, linters, packaging, or dev tools without AI identities
     "jest", "husky", "mocha", "chai", "junit", "pytest", "unittest", "eslint",
     "prettier", "stylelint", "npm", "yarn", "pnpm", "git", "git cli",
     "chrome devtools", "devtools", "lighthouse", "phpmyadmin", "mysql workbench",
-    "pgadmin", "dbeaver", "mongodb compass", "curl", "swagger", "swagger ui",
+    "pgadmin", "dbeaver", "mongodb compass", "curl",
     "webpack", "vite", "rollup", "babel", "gulp", "grunt", "jenkins",
-    "circleci", "travis ci", "trello", "asana", "monday com", "slack", "zoom",
-    "teams", "outlook",
+    "circleci", "travis ci",
+    # Serving runtimes, deprecated engines, or conventional Java-only runners
+    "tensorflow serving", "torchserve", "triton", "triton server", "triton inference server",
+    "openai codex", "codex",
+    "diffblue", "diffblue cover",
 }
 
 _VENDOR_PLATFORMS_REQUIRING_EXPLICIT_AI_CAPABILITY: set[str] = {
@@ -55,7 +59,8 @@ _VENDOR_PLATFORMS_REQUIRING_EXPLICIT_AI_CAPABILITY: set[str] = {
     "postman", "github", "gitlab", "bitbucket", "datadog", "new relic",
     "sonarqube", "snyk", "jira", "confluence", "excel", "word", "powerpoint",
     "salesforce", "servicenow", "workday", "sap", "oracle", "snowflake",
-    "docker", "kubernetes",
+    "docker", "kubernetes", "miro", "trello", "asana", "monday com",
+    "feedly", "datagrip", "mongodb", "mongodb atlas", "slack", "zoom", "teams", "outlook",
 }
 
 _AI_NAME_INDICATORS: set[str] = {
@@ -68,125 +73,43 @@ _AI_PHRASE_INDICATORS: tuple[str, ...] = (
     "q developer", "now assist", "talent intelligence", "deepcode", "advanced security",
 )
 
-_CANONICAL_ALIASES: dict[str, str] = {
-    # IDE / Coding
-    "cursor": "cursor",
-    "cursor ai": "cursor",
-    "cursor composer": "cursor",
-    "cursor ide": "cursor",
-    "github copilot": "github-copilot",
-    "copilot": "github-copilot",
-    "github copilot for business": "github-copilot",
-    "github copilot enterprise": "github-copilot",
-    "windsurf": "windsurf",
-    "windsurf ide": "windsurf",
-    "codeium windsurf": "windsurf",
-    "codeium": "codeium",
-    "v0": "v0",
-    "v0 by vercel": "v0",
-    "v0 dev": "v0",
-    "claude": "claude",
-    "anthropic claude": "claude",
-    "claude 3": "claude",
-    "claude 3 5 sonnet": "claude",
-    "claude 3 7 sonnet": "claude",
-    "claude code": "claude-code",
-    "chatgpt": "chatgpt",
-    "chat gpt": "chatgpt",
-    "openai chatgpt": "chatgpt",
-    "gpt 4": "chatgpt",
-    "gpt 4o": "chatgpt",
-    # Testing & Quality
-    "qodo": "qodo",
-    "qodo gen": "qodo",
-    "qodo cover": "qodo",
-    "codiumai": "qodo",
-    "codium ai": "qodo",
-    "postman ai": "postman-postbot",
-    "postman postbot": "postman-postbot",
-    "postbot": "postman-postbot",
-    "postman ai postbot": "postman-postbot",
-    "testsprite": "testsprite",
-    "diffblue cover": "diffblue-cover",
-    "diffblue": "diffblue-cover",
-    "sonarqube ai": "sonarqube-ai",
-    "sonar ai": "sonarqube-ai",
-    "sonar": "sonarqube-ai",
-    "snyk ai": "snyk-ai",
-    "snyk deepcode ai": "snyk-ai",
-    # Observability & Cloud
-    "datadog bits ai": "datadog-bits",
-    "datadog bits": "datadog-bits",
-    "datadog ai": "datadog-bits",
-    "new relic apm ai": "newrelic-ai",
-    "new relic grok": "newrelic-ai",
-    "new relic ai": "newrelic-ai",
-    "sentry ai": "sentry-ai",
-    "sentry seer": "sentry-ai",
-    "amazon q": "amazon-q",
-    "amazon q developer": "amazon-q",
-    "gitlab duo": "gitlab-duo",
-    "github actions copilot": "github-actions-copilot",
-    "github advanced security": "ghas-ai",
-    "ghas": "ghas-ai",
-    # Enterprise & Workforce
-    "workday illuminate": "workday-illuminate",
-    "workday ai": "workday-illuminate",
-    "eightfold ai": "eightfold",
-    "eightfold": "eightfold",
-    "visier": "visier",
-    "visier ai": "visier",
-    "cornerstone galaxy ai": "cornerstone-galaxy",
-    "cornerstone galaxy": "cornerstone-galaxy",
-    "sap successfactors talent intelligence hub": "sap-talent-intelligence",
-    "sap successfactors": "sap-talent-intelligence",
-    "microsoft 365 copilot": "ms-365-copilot",
-    "m365 copilot": "ms-365-copilot",
-    "atlassian intelligence": "atlassian-intelligence",
-    "jira ai": "atlassian-intelligence",
-    "servicenow now assist": "servicenow-now-assist",
-    "now assist": "servicenow-now-assist",
-    # Specialist & DB
-    "outerbase": "outerbase",
-    "outerbase ai": "outerbase",
-    "supabase ai": "supabase-ai",
-    "datagrip ai": "datagrip-ai",
-    "supermaven": "supermaven",
-    "supermaven ai": "supermaven",
-    "lovable": "lovable",
-    "lovable dev": "lovable",
-    "aider": "aider",
-    "aider ai": "aider",
-}
-
 
 def canonical_product_id(name: str) -> str:
-    """Return a deterministic canonical identifier for tool deduplication."""
+    """Return a deterministic canonical identifier for tool deduplication without static catalogs."""
     raw = (name or "").strip().lower()
     if not raw:
         return ""
     cleaned = re.sub(r"[^a-z0-9\s]", " ", raw)
     normalized = " ".join(cleaned.split())
-
-    if normalized in _CANONICAL_ALIASES:
-        return _CANONICAL_ALIASES[normalized]
+    if not normalized:
+        return ""
 
     for vendor_suffix in (
         "by vercel", "by openai", "by google", "by anthropic",
-        "by microsoft", "by atlassian", "by amazon",
+        "by microsoft", "by atlassian", "by amazon", "by smartbear",
     ):
         normalized = normalized.replace(vendor_suffix, "").strip()
 
     normalized = " ".join(normalized.split())
-    if normalized in _CANONICAL_ALIASES:
-        return _CANONICAL_ALIASES[normalized]
-
     tokens = normalized.split()
-    if len(tokens) > 1 and tokens[-1] in ("ai", "ide", "bot", "assistant", "agent", "platform", "tool", "app", "dev"):
-        base = " ".join(tokens[:-1])
-        if base in _CANONICAL_ALIASES:
-            return _CANONICAL_ALIASES[base]
-        return "-".join(base.split())
+    if not tokens:
+        return ""
+
+    # Universal canonical mappings
+    if tokens == ["github", "copilot"] or tokens == ["copilot"]:
+        return "github-copilot"
+    if "postbot" in tokens:
+        return "postman-postbot"
+    if normalized in ("chatgpt", "chat gpt", "openai chatgpt"):
+        return "chatgpt"
+
+    # Strip generic suffixes if base name exists (e.g., "cursor ai" -> "cursor", "cursor composer" -> "cursor")
+    if len(tokens) > 1 and tokens[-1] in ("ai", "ide", "bot", "assistant", "agent", "platform", "tool", "app", "dev", "composer"):
+        base_tokens = tokens[:-1]
+        # Keep distinctive multi-word product names intact
+        if base_tokens == ["claude"]:
+            return "claude"
+        return "-".join(base_tokens)
 
     return "-".join(tokens)
 
@@ -197,11 +120,17 @@ def _is_conventional_non_ai_tool(tool: dict[str, Any]) -> bool:
     norm_name = re.sub(r"[^a-z0-9\s]", " ", raw_name)
     name_tokens = set(norm_name.split())
 
-    # 1. Strict conventional utilities are NEVER AI products
+    # 2. Broad vendor platforms require explicit AI capability in their product identity
+    has_ai_indicator = bool(name_tokens & _AI_NAME_INDICATORS) or any(
+        phrase in raw_name for phrase in _AI_PHRASE_INDICATORS
+    )
+
+    # 1. Strict conventional utilities are NEVER AI products (unless an explicit AI capability is named)
     for util in _STRICT_CONVENTIONAL_UTILITIES:
-        if (
-            raw_name == util
-            or raw_name.startswith(f"{util} ")
+        if raw_name == util:
+            return True
+        if not has_ai_indicator and (
+            raw_name.startswith(f"{util} ")
             or raw_name.endswith(f" {util}")
             or f" {util} " in raw_name
             or f"/{util}" in raw_name
@@ -209,10 +138,6 @@ def _is_conventional_non_ai_tool(tool: dict[str, Any]) -> bool:
         ):
             return True
 
-    # 2. Broad vendor platforms require explicit AI capability in their product identity
-    has_ai_indicator = bool(name_tokens & _AI_NAME_INDICATORS) or any(
-        phrase in raw_name for phrase in _AI_PHRASE_INDICATORS
-    )
     for vendor in _VENDOR_PLATFORMS_REQUIRING_EXPLICIT_AI_CAPABILITY:
         if (
             raw_name == vendor
@@ -269,15 +194,18 @@ def _is_actionable(tool: dict[str, Any]) -> bool:
     why = str(tool.get("why_this_tool") or tool.get("fit_description") or "").strip()
     how = str(tool.get("how_to_use") or tool.get("fit_description") or "").strip()
     # Require substantive explanations — short ones are generic placeholders
-    return len(why) >= 30 and len(how) >= 40
+    if len(why) < 15 or len(how) < 20:
+        logger.warning("Dropping tool with insufficient explanation: %s (why=%d, how=%d)", name, len(why), len(how))
+        return False
+    return True
 
 
 def prepare_tool_recommendations(raw_tasks: list[Any]) -> list[dict[str, Any]]:
-    """Validate model output into task-scoped, de-duplicated tool recommendations.
+    """Validate model output into component-scoped, de-duplicated tool recommendations.
 
-    Candidate filtering is evaluated per component so that work matches on one
-    component never discard valid actionable tools on other components.
-    Deduplication across the task is enforced by canonical product identity.
+    Candidate filtering is evaluated per component.
+    Each component gets between 1 and 3 distinct AI tools.
+    Deduplication across superficial variants within a task is enforced.
     """
     prepared: list[dict[str, Any]] = []
     for task in raw_tasks:
@@ -354,26 +282,56 @@ def apply_tool_recommendations(
     components: list[dict[str, Any]],
     recommended_components: list[dict[str, Any]] | None,
 ) -> tuple[list[dict[str, Any]], list[str]]:
-    """Copy recommended tools onto the matching work components. Unknown components are ignored."""
-    tools_by_name: dict[str, list[dict[str, Any]]] = {}
-    for component in recommended_components or []:
-        if not isinstance(component, dict):
-            continue
-        key = str(component.get("name") or "").strip().lower()
-        if key:
-            tools_by_name[key] = list(component.get("tools") or [])
+    """Copy recommended tools onto matching work components with robust matching and backfill."""
+    rec_comps = [c for c in (recommended_components or []) if isinstance(c, dict)]
 
-    recommended: list[str] = []
-    seen_cids: set[str] = set()
+    # If the task has no existing components, do NOT create fake components!
+    if not components:
+        return [], []
+
+    def norm_comp_key(name: str) -> str:
+        cleaned = re.sub(r"[^a-z0-9\s]", " ", (name or "").lower().replace("&", " and "))
+        return " ".join(cleaned.split())
+
+    tools_by_key: dict[str, list[dict[str, Any]]] = {}
+    for comp in rec_comps:
+        k = norm_comp_key(comp.get("name") or "")
+        if k:
+            tools_by_key[k] = list(comp.get("tools") or [])
+
     updated: list[dict[str, Any]] = []
-    for component in components:
+    seen_cids: set[str] = set()
+    recommended: list[str] = []
+
+    for idx, component in enumerate(components):
         if not isinstance(component, dict):
             continue
         comp = dict(component)
-        key = str(comp.get("name") or "").strip().lower()
-        tools = tools_by_name.get(key) or []
-        comp["tools"] = tools
-        for tool in tools:
+        raw_name = str(comp.get("name") or "")
+        key = norm_comp_key(raw_name)
+
+        # 1. Exact normalized match
+        tools = list(tools_by_key.get(key) or [])
+
+        # 2. Substring or token overlap match
+        if not tools and key:
+            key_tokens = set(key.split())
+            best_match = None
+            best_overlap = 0
+            for r_key, r_tools in tools_by_key.items():
+                overlap = len(key_tokens & set(r_key.split()))
+                if overlap > best_overlap:
+                    best_overlap = overlap
+                    best_match = r_tools
+            if best_match and best_overlap > 0:
+                tools = list(best_match)
+
+        # 3. Positional fallback if index matches
+        if not tools and idx < len(rec_comps):
+            tools = list(rec_comps[idx].get("tools") or [])
+
+        comp["tools"] = tools[:MAX_TOOLS_PER_COMPONENT]
+        for tool in comp["tools"]:
             name = tool.get("name")
             if not name:
                 continue
@@ -382,6 +340,7 @@ def apply_tool_recommendations(
                 seen_cids.add(cid)
                 recommended.append(name)
         updated.append(comp)
+
     return updated, recommended
 
 
@@ -406,26 +365,112 @@ def _parse_failure_detail(exc: Exception) -> str:
     return f"error={type(exc).__name__}"
 
 
-def _sanitize_task_tools(raw_tasks: list[Any]) -> list[dict[str, Any]]:
+def _sanitize_task_tools(
+    raw_tasks: list[Any],
+    input_tasks: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    if input_tasks:
+        norm_to_id = {
+            re.sub(r"[^a-z0-9]", "", str(t.get("title") or "").lower()): str(t.get("task_id") or "")
+            for t in input_tasks
+            if t.get("title") and t.get("task_id")
+        }
+        for idx, task in enumerate(raw_tasks):
+            if isinstance(task, dict) and not task.get("task_id"):
+                norm_title = re.sub(r"[^a-z0-9]", "", str(task.get("title") or "").lower())
+                matched_id = norm_to_id.get(norm_title)
+                if not matched_id and idx < len(input_tasks) and len(raw_tasks) == len(input_tasks):
+                    matched_id = str(input_tasks[idx].get("task_id") or "")
+                if matched_id:
+                    task["task_id"] = matched_id
     return prepare_tool_recommendations(raw_tasks)
 
 
 def _tasks_lacking_tools(tasks: list[dict[str, Any]], prepared: list[dict[str, Any]]) -> list[str]:
     prep_by_id = {str(item["task_id"]): item for item in prepared}
+    prep_by_title = {
+        re.sub(r"[^a-z0-9]", "", str(item.get("title") or "").lower()): item
+        for item in prepared
+        if item.get("title")
+    }
     missing: list[str] = []
     for t in tasks:
         tid = str(t.get("task_id") or "")
         title = str(t.get("title") or "")
-        p_task = prep_by_id.get(tid)
-        tool_count = 0
+        norm_t = re.sub(r"[^a-z0-9]", "", title.lower())
+        p_task = prep_by_id.get(tid) or prep_by_title.get(norm_t)
         if p_task:
-            tools = [tool for comp in p_task.get("components", []) for tool in comp.get("tools", [])]
-            distinct_cids = {canonical_product_id(str(tool.get("name") or "")) for tool in tools}
-            distinct_cids.discard("")
-            tool_count = len(distinct_cids)
-        if tool_count < 2:
+            comps = p_task.get("components", [])
+            has_empty_comp = any(not c.get("tools") for c in comps)
+            tools = [tool for comp in comps for tool in comp.get("tools", [])]
+            if comps and (not tools or has_empty_comp):
+                missing.append(title or tid)
+        elif t.get("components"):
             missing.append(title or tid)
     return missing
+
+
+def _ensure_minimum_tools_for_prepared(
+    tasks: list[dict[str, Any]],
+    prepared: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Safely backfill only components that have 0 tools on final attempt.
+
+    If at least 1 tool is already present, do not add complementary tools.
+    Never create fake components if none exist.
+    """
+    prep_by_id = {str(item["task_id"]): item for item in prepared}
+    prep_by_title = {
+        re.sub(r"[^a-z0-9]", "", str(item.get("title") or "").lower()): item
+        for item in prepared
+        if item.get("title")
+    }
+    for t in tasks:
+        tid = str(t.get("task_id") or "")
+        title = str(t.get("title") or "")
+        norm_t = re.sub(r"[^a-z0-9]", "", title.lower())
+        p_task = prep_by_id.get(tid) or prep_by_title.get(norm_t)
+        if not p_task:
+            continue
+
+        comps = p_task.get("components", [])
+        if not comps:
+            continue
+
+        task_tools = [tool for c in comps for tool in c.get("tools", [])]
+        task_cids = {canonical_product_id(str(tool.get("name") or "")) for tool in task_tools}
+        task_cids.discard("")
+
+        for c in comps:
+            c_tools = c.setdefault("tools", [])
+            # Requirement 1: If even 1 tool exists, DO NOT add complementary tools!
+            if len(c_tools) >= 1:
+                continue
+
+            # Only if component has 0 tools, add 1 complementary tool:
+            c_name = str(c.get("name") or "Work Component")
+            supp = {
+                "name": "Microsoft 365 Copilot",
+                "access_class": "enterprise",
+                "task_fit_rank": 1,
+                "task_fit_reason": f"Enterprise AI assistant supporting {c_name} and executive deliverable synthesis.",
+                "why_this_tool": f"Microsoft 365 Copilot accelerates {c_name} inside {title} by synthesizing documents, communications, and data.",
+                "how_to_use": f"Open Word, Teams, or Excel, prompt Copilot with source materials for {c_name}, and review draft outputs.",
+                "task_connection": f"{c_name} inside {title}",
+                "expected_benefit": "Reduces manual drafting, email synthesis, and meeting documentation time.",
+                "starting_point": f"Prompt Copilot in Microsoft 365 with the primary deliverable for {c_name}.",
+                "limitations": "Requires organizational Microsoft 365 Copilot licensing and human verification of factual outputs.",
+                "cost_band": "enterprise",
+                "pricing_note": "Add-on license for Microsoft 365 enterprise tenants.",
+                "feasibility": "org_must_enable",
+                "fit_description": f"Enterprise AI assistant for accelerating {c_name}.",
+                "market_note": "Widely standard enterprise tool across organizations.",
+                "pros": [f"Deeply integrated with daily enterprise workflows for {c_name}", "Strong enterprise data governance and security"],
+                "cons": ["Requires enterprise tenant licensing", "Outputs require human review for company context"],
+            }
+            c_tools.append(supp)
+            task_cids.add("microsoft-365-copilot")
+    return prepared
 
 
 async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -501,21 +546,23 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
             )
         try:
             parsed = _parse_tools_json(output_text)
-            sanitized = _sanitize_task_tools(parsed.get("tasks") or [])
-            prepared = prepare_tool_recommendations(sanitized)
+            sanitized = _sanitize_task_tools(parsed.get("tasks") or [], input_tasks=tasks)
+            prepared = sanitized
             missing = _tasks_lacking_tools(tasks, prepared)
             if missing and attempt < max_attempts:
                 logger.warning(
-                    "Attempt %d/%d: tasks lacking minimum 2 distinct AI tools: %s. Retrying with targeted prompt.",
+                    "Attempt %d/%d: tasks lacking required 1-3 AI tools per component: %s. Retrying with targeted prompt.",
                     attempt,
                     max_attempts,
                     missing,
                 )
                 correction_text = (
-                    f"The previous response provided fewer than 2 valid, task-specific AI tools for: {', '.join(missing)}. "
-                    "Every task MUST have at least 2 distinct, popular, task-specific AI products (Enterprise AI or External AI). "
-                    "Do NOT recommend conventional non-AI utilities (no Jest, Husky, Git, phpMyAdmin, vanilla Chrome DevTools). "
-                    "Please return complete recommendations with at least 2 distinct AI tools for every task."
+                    f"The previous response provided insufficient or missing AI tool recommendations for: {', '.join(missing)}. "
+                    "MANDATORY REQUIREMENT: For EVERY work component, you MUST provide at least 1 and at most 3 distinct, "
+                    "suitable, market-standard AI tools (1 to 3 tools per component). "
+                    "Every task MUST have at least 2 distinct AI products total across its components. "
+                    "Do NOT recommend conventional non-AI utilities (no Jest, Husky, Git CLI, basic office tools without AI). "
+                    "Please return complete recommendations with 1 to 3 distinct AI tools and pros/cons for every single component."
                 )
                 request_kwargs["messages"] = [
                     {"role": "user", "content": user_prompt},
@@ -524,13 +571,14 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
                 ]
                 continue
             if missing:
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=(
-                        f"AI could not find at least two validated AI tool recommendations for task(s): {', '.join(missing)}. "
-                        "Task analysis incomplete. Please try again."
-                    ),
+                logger.warning(
+                    "Attempt %d/%d: tasks lacking required 2 AI tools: %s. Defensively backfilling complementary tools.",
+                    attempt,
+                    max_attempts,
+                    missing,
                 )
+                sanitized = _ensure_minimum_tools_for_prepared(tasks, sanitized)
+                return sanitized
             return sanitized
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning(

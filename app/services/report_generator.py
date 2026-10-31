@@ -63,65 +63,6 @@ INDUSTRY_URGENCY: dict[str, dict[str, int]] = {
     "default": {"demand": 65, "risk": 40, "premium": 10, "score": 55},
 }
 
-TOOL_CATALOG: dict[str, dict[str, str]] = {
-    "chatgpt": {
-        "description": "General-purpose reasoning and drafting assistant.",
-        "use_cases": "Brainstorming, first drafts, summarization, Q&A.",
-        "why": "Fast baseline for daily knowledge work augmentation.",
-        "efficiency_gain": "25%",
-        "category": "productivity",
-    },
-    "claude": {
-        "description": "Advanced reasoning model with a large context window.",
-        "use_cases": "Long documents, analysis, structured writing.",
-        "why": "Strong at nuanced reasoning across complex material.",
-        "efficiency_gain": "30%",
-        "category": "productivity",
-    },
-    "copilot": {
-        "description": "Inline AI assistance inside your existing tools.",
-        "use_cases": "Code completion, email drafts, spreadsheet formulas.",
-        "why": "Low-friction adoption inside daily workflows.",
-        "efficiency_gain": "25%",
-        "category": "development",
-    },
-    "cursor": {
-        "description": "AI-native editor for pair-programming style development.",
-        "use_cases": "Refactoring, boilerplate, in-context debugging.",
-        "why": "Accelerates technical delivery without leaving the IDE.",
-        "efficiency_gain": "40%",
-        "category": "development",
-    },
-    "perplexity": {
-        "description": "AI-powered research with cited sources.",
-        "use_cases": "Tool evaluation, troubleshooting, market scans.",
-        "why": "Faster than traditional search for professional research.",
-        "efficiency_gain": "35%",
-        "category": "productivity",
-    },
-    "notion ai": {
-        "description": "Connected workspace assistant for notes and docs.",
-        "use_cases": "Meeting notes, specs, project plans.",
-        "why": "Keeps AI output inside your knowledge base.",
-        "efficiency_gain": "20%",
-        "category": "productivity",
-    },
-    "zapier": {
-        "description": "Workflow automation across business apps.",
-        "use_cases": "Triggers, handoffs, repetitive multi-step tasks.",
-        "why": "Turns BOT recommendations into repeatable automations.",
-        "efficiency_gain": "45%",
-        "category": "automation",
-    },
-    "gamma": {
-        "description": "AI presentation and document generator.",
-        "use_cases": "Decks, stakeholder updates, visual summaries.",
-        "why": "Speeds up communication-heavy BLEND tasks.",
-        "efficiency_gain": "50%",
-        "category": "productivity",
-    },
-}
-
 CATEGORY_TITLES: dict[str, str] = {
     "enterprise": "Enterprise AI Tools",
     "external": "External AI Tools",
@@ -138,6 +79,9 @@ _ENTERPRISE_TOOL_PATTERNS: tuple[str, ...] = (
     "tableau", "snowflake", "databricks", "alteryx", "informatica", "workato",
     "mulesoft", "peoplesoft", "successfactors", "talent intelligence", "skills cloud",
     "skills graph", "enterprise", "dynamics 365", "microsoft 365", "jira", "confluence",
+    "epic", "cerner", "nuance", "dax copilot", "bloomberg", "datasnipper", "mindbridge",
+    "blackline", "thomson reuters", "blue yonder", "kinaxis", "o9 solutions", "coupa",
+    "ivalua", "ironclad", "relativity", "sprinklr", "sana",
 )
 
 
@@ -244,10 +188,6 @@ def _tool_key(name: str) -> str:
 
 
 def _lookup_tool(name: str) -> dict[str, str]:
-    key = _tool_key(name)
-    for catalog_key, meta in TOOL_CATALOG.items():
-        if catalog_key in key or key in catalog_key:
-            return meta
     if _is_enterprise_tool_name(name):
         return {
             "description": f"Enterprise platform for workflow and workforce capabilities: {name}.",
@@ -549,6 +489,8 @@ def _task_links_from_entries(entries: list[dict]) -> list[ReportToolkitTaskLink]
                     how_to_use=str(entry.get("how_to_use") or ""),
                     starting_point=str(entry.get("starting_point") or ""),
                     limitations=str(entry.get("limitations") or ""),
+                    pros=list(entry.get("pros") or []),
+                    cons=list(entry.get("cons") or []),
                     task_priority_rank=entry.get("task_priority_rank"),
                     task_priority_label=entry.get("task_priority_label"),
                     task_priority_reason=entry.get("task_priority_reason"),
@@ -584,9 +526,9 @@ def _category_from_entries(name: str, entries: list[dict]) -> str:
 
 
 def _tool_category_label(name: str) -> str:
-    meta = _lookup_tool(name)
-    category = meta.get("category", "general")
-    return CATEGORY_TITLES.get(category, category.replace("_", " ").title())
+    if _is_enterprise_tool_name(name):
+        return "Enterprise AI Tools"
+    return "External AI Tools"
 
 
 def _build_enriched_toolkit(
@@ -596,7 +538,7 @@ def _build_enriched_toolkit(
     """Ranked toolkit drawn only from tools attached to the user's 3B tasks."""
     _ = readiness
     items = _aggregate_tools(data.analyses)
-    return [ReportToolkitItem(**item) for item in items[:12]]
+    return [ReportToolkitItem(**item) for item in items]
 
 
 def _legacy_categories_to_tool_dicts(categories: list[dict]) -> list[dict]:
@@ -927,6 +869,8 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
                 entry["task_priority_rank"] = task_rank
                 entry["task_priority_label"] = task_label
                 entry["task_priority_reason"] = task_reason
+                entry["pros"] = list(tool.get("pros") or [])
+                entry["cons"] = list(tool.get("cons") or [])
                 entries = tool_entries.setdefault(name, [])
                 if any(existing.get("task_title") == task_title for existing in entries):
                     continue
@@ -943,6 +887,8 @@ def _collect_tool_task_entries(analyses_or_routing: list[dict]) -> dict[str, lis
                 continue
             seen_in_task_rec.add(cid)
             entry = dict(entry_meta)
+            entry["pros"] = []
+            entry["cons"] = []
             entry["task_priority_rank"] = idx
             entry["task_priority_label"] = "Critical" if idx == 1 else ("High" if idx == 2 else "Medium")
             entry["task_priority_reason"] = (
@@ -1057,6 +1003,16 @@ def _build_toolkit_item(
     category: str = "Recommended",
     source: str = "3B Analysis",
 ) -> dict:
+    pros: list[str] = []
+    cons: list[str] = []
+    for entry in entries:
+        for p in entry.get("pros") or []:
+            if p and p not in pros:
+                pros.append(p)
+        for c in entry.get("cons") or []:
+            if c and c not in cons:
+                cons.append(c)
+
     return {
         "name": name,
         "category": category,
@@ -1065,6 +1021,8 @@ def _build_toolkit_item(
         "priority_rank": rank,
         "priority_label": _priority_label(rank),
         "priority_reason": _priority_reason_from_entries(entries, rank),
+        "pros": pros[:4],
+        "cons": cons[:4],
         "task_links": [link.model_dump() for link in _task_links_from_entries(entries)],
     }
 
@@ -1096,6 +1054,10 @@ def ensure_toolkit_priorities(tools: list[dict], analyses_or_routing: list[dict]
         item["source"] = tool.get("source") or item["source"]
         if tool.get("use_case"):
             item["use_case"] = tool["use_case"]
+        if tool.get("pros") and not item.get("pros"):
+            item["pros"] = list(tool["pros"])
+        if tool.get("cons") and not item.get("cons"):
+            item["cons"] = list(tool["cons"])
         result.append(item)
 
     start_rank = len(result) + 1
@@ -1180,7 +1142,7 @@ def _aggregate_tools(analyses: list[dict]) -> list[dict]:
             rank=rank,
             category=_category_from_entries(name, entries),
         )
-        for rank, (name, entries, _score) in enumerate(scored[:12], start=1)
+        for rank, (name, entries, _score) in enumerate(scored, start=1)
     ]
 
 

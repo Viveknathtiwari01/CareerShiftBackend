@@ -7,18 +7,28 @@
   <style>
     :root { --ink: #1a273d; --gold: #c9a84c; --teal: #0d9488; --muted: #64748b; --bg: #f8fafc; }
     * { box-sizing: border-box; }
-    body { font-family: Georgia, 'Times New Roman', serif; margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6; }
     header { background: var(--ink); color: #fff; padding: 2.5rem 2rem; }
     header h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
-    header p { margin: 0; opacity: 0.85; font-family: Arial, sans-serif; font-size: 0.95rem; }
+    header p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
     main { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
     section { margin-bottom: 2.5rem; }
-    h2 { font-family: Arial, sans-serif; font-size: 1.25rem; color: var(--ink); border-bottom: 2px solid var(--gold); padding-bottom: 0.35rem; margin-bottom: 1rem; }
-    .tool { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .tool h3 { margin: 0 0 0.35rem; font-family: Arial, sans-serif; font-size: 1.1rem; }
-    .gain { display: inline-block; background: #fef9ec; color: #8a6d1f; border: 1px solid var(--gold); border-radius: 999px; padding: 0.15rem 0.65rem; font-size: 0.75rem; font-family: Arial, sans-serif; font-weight: bold; margin-bottom: 0.5rem; }
-    .label { font-family: Arial, sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: bold; margin-top: 0.75rem; }
-    footer { text-align: center; padding: 1.5rem; font-family: Arial, sans-serif; font-size: 0.8rem; color: var(--muted); border-top: 1px solid #e2e8f0; }
+    h2 { font-size: 1.25rem; color: var(--ink); border-bottom: 2px solid var(--gold); padding-bottom: 0.35rem; margin-bottom: 1rem; }
+    .tool { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .tool-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .tool h3 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #0b1d3a; }
+    .priority-badge { display: inline-block; background: #eef2f6; color: #0b1d3a; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+    .category-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #c9a84c; margin-bottom: 0.5rem; }
+    .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: bold; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    .use-case { font-size: 0.95rem; color: #334155; margin: 0.25rem 0 0.75rem; }
+    .pros-cons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
+    .pros-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem; }
+    .pros-title { color: #166534; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.35rem; }
+    .cons-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 0.75rem; }
+    .cons-title { color: #9a3412; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.35rem; }
+    .pc-list { margin: 0; padding-left: 1.2rem; font-size: 0.85rem; color: #1e293b; }
+    .pc-list li { margin-bottom: 0.2rem; }
+    footer { text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--muted); border-top: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
@@ -27,23 +37,58 @@
     <p>{{ job_title }} · Generated {{ generated_date }} · CareerShift</p>
   </header>
   <main>
-    <p>Tools recommended from your 3B analysis and AI readiness profile. Use offline or print this page as your quick reference.</p>
-    {% for category in report.ai_toolkit %}
+    <p>Recommended AI tools dynamically matched to your 3B work components. Use offline or print this page as your strategic toolkit reference.</p>
+    
+    {% if report.ai_toolkit %}
     <section>
-      <h2>{{ category.title }}</h2>
-      {% for tool in category.tools %}
+      <h2>Recommended AI Products</h2>
+      {% for tool in report.ai_toolkit %}
       <article class="tool">
-        <span class="gain">+{{ tool.efficiency_gain }} efficiency</span>
-        <h3>{{ tool.name }}</h3>
-        <p>{{ tool.description }}</p>
-        <div class="label">Best for</div>
-        <p>{{ tool.use_cases }}</p>
-        <div class="label">Why we recommend it</div>
-        <p>{{ tool.why }}</p>
+        <div class="tool-header">
+          <div>
+            <div class="category-tag">{{ tool.category }}</div>
+            <h3>{% if tool.priority_rank %}#{{ tool.priority_rank }} {% endif %}{{ tool.name }}</h3>
+          </div>
+          {% if tool.priority_label %}
+          <span class="priority-badge">{{ tool.priority_label }}</span>
+          {% endif %}
+        </div>
+        
+        {% if tool.use_case %}
+        <div class="label">Why this tool fits your work</div>
+        <p class="use-case">{{ tool.use_case }}</p>
+        {% endif %}
+
+        {% if tool.pros or tool.cons %}
+        <div class="pros-cons-grid">
+          {% if tool.pros %}
+          <div class="pros-box">
+            <div class="pros-title">✓ Pros</div>
+            <ul class="pc-list">
+              {% for pro in tool.pros %}
+              <li>{{ pro }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          {% if tool.cons %}
+          <div class="cons-box">
+            <div class="cons-title">⚠ Cons & Review Needs</div>
+            <ul class="pc-list">
+              {% for con in tool.cons %}
+              <li>{{ con }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
       </article>
       {% endfor %}
     </section>
-    {% endfor %}
+    {% else %}
+    <p style="color: #64748b; font-style: italic;">No AI toolkit recommendations available yet. Run 3B analysis to generate your tools.</p>
+    {% endif %}
   </main>
   <footer>CareerShift AI Toolkit · Report v{{ report.report_version }}</footer>
 </body>

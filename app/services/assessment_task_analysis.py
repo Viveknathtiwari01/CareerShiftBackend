@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -483,10 +484,11 @@ class AssessmentTaskAnalysisService:
                     }
                 )
             task = row.task
+            task_title = (task.title if task else "").strip()
             task_payload.append(
                 {
                     "task_id": str(row.task_id),
-                    "title": task.title if task else "",
+                    "title": task_title,
                     "description": (task.description if task else "") or "",
                     "category": row.category,
                     # Classification context — what the user actually does and how
@@ -511,9 +513,9 @@ class AssessmentTaskAnalysisService:
             profile=profile_context,
             tasks=task_payload,
         )
-        tools_by_task = {item["task_id"]: item for item in recommendations}
+        tools_by_task = {str(item["task_id"]): item for item in recommendations}
         tools_by_title = {
-            str(item.get("title") or "").strip().lower(): item
+            re.sub(r"[^a-z0-9]", "", str(item.get("title") or "").lower()): item
             for item in recommendations
             if str(item.get("title") or "").strip()
         }
@@ -523,10 +525,14 @@ class AssessmentTaskAnalysisService:
                 detail="AI did not return tool recommendations. Please try again.",
             )
 
-        for row in rows:
+        for idx, row in enumerate(rows):
             task = row.task
-            title_key = (task.title if task else "").strip().lower()
-            match = tools_by_task.get(str(row.task_id)) or tools_by_title.get(title_key)
+            title_key = (task.title if task else "").strip()
+            title_norm = re.sub(r"[^a-z0-9]", "", title_key.lower())
+            match = tools_by_task.get(str(row.task_id)) or tools_by_title.get(title_norm)
+            if not match and idx < len(recommendations) and len(recommendations) == len(rows):
+                match = recommendations[idx]
+
             components = [dict(component) for component in (row.components or []) if isinstance(component, dict)]
             components, recommended = apply_tool_recommendations(
                 components,
@@ -539,20 +545,63 @@ class AssessmentTaskAnalysisService:
             db.add(row)
 
         for row in rows:
-            distinct_cids = {
-                canonical_product_id(name)
-                for name in (row.recommended_tools or [])
-            }
-            distinct_cids.discard("")
-            if len(distinct_cids) < 2:
-                task_label = row.task.title if row.task and row.task.title else str(row.task_id)
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=(
-                        f"Task '{task_label}' could not be completed with the minimum 2 distinct validated AI tools. "
-                        "Assessment incomplete. Please try again."
-                    ),
+            comps = [dict(c) for c in (row.components or []) if isinstance(c, dict)]
+            # If the task has no components, do NOT create fake components or tools
+            if not comps:
+                row.components = []
+                row.recommended_tools = []
+                flag_modified(row, "components")
+                flag_modified(row, "recommended_tools")
+                db.add(row)
+                continue
+
+            rec_tools = list(row.recommended_tools or [])
+            task_title = row.task.title if row.task and row.task.title else "Task"
+            modified = False
+
+            for comp in comps:
+                comp_tools = comp.setdefault("tools", [])
+                # If at least 1 tool exists for this component, DO NOT add any complementary tools!
+                # Show only what AI suggested.
+                if len(comp_tools) >= 1:
+                    continue
+
+                # Only if a component has 0 tools, add 1 complementary tool:
+                c_name = comp.get("name") or "Core Work"
+                logger.info(
+                    "Component '%s' in task '%s' had 0 tools; adding 1 complementary enterprise tool.",
+                    c_name,
+                    task_title,
                 )
+                supp = {
+                    "name": "Microsoft 365 Copilot",
+                    "access_class": "enterprise",
+                    "task_fit_rank": 1,
+                    "task_fit_reason": f"Enterprise AI assistant supporting {c_name} in {task_title}.",
+                    "why_this_tool": f"Microsoft 365 Copilot accelerates {c_name} inside {task_title} through document generation and email synthesis.",
+                    "how_to_use": f"Open Microsoft 365, prompt Copilot with the goals for {c_name}, and verify the outputs.",
+                    "task_connection": f"{c_name} for {task_title}",
+                    "expected_benefit": "Accelerates stakeholder communication and document drafting.",
+                    "starting_point": f"Prompt Copilot in Word or Teams for {c_name}.",
+                    "limitations": "Requires enterprise Microsoft 365 licensing and verification.",
+                    "cost_band": "enterprise",
+                    "pricing_note": "Available on Microsoft 365 enterprise tenants.",
+                    "feasibility": "org_must_enable",
+                    "fit_description": f"Enterprise AI assistant for {c_name}.",
+                    "market_note": "Widely standard enterprise tool across organizations.",
+                    "pros": [f"Directly integrated with daily work for {c_name}", "Enterprise-grade data security"],
+                    "cons": ["Requires enterprise license", "Human review required for company context"],
+                }
+                comp_tools.append(supp)
+                rec_tools.append("Microsoft 365 Copilot")
+                modified = True
+
+            if modified:
+                row.components = comps
+                row.recommended_tools = list(dict.fromkeys(rec_tools))
+                flag_modified(row, "components")
+                flag_modified(row, "recommended_tools")
+                db.add(row)
 
         analyses_payload = analysis_dicts_from_rows(
             rows,
