@@ -302,7 +302,7 @@ async def suggest_career_identity_from_ai(
     try:
         get_anthropic_api_key()
     except ValueError as exc:
-        raise AIUnavailableError("ANTHROPIC_API_KEY is not configured on the server.") from exc
+        raise AIUnavailableError("Neither OPENAI_API_KEY nor ANTHROPIC_API_KEY is configured on the server.") from exc
 
     model = get_anthropic_model()
     # replace(), not format(): resume text often contains braces.

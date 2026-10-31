@@ -73,7 +73,7 @@ async def generate_skills_from_ai(
     try:
         get_anthropic_api_key()
     except ValueError as exc:
-        raise ValueError("ANTHROPIC_API_KEY is not configured on the server.") from exc
+        raise ValueError("AI API key (OPENAI_API_KEY or ANTHROPIC_API_KEY) is not configured on the server.") from exc
 
     model = get_anthropic_model()
     api_key = get_anthropic_api_key()
@@ -105,16 +105,16 @@ async def generate_skills_from_ai(
     try:
         response = await client.messages.create(**request_kwargs)
     except AuthenticationError as exc:
-        logger.error("Anthropic authentication failed: %s", exc)
+        logger.error("AI service authentication failed: %s", exc)
         raise ValueError(
-            "AI service authentication failed. The ANTHROPIC_API_KEY in Backend/.env is invalid or revoked."
+            "AI service authentication failed. Check OPENAI_API_KEY or ANTHROPIC_API_KEY in Backend/.env."
         ) from exc
     except APIStatusError as exc:
-        logger.exception("Anthropic API error status=%s", exc.status_code)
+        logger.exception("AI API error status=%s", exc.status_code)
         message = exc.message or str(exc)
-        if "credit balance" in message.lower():
+        if "credit balance" in message.lower() or "quota" in message.lower():
             raise ValueError(
-                "Anthropic API credit balance is too low. Add credits at console.anthropic.com/settings/billing."
+                "AI API credit balance is too low or quota exceeded. Please check your billing settings."
             ) from exc
         raise ValueError(f"AI service error: {message}") from exc
     except Exception as exc:

@@ -101,8 +101,36 @@ def test_validate_production_settings_blocks_missing_smtp_and_anthropic(monkeypa
             SMTP_PASSWORD=None,
             EMAILS_FROM_EMAIL=None,
             ANTHROPIC_API_KEY=None,
+            OPENAI_API_KEY=None,
         ),
     )
 
     with pytest.raises(RuntimeError, match="SMTP"):
         validate_production_settings()
+
+
+def test_validate_production_settings_allows_openai_key(monkeypatch):
+    monkeypatch.setattr(
+        config_module,
+        "settings",
+        Settings(
+            ENVIRONMENT="production",
+            DB_HOST="db",
+            DB_PORT=5432,
+            DB_USER="user",
+            DB_PASSWORD="pass",
+            DB_NAME="careershift",
+            SECRET_KEY="x" * 32,
+            BACKEND_CORS_ORIGINS=["https://app.example.com"],
+            SMTP_HOST="smtp.example.com",
+            SMTP_USER="noreply@example.com",
+            SMTP_PASSWORD="secret",
+            EMAILS_FROM_EMAIL="noreply@example.com",
+            OPENAI_API_KEY="sk-openai-prod-test",
+            ANTHROPIC_API_KEY=None,
+            REPORT_READY_EMAIL_ENABLED=True,
+        ),
+    )
+
+    validate_production_settings()
+

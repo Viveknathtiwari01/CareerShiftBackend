@@ -185,7 +185,7 @@ async def _extract_details_from_ai(
             len(resume_text),
         )
 
-    client: AsyncAnthropic = create_async_client()
+    client = create_async_client()
     started = time.monotonic()
     timeout_seconds = float(settings.SUGGEST_IDENTITY_LLM_TIMEOUT_SECONDS)
     try:

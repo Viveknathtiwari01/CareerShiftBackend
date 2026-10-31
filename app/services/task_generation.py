@@ -73,12 +73,12 @@ async def generate_tasks_from_ai(
         messages=[{"role": "user", "content": user_prompt}],
     )
 
-    client: AsyncAnthropic = create_async_client()
+    client = create_async_client()
     try:
         response = await client.messages.create(**request_kwargs)
     except AuthenticationError as exc:
         raise ValueError(
-            "AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env."
+            "AI service authentication failed. Check OPENAI_API_KEY or ANTHROPIC_API_KEY in Backend/.env."
         ) from exc
     except APIStatusError as exc:
         message = exc.message or str(exc)

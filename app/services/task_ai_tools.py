@@ -11,6 +11,7 @@ from fastapi import HTTPException, status
 
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
+    create_async_client,
     extract_response_text,
     get_anthropic_api_key,
     get_anthropic_effort,
@@ -448,8 +449,7 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
     if not model_supports_sampling_params(model):
         logger.info("AI tools generation effort=%s", get_anthropic_effort())
 
-    client = AsyncAnthropic(
-        api_key=get_anthropic_api_key(),
+    client = create_async_client(
         timeout=long_request_timeout(),
         max_retries=2,
     )
@@ -462,14 +462,14 @@ async def _call_tools_chunk(*, profile: dict[str, Any], tasks: list[dict[str, An
         except AuthenticationError as exc:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="AI service authentication failed. Check ANTHROPIC_API_KEY in Backend/.env.",
+                detail="AI service authentication failed. Check OPENAI_API_KEY or ANTHROPIC_API_KEY in Backend/.env.",
             ) from exc
         except APIStatusError as exc:
             message = exc.message or str(exc)
             if "credit balance" in message.lower():
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="Anthropic API credit balance is too low. Please add credits at console.anthropic.com/settings/billing or update ANTHROPIC_API_KEY in Backend/.env.",
+                    detail="AI credit balance is too low. Please add credits or update OPENAI_API_KEY / ANTHROPIC_API_KEY in Backend/.env.",
                 ) from exc
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,

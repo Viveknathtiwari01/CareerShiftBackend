@@ -6,6 +6,7 @@ from anthropic import AuthenticationError, APIStatusError
 from app.core.anthropic_client import (
     build_messages_create_kwargs,
     create_async_client,
+    get_ai_provider,
     get_anthropic_effort,
     get_anthropic_model,
     get_anthropic_temperature,
@@ -14,7 +15,8 @@ from app.core.anthropic_client import (
 
 
 async def test_connection():
-    print("--- Testing Anthropic Connection ---")
+    provider = get_ai_provider()
+    print(f"--- Testing AI Connection (Provider: {provider.upper()}) ---")
     model = get_anthropic_model()
     print(f"Model configured: {model}")
     if model_supports_sampling_params(model):
@@ -47,14 +49,13 @@ async def test_connection():
 
     except AuthenticationError as e:
         print("--- Authentication Error (401) ---")
-        print("The ANTHROPIC_API_KEY in Backend/.env is invalid or revoked.")
-        print(f"Detail: {e}")
+        print(f"The API key in Backend/.env is invalid or revoked: {e}")
     except APIStatusError as e:
         print(f"--- API Error ({e.status_code}) ---")
         print(f"Detail: {e.message}")
         if e.status_code == 400 and "credit balance" in (e.message or "").lower():
             print("\nKey is VALID but account has no credits.")
-            print("Add credits: https://console.anthropic.com/settings/billing")
+            print("Add credits in billing settings.")
     except Exception as e:
         print("--- Exception Occurred ---")
         print(f"Exception type: {type(e)}")
